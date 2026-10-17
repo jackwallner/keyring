@@ -1,13 +1,19 @@
 Keyring is one shared maintenance log for every vehicle your family owns. The truck, your partner's SUV, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower all hang on one ring, and each one tells you what's due next.
 
 ONE GARAGE, THE WHOLE FAMILY
-Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders stay personal, so one oil change doesn't ping the whole house.
+Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders are set on each phone, so one oil change doesn't ping the whole house.
 
 KNOWS WHAT'S DUE
 Every vehicle starts with a recommended schedule for its kind and powertrain: oil, tires, brakes, filters, fluids, inspections, winterizing, impellers, annuals. Tell Keyring when each job was last done and it counts down by date and by miles, kilometers or engine hours, using how much you actually drive.
 
 LOG IN SECONDS
 Tick what was done, add the mileage, cost and shop, and snap the receipt. Every checked job restarts its own countdown. Scan the odometer or VIN with your camera.
+
+BRING YOUR HISTORY
+Import a CSV from Fuelly, Drivvo, Simply Auto or your own spreadsheet. Keyring matches the columns, sorts fuel from service, and restarts each job's countdown from the last time it was done.
+
+SEASONS, SALES AND SECOND METERS
+Put the boat or the convertible in storage and reminders pause until it's back out. Track an RV's generator hours on their own schedule. When you sell, note the date and price and hand the buyer the full record.
 
 REPAIRS AND RECALLS TOO
 Log unplanned repairs alongside maintenance and see what each one really costs. Keyring watches NHTSA for new safety recalls on your cars and lets you know when one is issued. Log the dealer fix and it's marked done for the whole family.
@@ -17,7 +23,7 @@ Cars, SUVs, trucks, vans, motorcycles, scooters, motorhomes, campers, trailers, 
 
 RECALLS, VALUE AND PARTS
 - Safety recalls from NHTSA for your year, make and model, with an alert when a new one is issued
-- One tap to Kelley Blue Book, Edmunds or J.D. Power with your vehicle filled in, and a place to note what it's worth
+- One tap to Kelley Blue Book, Edmunds, J.D. Power or your country's price guide, and a place to note what it's worth
 - The tools and parts for the job that's due next
 - Quick facts you always look up: oil type, tire size, wiper lengths, paint code
 

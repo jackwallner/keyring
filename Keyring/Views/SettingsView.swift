@@ -21,6 +21,14 @@ struct SettingsView: View {
     @State private var exportFile: SharedFile?
     @State private var importing = false
 
+    private var familyStatus: String {
+        if sharing.share != nil { return Format.count(sharing.participantNames.count + 1, "person", "people") }
+        if let joined = garage.joinedGarages.first {
+            return garage.joinedGarages.count == 1 ? "Joined \(joined.displayName)" : "Joined \(garage.joinedGarages.count) garages"
+        }
+        return "Off"
+    }
+
     var body: some View {
         Form {
             proSection
@@ -45,8 +53,9 @@ struct SettingsView: View {
                     HStack {
                         Label("Family sharing", systemImage: "person.2.fill")
                         Spacer()
-                        Text(sharing.share == nil ? "Off" : Format.count(sharing.participantNames.count + 1, "person", "people"))
+                        Text(familyStatus)
                             .foregroundStyle(Theme.secondaryInk)
+                            .lineLimit(1)
                     }
                 }
                 .foregroundStyle(Theme.ink)

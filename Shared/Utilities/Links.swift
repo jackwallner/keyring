@@ -47,8 +47,26 @@ enum AmazonLinks {
 
     static let disclosure = "As an Amazon Associate, Keyring earns from qualifying purchases."
 
-    static func search(_ query: String) -> URL {
-        var components = URLComponents(string: "https://www.amazon.com/s")!
+    /// The reader's own Amazon store, so prices and shipping are local.
+    static func host(region: String? = Locale.current.region?.identifier) -> String {
+        switch region {
+        case "CA": "www.amazon.ca"
+        case "GB", "IE": "www.amazon.co.uk"
+        case "AU", "NZ": "www.amazon.com.au"
+        case "DE", "AT", "CH": "www.amazon.de"
+        case "FR", "BE": "www.amazon.fr"
+        case "IT": "www.amazon.it"
+        case "ES": "www.amazon.es"
+        case "NL": "www.amazon.nl"
+        case "MX": "www.amazon.com.mx"
+        case "JP": "www.amazon.co.jp"
+        case "IN": "www.amazon.in"
+        default: "www.amazon.com"
+        }
+    }
+
+    static func search(_ query: String, region: String? = Locale.current.region?.identifier) -> URL {
+        var components = URLComponents(string: "https://\(host(region: region))/s")!
         var items = [URLQueryItem(name: "k", value: query)]
         if isAffiliate { items.append(URLQueryItem(name: "tag", value: associateTag)) }
         components.queryItems = items
@@ -75,7 +93,61 @@ struct ValueSource: Identifiable, Hashable {
     let url: URL
     var id: String { name }
 
-    static func sources(for vehicle: Vehicle) -> [ValueSource] {
+    static func sources(for vehicle: Vehicle, region: String? = Locale.current.region?.identifier) -> [ValueSource] {
+        let isRoad = [.car, .suv, .truck, .van].contains(vehicle.kind)
+        if isRoad, let local = localCarSources(for: vehicle, region: region) {
+            return local + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
+        }
+        return usSources(for: vehicle) + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
+    }
+
+    /// Price guides people outside the US actually use.
+    private static func localCarSources(for vehicle: Vehicle, region: String?) -> [ValueSource]? {
+        let query = vehicle.makeAndModel
+        switch region {
+        case "CA":
+            var trader = URLComponents(string: "https://www.autotrader.ca/cars/")!
+            if !query.isEmpty { trader.queryItems = [URLQueryItem(name: "kwd", value: query)] }
+            return [
+                ValueSource(name: "Canadian Black Book", detail: "Trade-in and retail values", url: URL(string: "https://www.canadianblackbook.com/")!),
+                ValueSource(name: "AutoTrader.ca", detail: "Asking prices for similar cars", url: trader.url!),
+            ]
+        case "GB", "IE":
+            return [
+                ValueSource(name: "Auto Trader", detail: "Free car valuation", url: URL(string: "https://www.autotrader.co.uk/car-valuation")!),
+                ValueSource(name: "Parkers", detail: "Price guide", url: URL(string: "https://www.parkers.co.uk/car-valuation/")!),
+            ]
+        case "AU", "NZ":
+            return [
+                ValueSource(name: "RedBook", detail: "Car values", url: URL(string: "https://www.redbook.com.au/")!),
+                ValueSource(name: "carsales", detail: "Asking prices for similar cars", url: URL(string: "https://www.carsales.com.au/")!),
+            ]
+        default:
+            return nil
+        }
+    }
+
+    private static func ebaySold(for vehicle: Vehicle, region: String?) -> ValueSource? {
+        let year = vehicle.year > 0 ? String(vehicle.year) : nil
+        let query = [year, vehicle.make, vehicle.model].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        guard !query.isEmpty else { return nil }
+        let host = switch region {
+        case "CA": "www.ebay.ca"
+        case "GB", "IE": "www.ebay.co.uk"
+        case "AU", "NZ": "www.ebay.com.au"
+        case "DE", "AT", "CH": "www.ebay.de"
+        default: "www.ebay.com"
+        }
+        var ebay = URLComponents(string: "https://\(host)/sch/i.html")!
+        ebay.queryItems = [
+            URLQueryItem(name: "_nkw", value: query),
+            URLQueryItem(name: "LH_Sold", value: "1"),
+            URLQueryItem(name: "LH_Complete", value: "1"),
+        ]
+        return ValueSource(name: "eBay sold listings", detail: "What similar ones actually sold for", url: ebay.url!)
+    }
+
+    private static func usSources(for vehicle: Vehicle) -> [ValueSource] {
         let make = slug(vehicle.make)
         let model = slug(vehicle.model)
         let year = vehicle.year > 0 ? String(vehicle.year) : nil
@@ -114,17 +186,8 @@ struct ValueSource: Identifiable, Hashable {
         default:
             break
         }
-        // Sold listings are an honest value for anything with a resale market.
-        let query = [year, vehicle.make, vehicle.model].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        if !query.isEmpty {
-            var ebay = URLComponents(string: "https://www.ebay.com/sch/i.html")!
-            ebay.queryItems = [
-                URLQueryItem(name: "_nkw", value: query),
-                URLQueryItem(name: "LH_Sold", value: "1"),
-                URLQueryItem(name: "LH_Complete", value: "1"),
-            ]
-            list.append(ValueSource(name: "eBay sold listings", detail: "What similar ones actually sold for", url: ebay.url!))
-        }
+        // Sold listings (added by the caller) are an honest value for
+        // anything with a resale market.
         return list
     }
 

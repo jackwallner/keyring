@@ -92,9 +92,11 @@ struct GarageView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { showingFamily = true } label: {
-                    Image(systemName: sharing.share == nil ? "person.2" : "person.2.fill")
+                    Label("Family", systemImage: sharing.share == nil && garage.joinedGarages.isEmpty ? "person.2" : "person.2.fill")
+                        .labelStyle(.titleAndIcon)
                 }
                 .accessibilityLabel("Family sharing")
+                .accessibilityIdentifier("garage.family")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: addVehicle) { Image(systemName: "plus") }
@@ -284,6 +286,7 @@ struct LogRequest: Identifiable {
 struct VehicleCard: View {
     @EnvironmentObject private var garage: GarageStore
     let vehicle: Vehicle
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         let headline = garage.headline(for: vehicle)
@@ -314,7 +317,7 @@ struct VehicleCard: View {
                 Spacer(minLength: Theme.sm)
                 if !vehicle.descriptor.isEmpty && vehicle.descriptor != vehicle.displayName {
                     Text(vehicle.descriptor.uppercased())
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .tracking(0.8)
                         .foregroundStyle(tint.foreground.opacity(0.75))
                         .lineLimit(1)
@@ -324,7 +327,7 @@ struct VehicleCard: View {
                     .foregroundStyle(tint.foreground)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if vehicle.meter.hasReading {
+                if vehicle.meter.hasReading, vehicle.reading > 0 {
                     Text(Format.reading(vehicle.reading, vehicle.meter))
                         .font(Theme.figure(15, weight: .medium))
                         .foregroundStyle(tint.foreground.opacity(0.8))
@@ -357,14 +360,15 @@ struct VehicleCard: View {
     }
 
     private func statusChip(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> some View {
-        HStack(spacing: 6) {
+        let quiet = headline.status == .ok || vehicle.storedSince != nil
+        return HStack(spacing: 6) {
             Circle()
-                .fill(headline.status == .ok ? vehicle.tint.foreground.opacity(0.7) : headline.status.color)
-                .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: headline.status == .ok ? 0 : 1))
+                .fill(quiet ? vehicle.tint.foreground.opacity(0.7) : headline.status.color)
+                .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: quiet ? 0 : 1))
                 .frame(width: 8, height: 8)
             Text(statusText(headline))
                 .font(.footnote.weight(.semibold))
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
         }
         .foregroundStyle(vehicle.tint.foreground)
         .padding(.horizontal, 10)
@@ -373,6 +377,9 @@ struct VehicleCard: View {
     }
 
     private func statusText(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> String {
+        if vehicle.storedSince != nil {
+            return vehicle.storedUntil.map { "In storage until \(Format.shortDate($0))" } ?? "In storage"
+        }
         guard let next = headline.next else {
             return garage.dues(for: vehicle).isEmpty ? "No schedule yet" : "Add when jobs were last done"
         }
@@ -391,7 +398,7 @@ struct VehicleCard: View {
     private func accessibilityText(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> String {
         var parts = [vehicle.displayName]
         if !vehicle.descriptor.isEmpty { parts.append(vehicle.descriptor) }
-        if vehicle.meter.hasReading { parts.append(Format.reading(vehicle.reading, vehicle.meter)) }
+        if vehicle.meter.hasReading, vehicle.reading > 0 { parts.append(Format.reading(vehicle.reading, vehicle.meter)) }
         parts.append(statusText(headline))
         return parts.joined(separator: ", ")
     }

@@ -572,8 +572,142 @@ final class ParserTests: XCTestCase {
     }
 
     func testAmazonLinks() {
-        let url = AmazonLinks.search("2019 Toyota Tacoma oil filter")
+        let url = AmazonLinks.search("2019 Toyota Tacoma oil filter", region: "US")
         XCTAssertEqual(url.host(), "www.amazon.com")
+        XCTAssertEqual(AmazonLinks.search("wipers", region: "CA").host(), "www.amazon.ca")
         XCTAssertTrue(url.absoluteString.contains("k=2019%20Toyota%20Tacoma%20oil%20filter"))
+    }
+}
+
+@MainActor
+final class AuditRoundThreeTests: XCTestCase {
+    private func makeStore() -> GarageStore {
+        GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+    }
+
+    func testStorageFreezesThePaceAndPausesReminders() {
+        let store = makeStore()
+        var draft = NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2018, make: "Mazda", model: "MX-5", reading: 30_000)
+        draft.yearlyUse = 12_000
+        draft.lastDone = ["oil": Date.now.addingTimeInterval(-30 * 86_400)]
+        let car = store.addVehicle(draft)
+        XCTAssertEqual(store.typicalDailyUse(for: car), 12_000 / 365, accuracy: 0.01)
+        let before = store.dues(for: car).first { $0.catalogKey == "oil" }!
+        XCTAssertTrue(before.result.dateIsEstimated)
+
+        let back = Calendar.current.date(byAdding: .month, value: 5, to: .now)!
+        store.store(car, until: back)
+        XCTAssertNotNil(car.storedSince)
+        let stored = store.dues(for: car).first { $0.catalogKey == "oil" }!
+        // Only the calendar runs while it's stored: a year from the last change.
+        XCTAssertFalse(stored.result.dateIsEstimated)
+
+        let plan = ReminderScheduler.plan(dues: [], now: .now, hour: 9, returns: [(car.displayName, car.id!.uuidString, back)])
+        XCTAssertEqual(plan.count, 1)
+        XCTAssertEqual(plan[0].id, "storage-\(car.id!.uuidString)")
+
+        store.returnFromStorage(car, reading: 30_400)
+        XCTAssertNil(car.storedSince)
+        XCTAssertNil(car.storedUntil)
+        XCTAssertEqual(car.reading, 30_400)
+    }
+
+    func testPowertrainFromMakeAndModel() {
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Tesla", model: "Model 3"), .electric)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Toyota", model: "RAV4 Prime"), .plugInHybrid)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Jeep", model: "Wrangler 4xe"), .plugInHybrid)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Ford", model: "F-150 Lightning"), .electric)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Ford", model: "Mustang Mach-E"), .electric)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Volkswagen", model: "ID.4"), .electric)
+        XCTAssertEqual(Makes.inferredPowertrain(make: "Toyota", model: "Camry", trim: "Hybrid XLE"), .hybrid)
+        XCTAssertNil(Makes.inferredPowertrain(make: "Toyota", model: "Tacoma"))
+        XCTAssertNil(Makes.inferredPowertrain(make: "Chevrolet", model: "Silverado"))
+    }
+
+    func testMakesFollowTheRegion() {
+        XCTAssertEqual(Makes.common(for: .car, region: "GB").first, "Ford")
+        XCTAssertTrue(Makes.common(for: .car, region: "GB").contains("Vauxhall"))
+        XCTAssertFalse(Makes.common(for: .car, region: "US").contains("Vauxhall"))
+        XCTAssertEqual(Makes.common(for: .boat, region: "CA"), Makes.common(for: .boat, region: "US"))
+    }
+
+    func testWinterTiresAndClassicSchedule() {
+        let canada = MaintenanceCatalog.items(for: .car, powertrain: .gasoline, year: 2020, region: "CA")
+        XCTAssertEqual(canada.first { $0.key == "winterTires" }?.isCore, true)
+        let us = MaintenanceCatalog.items(for: .car, powertrain: .gasoline, year: 2020, region: "US")
+        XCTAssertEqual(us.first { $0.key == "winterTires" }?.isCore, false)
+
+        let classic = MaintenanceCatalog.items(for: .car, powertrain: .gasoline, year: 1967, region: "US")
+        XCTAssertEqual(classic.first { $0.key == "oil" }?.miles, 3_000)
+        XCTAssertEqual(classic.first { $0.key == "oil" }?.months, 6)
+        XCTAssertNotNil(classic.first { $0.key == "chassisLube" })
+        XCTAssertNil(us.first { $0.key == "chassisLube" })
+        XCTAssertEqual(us.first { $0.key == "oil" }?.miles, 7_500)
+    }
+
+    func testPlugInHybridGetsElectricJobs() {
+        let keys = Set(MaintenanceCatalog.items(for: .suv, powertrain: .plugInHybrid).map(\.key))
+        XCTAssertTrue(keys.isSuperset(of: ["oil", "brakes", "charger", "plugs"]))
+    }
+
+    func testPowertrainChangeSwitchesOffUntouchedJobs() {
+        let store = makeStore()
+        var draft = NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2022, make: "Hyundai", model: "Kona", reading: 10_000)
+        draft.lastDone = ["oil": .now.addingTimeInterval(-60 * 86_400)]
+        let car = store.addVehicle(draft)
+        store.addCatalogItems(MaintenanceCatalog.items(for: .car, powertrain: .gasoline).filter { $0.key == "plugs" }, to: car)
+        car.powertrain = .electric
+        store.addCatalogItems(MaintenanceCatalog.items(for: .car, powertrain: .electric).filter(\.isCore), to: car)
+        store.switchOffInapplicableTasks(on: car)
+        let enabled = Set(car.enabledTasks.compactMap(\.catalogKey))
+        XCTAssertFalse(enabled.contains("plugs"), "never done, doesn't apply")
+        XCTAssertTrue(enabled.contains("oil"), "has history, stays")
+        XCTAssertTrue(enabled.contains("rotate"))
+    }
+
+    func testMetricDetailText() {
+        XCTAssertEqual(CatalogItem.metric("Most call for 3,000 to 6,000 miles."), "Most call for 5,000 to 10,000 km.")
+        XCTAssertEqual(CatalogItem.metric("Around 100,000 miles."), "Around 161,000 km.")
+        XCTAssertEqual(CatalogItem.metric("Every 300 to 600 miles and after rain."), "Every 500 to 950 km and after rain.")
+        XCTAssertEqual(CatalogItem.metric("No units here."), "No units here.")
+    }
+
+    func testRegionalValueSources() {
+        let store = makeStore()
+        let car = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .kilometers, year: 2019, make: "Honda", model: "Civic"))
+        let canada = ValueSource.sources(for: car, region: "CA").map(\.name)
+        XCTAssertEqual(canada.first, "Canadian Black Book")
+        XCTAssertFalse(canada.contains("Kelley Blue Book"))
+        XCTAssertEqual(ValueSource.sources(for: car, region: "CA").last?.url.host(), "www.ebay.ca")
+        XCTAssertEqual(ValueSource.sources(for: car, region: "US").first?.name, "Kelley Blue Book")
+    }
+
+    func testCarPlayAdapterOnlyWhereItFits() {
+        let store = makeStore()
+        let tesla = store.addVehicle(NewVehicle(kind: .car, powertrain: .electric, meter: .miles, year: 2023, make: "Tesla", model: "Model Y"))
+        let classic = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 1972, make: "Ford", model: "Bronco"))
+        let modern = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Honda", model: "Accord"))
+        XCTAssertFalse(UpgradeCatalog.upgrades(for: tesla).contains { $0.title.contains("CarPlay") })
+        XCTAssertFalse(UpgradeCatalog.upgrades(for: classic).contains { $0.title.contains("CarPlay") })
+        XCTAssertTrue(UpgradeCatalog.upgrades(for: modern).contains { $0.title.contains("CarPlay") })
+    }
+
+    func testMixedUnitsInsights() {
+        let store = makeStore()
+        let miles = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Ford", model: "Focus", reading: 10_000))
+        let km = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .kilometers, make: "Kia", model: "Soul", reading: 10_000))
+        for (vehicle, first, second) in [(miles, 10_000.0, 11_000.0), (km, 10_000.0, 11_609.344)] {
+            var a = GarageStore.ServiceDraft(); a.date = .now.addingTimeInterval(-90 * 86_400); a.reading = first; a.title = "Oil"; a.cost = 50
+            store.log(a, for: vehicle)
+            var b = GarageStore.ServiceDraft(); b.reading = second; b.title = "Oil"; b.cost = 50
+            store.log(b, for: vehicle)
+        }
+        let insights = CostInsights.compute(vehicles: [miles, km])
+        let perUnit = try! XCTUnwrap(insights.costPerDistance)
+        if insights.distanceUnit == "mi" {
+            XCTAssertEqual(perUnit, 200.0 / 2_000, accuracy: 0.001)
+        } else {
+            XCTAssertEqual(perUnit, 200.0 / 3_218.688, accuracy: 0.001)
+        }
     }
 }

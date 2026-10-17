@@ -178,18 +178,21 @@ struct CostInsights: Equatable {
         let diy = recent.filter { $0.1.isDIY }.reduce(0) { $0 + $1.1.cost }
         let repairs = recent.filter { $0.1.kind == .repair }.reduce(0) { $0 + $1.1.cost }
 
-        // Cost per mile from distance-metered vehicles with enough history.
+        // Cost per mile (or km) from distance-metered vehicles with enough
+        // history, each converted to one unit so a mixed garage adds up.
+        let hasKm = vehicles.contains { $0.meter == .kilometers }
+        let hasMiles = vehicles.contains { $0.meter == .miles }
+        let target: MeterUnit = hasKm && (!hasMiles || Locale.current.measurementSystem == .metric) ? .kilometers : .miles
         var distance = 0.0
         var spend = 0.0
-        var unit = "mi"
         for vehicle in vehicles where vehicle.meter == .miles || vehicle.meter == .kilometers {
             let points = vehicle.sortedEntries.filter { $0.hasReading && ($0.date ?? .distantPast) >= yearAgo }.map(\.reading)
                 + vehicle.mainReadings.filter { ($0.date ?? .distantPast) >= yearAgo }.map(\.value)
             guard let low = points.min(), let high = points.max(), high - low > 500 else { continue }
-            distance += high - low
+            distance += vehicle.meter.convert(high - low, to: target) ?? 0
             spend += vehicle.sortedEntries.filter { ($0.date ?? .distantPast) >= yearAgo }.reduce(0) { $0 + $1.cost }
-            unit = vehicle.meter.short
         }
+        let unit = target.short
 
         return CostInsights(
             lastTwelveMonths: lastYear,

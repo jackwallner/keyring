@@ -99,7 +99,7 @@ struct OnboardingView: View {
 
     private var family: some View {
         pageLayout {
-            if !nameFocused {
+            if !nameFocused, !dynamicTypeSize.isAccessibilitySize {
             HStack(spacing: -12) {
                 ForEach(Array(["J", "S", "M"].enumerated()), id: \.offset) { index, initial in
                     Text(initial)
@@ -154,8 +154,14 @@ struct OnboardingView: View {
                 benefit("Spending by vehicle, job and month")
             }
             if dynamicTypeSize.isAccessibilitySize, !store.isPro {
-                priceSlot
-                softExit
+                Text(disclosure)
+                    .font(.caption2)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                softExit.frame(maxWidth: .infinity)
                 legalRow
             }
             if let errorText {
@@ -223,6 +229,10 @@ struct OnboardingView: View {
                 priceSlot
                     .opacity(onTrialPage ? 1 : 0)
                     .accessibilityHidden(!onTrialPage || store.isPro)
+            } else if onTrialPage, !store.isPro {
+                // The billed amount stays beside the button at every text size.
+                billedAmount
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             }
             Button(action: primary) {
                 Group {
@@ -260,9 +270,7 @@ struct OnboardingView: View {
     /// 3.1.2(c)); the terms under it stay small.
     private var priceSlot: some View {
         VStack(spacing: 2) {
-            Text(store.isPro ? "" : onboardingPackage.map { ConversionCopy.billedAmount(priceLabel: $0.priceLabel) } ?? "")
-                .font(Theme.figure(20, weight: .bold))
-                .foregroundStyle(Theme.ink)
+            billedAmount
             Text(store.isPro ? "" : disclosure)
                 .font(.caption2)
                 .foregroundStyle(Theme.faintInk)
@@ -270,6 +278,14 @@ struct OnboardingView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(minHeight: 48)
+    }
+
+    private var billedAmount: some View {
+        Text(store.isPro ? "" : onboardingPackage.map { ConversionCopy.billedAmount(priceLabel: $0.priceLabel) } ?? "")
+            .font(Theme.figure(22, weight: .bold))
+            .foregroundStyle(Theme.ink)
+            .multilineTextAlignment(.center)
+            .accessibilityIdentifier("onboarding.billedAmount")
     }
 
     private var disclosure: String {
@@ -281,11 +297,15 @@ struct OnboardingView: View {
     }
 
     private var legalRow: some View {
-        HStack(spacing: 14) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: Theme.sm))
+            : AnyLayout(HStackLayout(spacing: 14))
+        return layout {
             Link("Terms", destination: AppLinks.standardEULA)
             Link("Privacy", destination: AppLinks.privacyPolicy)
             Button("Restore", action: restore)
         }
+        .frame(maxWidth: .infinity)
         .font(.caption2)
         .foregroundStyle(Theme.faintInk)
         .frame(minHeight: 20)

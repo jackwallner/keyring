@@ -28,6 +28,14 @@ struct Upgrade: Identifiable, Hashable, Sendable {
 }
 
 enum UpgradeCatalog {
+    /// Drops what can't fit this one: a CarPlay adapter needs a car with
+    /// wired CarPlay, which Teslas and anything before about 2016 don't have.
+    static func upgrades(for vehicle: Vehicle) -> [Upgrade] {
+        let list = upgrades(for: vehicle.kind, powertrain: vehicle.powertrain)
+        let noCarPlay = vehicle.make?.lowercased() == "tesla" || (vehicle.year > 0 && vehicle.year < 2016)
+        return noCarPlay ? list.filter { !$0.title.contains("CarPlay") } : list
+    }
+
     static func upgrades(for kind: VehicleKind, powertrain: Powertrain) -> [Upgrade] {
         var list: [Upgrade]
         switch kind {

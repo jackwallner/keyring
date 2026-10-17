@@ -15,6 +15,7 @@ struct FamilyView: View {
     @State private var managing: ManagedShare?
     @State private var joining = false
     @State private var leaving: Garage?
+    @State private var leaveFailed: Garage?
 
     var body: some View {
         ScrollView {
@@ -23,7 +24,7 @@ struct FamilyView: View {
                     Text("Share the garage")
                         .font(Theme.title(30))
                         .foregroundStyle(Theme.ink)
-                    Text("Your partner, a teen driver, whoever takes the truck in. Everyone logs from their own iPhone, and every phone shows the same history. Reminders stay personal.")
+                    Text("Your partner, a teen driver, whoever takes the truck in. Everyone logs from their own iPhone, and every phone shows the same history. Each person turns reminders on or off for each vehicle on their own phone.")
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                 }
@@ -121,11 +122,28 @@ struct FamilyView: View {
         .sheet(isPresented: $joining) { JoinGarageView() }
         .confirmationDialog("Leave \(leaving?.displayName ?? "this garage")?", isPresented: Binding(get: { leaving != nil }, set: { if !$0 { leaving = nil } }), titleVisibility: .visible) {
             Button("Leave", role: .destructive) {
-                if let leaving { Task { try? await sharing.leave(leaving) } }
+                if let leaving { leave(leaving) }
                 leaving = nil
             }
         } message: {
             Text("Its vehicles disappear from this iPhone. Nothing is deleted for the owner, and they can invite you again.")
+        }
+        .alert("Couldn't leave \(leaveFailed?.displayName ?? "the garage")", isPresented: Binding(get: { leaveFailed != nil }, set: { if !$0 { leaveFailed = nil } })) {
+            Button("Try again") { if let leaveFailed { leave(leaveFailed) } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("iCloud didn't respond. Check your connection and try again.")
+        }
+    }
+
+    private func leave(_ joined: Garage) {
+        Task {
+            do {
+                try await sharing.leave(joined)
+                Haptics.success()
+            } catch {
+                leaveFailed = joined
+            }
         }
     }
 
@@ -142,7 +160,7 @@ struct FamilyView: View {
     private var steps: some View {
         VStack(alignment: .leading, spacing: Theme.md) {
             step(1, "They install Keyring", "Free on the App Store.")
-            step(2, "They scan your code", "In Keyring: Garage, the people button, then Join. Or the Camera app, or a link you text.")
+            step(2, "They scan your code", "With the Camera app, or in Keyring: Family at the top of Garage, then Join with a code or link. A texted link works too.")
             step(3, "You log together", "Every vehicle, job and receipt, signed with who logged it.")
         }
         .card()
@@ -255,7 +273,7 @@ struct JoinGarageView: View {
                     Section {
                         Button { scanning = true } label: { Label("Scan their code", systemImage: "qrcode.viewfinder") }
                     } footer: {
-                        Text("On their iPhone: Garage, the people button, then Create invite.")
+                        Text("On their iPhone: Family at the top of Garage, then Create invite.")
                     }
                 }
                 Section {
@@ -267,7 +285,7 @@ struct JoinGarageView: View {
                         if let first = strings.first { link = first }
                     }
                 } header: {
-                    Text("Or paste the link they sent")
+                    Text(LiveTextScanner.isAvailable ? "Or paste the link they sent" : "Paste the invite link")
                 }
                 if let status {
                     Section { Text(status).font(.footnote) }
@@ -306,7 +324,7 @@ struct JoinGarageView: View {
         do {
             try await sharing.join(pasted: link)
             Haptics.success()
-            status = "Joined. The vehicles appear in your garage in a moment."
+            status = "Joined. The vehicles appear in your garage in a moment. Reminders for each one can be turned off on its page."
             try? await Task.sleep(for: .seconds(1.2))
             dismiss()
         } catch let error as SharingService.JoinError {

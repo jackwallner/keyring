@@ -9,7 +9,7 @@ import Foundation
 struct CatalogItem: Identifiable, Hashable, Sendable {
     let key: String
     let name: String
-    let detail: String
+    var detail: String
     let symbol: String
     /// Distance interval when the vehicle's meter reads distance.
     var miles: Double? = nil
@@ -64,7 +64,33 @@ struct GearSuggestion: Hashable, Sendable {
 enum MaintenanceCatalog {
     /// Every job that applies to a vehicle of this kind and powertrain, core
     /// items first.
-    static func items(for kind: VehicleKind, powertrain: Powertrain) -> [CatalogItem] {
+    /// Regions where winter tires go on every fall (by law in Quebec and
+    /// parts of the Nordics and Alps), so the swap starts on the schedule.
+    static let winterTireRegions: Set<String> = ["CA", "NO", "SE", "FI", "IS", "EE", "LV", "LT", "AT", "CH", "DE", "CZ", "SK", "SI", "RU"]
+
+    /// Road cars built before about 1990: carbureted, points or early
+    /// injection, mineral oil, grease fittings.
+    static func isClassic(kind: VehicleKind, year: Int) -> Bool {
+        [.car, .suv, .van, .truck].contains(kind) && year > 1885 && year < 1990
+    }
+
+    static func items(
+        for kind: VehicleKind, powertrain: Powertrain, year: Int = 0,
+        region: String? = Locale.current.region?.identifier
+    ) -> [CatalogItem] {
+        var list = baseItems(for: kind, powertrain: powertrain)
+        if [.car, .suv, .van, .truck].contains(kind) {
+            list.append(winterTires(core: winterTireRegions.contains(region ?? "")))
+        }
+        if isClassic(kind: kind, year: year), powertrain.burnsFuel {
+            list = list.map(classicTuned) + classicExtras
+        }
+        var seen = Set<String>()
+        let unique = list.filter { seen.insert($0.key).inserted }
+        return unique.filter(\.isCore) + unique.filter { !$0.isCore }
+    }
+
+    private static func baseItems(for kind: VehicleKind, powertrain: Powertrain) -> [CatalogItem] {
         var list: [CatalogItem]
         switch kind {
         case .car, .suv, .van, .truck:
@@ -101,18 +127,59 @@ enum MaintenanceCatalog {
             list = generic
         }
         list += paperwork(for: kind)
-        var seen = Set<String>()
-        let unique = list.filter { seen.insert($0.key).inserted }
-        return unique.filter(\.isCore) + unique.filter { !$0.isCore }
+        return list
     }
+
+    static func winterTires(core: Bool) -> CatalogItem {
+        CatalogItem(
+            key: "winterTires", name: "Winter tire swap",
+            detail: "On when it stays below about 7°C (45°F), off again in spring. A good moment to check pressure and tread on the set coming off.",
+            symbol: "snowflake", months: 6, isCore: core,
+            gear: [.init(title: "Tire storage bags", query: "tire storage bags"),
+                   .init(title: "Impact wrench", query: "cordless impact wrench lug nuts")]
+        )
+    }
+
+    /// Shorter intervals for a classic: mineral oil, older plugs and coolant.
+    private static func classicTuned(_ item: CatalogItem) -> CatalogItem {
+        var item = item
+        switch item.key {
+        case "oil":
+            item.miles = 3_000
+            item.months = 6
+            item.detail = "Older engines on conventional oil want it every 3,000 miles or six months, and a zinc additive or high-zinc oil for flat-tappet cams."
+        case "plugs":
+            item.miles = 30_000
+            item.isCore = true
+        case "coolant":
+            item.miles = 30_000
+            item.months = 24
+            item.isCore = true
+        default:
+            break
+        }
+        return item
+    }
+
+    private static let classicExtras: [CatalogItem] = [
+        CatalogItem(
+            key: "chassisLube", name: "Grease the chassis", detail: "Older cars have grease fittings on the steering and suspension. A few pumps each at every oil change.",
+            symbol: "wrench.adjustable", miles: 3_000, months: 6, difficulty: .moderate,
+            gear: [.init(title: "Grease gun", query: "grease gun chassis")]
+        ),
+        CatalogItem(
+            key: "tuneUp", name: "Tune-up", detail: "Points, condenser, timing and carb adjustment on cars that have them.",
+            symbol: "slider.horizontal.3", miles: 12_000, months: 12, isCore: false, difficulty: .moderate
+        ),
+    ]
 
     static func usesCalendarMonths(key: String?, kind: VehicleKind) -> Bool {
         guard let key, kind == .aircraft else { return false }
         return aircraft(.piston).first { $0.key == key }?.calendarMonths ?? false
     }
 
-    static func item(key: String, kind: VehicleKind, powertrain: Powertrain) -> CatalogItem? {
-        items(for: kind, powertrain: powertrain).first { $0.key == key }
+    static func item(key: String, kind: VehicleKind, powertrain: Powertrain, year: Int = 0) -> CatalogItem? {
+        items(for: kind, powertrain: powertrain, year: year).first { $0.key == key }
     }
 
     // MARK: - Road vehicles
@@ -192,6 +259,22 @@ enum MaintenanceCatalog {
                 key: "plugs", name: "Spark plugs", detail: "Iridium plugs typically last around 100,000 miles.",
                 symbol: "bolt.fill", miles: 100_000, isCore: false, difficulty: .moderate,
                 gear: [.init(title: "Spark plugs", query: "{vehicle} spark plugs")]
+            ))
+        }
+        if powertrain == .hybrid || powertrain == .plugInHybrid {
+            items.append(CatalogItem(
+                key: "brakes", name: "Brake clean and lube", detail: "Regenerative braking spares the pads, so they can seize from disuse where roads are salted. Once a year in winter climates.",
+                symbol: "exclamationmark.octagon", months: 12, isCore: powertrain == .plugInHybrid, difficulty: .shop
+            ))
+            items.append(CatalogItem(
+                key: "hybridBattery", name: "Hybrid battery cooling filter", detail: "Many hybrids pull cabin air over the battery through a small filter, often under the rear seat. Pet hair clogs it.",
+                symbol: "fan", months: 24, isCore: false, difficulty: .moderate
+            ))
+        }
+        if powertrain == .plugInHybrid {
+            items.append(CatalogItem(
+                key: "charger", name: "Charging cable check", detail: "Look over the cable and plug for wear or heat marks.",
+                symbol: "powerplug", months: 12, isCore: false
             ))
         }
         if powertrain == .diesel {
@@ -589,7 +672,7 @@ enum MaintenanceCatalog {
     ]
 
     static let electricGolfCart: [CatalogItem] = [
-        CatalogItem(key: "waterLevel", name: "Battery water level", detail: "Flooded lead-acid batteries need distilled water topped up monthly. Lithium packs skip this.", symbol: "drop", months: 1,
+        CatalogItem(key: "waterLevel", name: "Battery water (lead-acid)", detail: "Flooded lead-acid batteries need distilled water topped up monthly. Lithium packs never do, so switch this off if yours is lithium.", symbol: "drop", months: 1,
                     gear: [.init(title: "Battery watering system", query: "golf cart battery watering system")]),
         CatalogItem(key: "terminals", name: "Clean battery terminals", detail: "Corrosion steals range.", symbol: "minus.plus.batteryblock", months: 6),
         CatalogItem(key: "tires", name: "Tire pressure", detail: "Soft tires cost range and wear unevenly.", symbol: "circle.circle", months: 3),
@@ -621,8 +704,44 @@ enum MaintenanceCatalog {
             items.append(CatalogItem(key: "insurance", name: "Insurance renewal", detail: "A reminder to shop your rate before it renews.", symbol: "shield.lefthalf.filled", months: 12, isCore: false))
         }
         if kind.hasNHTSARecords && kind != .trailer && kind != .camper {
-            items.append(CatalogItem(key: "inspection", name: "State inspection or emissions", detail: "Only where your state requires it.", symbol: "checkmark.seal", months: 12, isCore: false))
+            let (name, detail): (String, String) = switch Locale.current.region?.identifier {
+            case "GB": ("MOT test", "Due every year once a car is three years old.")
+            case "IE": ("NCT test", "Due every two years from four years old, then yearly after ten.")
+            case "CA": ("Safety or emissions inspection", "Only where your province requires it, often when the vehicle is sold.")
+            case "AU", "NZ": ("Roadworthy or WOF check", "Only where your state requires it.")
+            case "US", nil: ("State inspection or emissions", "Only where your state requires it.")
+            default: ("Roadworthiness inspection", "Set it to your country's schedule.")
+            }
+            items.append(CatalogItem(key: "inspection", name: name, detail: detail, symbol: "checkmark.seal", months: 12, isCore: false))
         }
         return items
+    }
+}
+
+extension CatalogItem {
+    /// The detail text in the reader's unit: "5,000 to 10,000 miles" reads
+    /// "8,000 to 16,000 km" on a metric odometer.
+    func detail(for meter: MeterUnit) -> String {
+        guard meter == .kilometers else { return detail }
+        return Self.metric(detail)
+    }
+
+    static func metric(_ text: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: #"(\d[\d,]*)(?: to (\d[\d,]*))? miles"#) else { return text }
+        let source = text as NSString
+        let result = NSMutableString(string: text)
+        func km(_ range: NSRange) -> String? {
+            guard range.location != NSNotFound,
+                  let miles = Double(source.substring(with: range).replacingOccurrences(of: ",", with: "")) else { return nil }
+            let value = miles * 1.609344
+            let step: Double = value >= 5_000 ? 1_000 : (value >= 1_000 ? 500 : (value >= 100 ? 50 : 10))
+            return Int((value / step).rounded() * step).formatted()
+        }
+        for match in regex.matches(in: text, range: NSRange(location: 0, length: source.length)).reversed() {
+            guard let first = km(match.range(at: 1)) else { continue }
+            let replacement = km(match.range(at: 2)).map { "\(first) to \($0) km" } ?? "\(first) km"
+            result.replaceCharacters(in: match.range, with: replacement)
+        }
+        return (result as String).replacingOccurrences(of: "few thousand miles", with: "few thousand km")
     }
 }

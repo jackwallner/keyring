@@ -57,6 +57,9 @@ enum KeyringModel {
             attr("auxMeterName", .stringAttributeType),
             attr("auxReading", .doubleAttributeType, default: 0.0),
             attr("auxReadingDate", .dateAttributeType),
+            attr("storedSince", .dateAttributeType),
+            attr("storedUntil", .dateAttributeType),
+            attr("yearlyUse", .doubleAttributeType, default: 0.0),
         ] : [])
         task.properties = [
             attr("id", .UUIDAttributeType),
@@ -231,6 +234,13 @@ final class Vehicle: NSManagedObject, Identifiable {
     @NSManaged var auxMeterName: String?
     @NSManaged var auxReading: Double
     @NSManaged var auxReadingDate: Date?
+    /// Laid up for the season: reminders pause and the meter isn't assumed
+    /// to move. `storedUntil` is an optional date to bring it back out.
+    @NSManaged var storedSince: Date?
+    @NSManaged var storedUntil: Date?
+    /// How far it usually goes a year, in its own unit, as the owner put it.
+    /// Stands in for a measured pace until there are readings. 0 = not given.
+    @NSManaged var yearlyUse: Double
     @NSManaged var garage: Garage?
     @NSManaged var tasks: Set<MaintenanceTask>?
     @NSManaged var entries: Set<ServiceEntry>?

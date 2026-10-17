@@ -42,13 +42,29 @@ enum Theme {
 
     // MARK: Type
 
-    /// Serif for names and headlines: the logbook voice.
-    static func title(_ size: CGFloat = 28) -> Font { .system(size: size, weight: .semibold, design: .serif) }
+    /// Serif for names and headlines: the logbook voice. Sizes snap to the
+    /// nearest text style so every heading grows with the reader's text size.
+    static func title(_ size: CGFloat = 28) -> Font { .system(style(for: size), design: .serif, weight: .semibold) }
     /// Rounded, fixed-width digits for every meter and money figure.
     static func figure(_ size: CGFloat = 17, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .rounded).monospacedDigit()
+        .system(style(for: size), design: .rounded, weight: weight).monospacedDigit()
     }
-    static let caption = Font.system(size: 12, weight: .semibold).smallCaps()
+    static let caption = Font.caption.weight(.semibold).smallCaps()
+
+    static func style(for size: CGFloat) -> Font.TextStyle {
+        switch size {
+        case 31...: .largeTitle
+        case 25..<31: .title
+        case 21..<25: .title2
+        case 19..<21: .title3
+        case 17..<19: .body
+        case 16..<17: .callout
+        case 14..<16: .subheadline
+        case 12.5..<14: .footnote
+        case 11.5..<12.5: .caption
+        default: .caption2
+        }
+    }
 }
 
 /// A vehicle's own color. Dark tints carry light text; the two light ones

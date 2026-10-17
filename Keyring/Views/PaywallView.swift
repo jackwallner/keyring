@@ -179,6 +179,7 @@ struct PaywallView: View {
                 Text(ConversionCopy.billedAmount(priceLabel: selected.priceLabel))
                     .font(Theme.figure(22, weight: .bold))
                     .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
                     .accessibilityIdentifier("paywall.billedAmount")
                 Text(selected.planKind == .lifetime
                      ? "One payment · Never renews"
@@ -207,6 +208,7 @@ struct PaywallView: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             if let error = store.errorMessage {
                 Text(error).font(.caption).foregroundStyle(Theme.overdue).multilineTextAlignment(.center)
             }
@@ -245,10 +247,16 @@ struct PaywallView: View {
                     .frame(minHeight: 44)
             }
             .disabled(restoring || store.isLoading)
-            HStack(spacing: Theme.sm) {
-                Link("Terms of Use", destination: AppLinks.standardEULA)
-                Text("·").accessibilityHidden(true)
-                Link("Privacy Policy", destination: AppLinks.privacyPolicy)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Theme.sm) {
+                    Link("Terms of Use", destination: AppLinks.standardEULA)
+                    Text("·").accessibilityHidden(true)
+                    Link("Privacy Policy", destination: AppLinks.privacyPolicy)
+                }
+                VStack(spacing: Theme.sm) {
+                    Link("Terms of Use", destination: AppLinks.standardEULA)
+                    Link("Privacy Policy", destination: AppLinks.privacyPolicy)
+                }
             }
             .font(.caption.weight(.semibold))
             .foregroundStyle(Theme.secondaryInk)
@@ -315,6 +323,7 @@ private struct PlanCard: View {
     let perMonth: String?
     let savings: Int?
     let tap: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: tap) {
@@ -324,20 +333,22 @@ private struct PlanCard: View {
                     if isSelected { Circle().fill(Theme.ink).frame(width: 12, height: 12) }
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: Theme.xs) {
-                        Text(package.planName).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-                        if let savings {
-                            badge("SAVE \(savings)%")
-                        } else if package.planKind == .lifetime {
-                            badge("PAY ONCE")
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: Theme.xs) { nameAndBadge }
+                        VStack(alignment: .leading, spacing: 2) { nameAndBadge }
+                    }
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Text(package.priceLabel).font(Theme.figure(15)).foregroundStyle(Theme.ink)
                     }
                     if let secondary {
                         Text(secondary).font(.caption).foregroundStyle(Theme.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Spacer(minLength: Theme.xs)
-                Text(package.priceLabel).font(Theme.figure(15)).foregroundStyle(Theme.ink)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text(package.priceLabel).font(Theme.figure(15)).foregroundStyle(Theme.ink)
+                }
             }
             .padding(.horizontal, Theme.md)
             .padding(.vertical, Theme.sm)
@@ -348,6 +359,15 @@ private struct PlanCard: View {
         .buttonStyle(PressableStyle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    }
+
+    @ViewBuilder private var nameAndBadge: some View {
+        Text(package.planName).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+        if let savings {
+            badge("SAVE \(savings)%")
+        } else if package.planKind == .lifetime {
+            badge("PAY ONCE")
+        }
     }
 
     private var secondary: String? {

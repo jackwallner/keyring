@@ -193,6 +193,16 @@ enum MeterUnit: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
+    /// Choices for "How much is it used?", in this unit a year.
+    var yearlyUseChoices: [Double] {
+        switch self {
+        case .miles: [3_000, 7_500, 12_000, 18_000]
+        case .kilometers: [5_000, 12_000, 20_000, 30_000]
+        case .hours: [25, 50, 100, 200]
+        case .none: []
+        }
+    }
+
     var meterName: String {
         switch self {
         case .miles, .kilometers: "Odometer"

@@ -36,6 +36,8 @@ struct LogServiceView: View {
     @State private var loaded = false
     @State private var confirmingJump = false
     @State private var showingScheduled = false
+    @State private var addingAnother = false
+    @State private var savedInRow = 0
 
     private var dues: [TaskDue] { garage.dues(for: vehicle) }
 
@@ -60,6 +62,17 @@ struct LogServiceView: View {
                     TextField(draft.kind == .repair ? "What went wrong, what the shop found, warranty" : "Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
                         .lineLimit(2...6)
                 }
+                if editing == nil, draft.kind != .recall {
+                    Section {
+                        Button("Save and add another") { attemptSave(another: true) }
+                            .disabled(!canSave)
+                            .accessibilityIdentifier("log.saveAnother")
+                    } footer: {
+                        Text(savedInRow > 0
+                             ? "Saved \(savedInRow == 1 ? "one entry" : "\(savedInRow) entries"). The date stays put for the next old receipt."
+                             : "For catching up on old receipts. The date stays put for the next one.")
+                    }
+                }
             }
             .paperBackground()
             .navigationTitle(navigationTitle)
@@ -67,13 +80,7 @@ struct LogServiceView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        if let reading, editing == nil, garage.isSuspiciousJump(reading, for: vehicle) {
-                            confirmingJump = true
-                        } else {
-                            save()
-                        }
-                    }
+                    Button("Save") { attemptSave(another: false) }
                         .fontWeight(.semibold)
                         .disabled(!canSave)
                         .accessibilityIdentifier("log.save")
@@ -81,7 +88,7 @@ struct LogServiceView: View {
             }
             .onAppear(perform: load)
             .confirmationDialog("Save at \(Format.reading(reading ?? 0, vehicle.meter))?", isPresented: $confirmingJump, titleVisibility: .visible) {
-                Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))", action: save)
+                Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))") { save() }
                 Button("Fix it", role: .cancel) {}
             } message: {
                 Text("That's \(Format.reading((reading ?? 0) - vehicle.reading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
@@ -263,21 +270,31 @@ struct LogServiceView: View {
     }
 
     private var whenSection: some View {
-        Section("When") {
+        Section {
             DatePicker("Date", selection: $draft.date, in: ...Date.now.addingTimeInterval(86_400), displayedComponents: .date)
             if vehicle.meter.hasReading {
                 LabeledContent(vehicle.meter.meterName) {
-                    NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                    NumberField(title: "Optional", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
                         .multilineTextAlignment(.trailing)
                 }
             }
             if vehicle.hasAuxMeter {
                 LabeledContent("\(vehicle.auxMeterName ?? "Second meter") hours") {
-                    NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxReading, suffix: "hrs", allowsDecimal: true)
+                    NumberField(title: "Optional", value: $auxReading, suffix: "hrs", allowsDecimal: true)
                         .multilineTextAlignment(.trailing)
                 }
             }
+        } header: {
+            Text("When")
+        } footer: {
+            if let last = lastReadingText { Text(last) }
         }
+    }
+
+    private var lastReadingText: String? {
+        guard vehicle.meter.hasReading, vehicle.reading > 0 else { return nil }
+        let when = vehicle.readingDate.map { " on \(Format.shortDate($0))" } ?? ""
+        return "Last reading \(Format.reading(vehicle.reading, vehicle.meter))\(when)."
     }
 
     private var whoSection: some View {
@@ -461,6 +478,15 @@ struct LogServiceView: View {
         Haptics.success()
     }
 
+    private func attemptSave(another: Bool) {
+        addingAnother = another
+        if let reading, editing == nil, garage.isSuspiciousJump(reading, for: vehicle) {
+            confirmingJump = true
+        } else {
+            save()
+        }
+    }
+
     private func save() {
         if draft.kind == .service, draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
         draft.reading = reading
@@ -469,7 +495,13 @@ struct LogServiceView: View {
         draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }
         garage.log(draft, for: vehicle, editing: editing)
         Haptics.success()
-        if editing == nil, ReviewPrompter.shouldAsk() {
+        if addingAnother {
+            startAnother()
+            return
+        }
+        // Catching up on an old receipt isn't a moment to ask for a rating.
+        let recent = abs(draft.date.timeIntervalSinceNow) < 30 * 86_400
+        if editing == nil, recent, savedInRow == 0, ReviewPrompter.shouldAsk() {
             ReviewPrompter.markAsked()
             Task {
                 try? await Task.sleep(for: .seconds(0.8))
@@ -477,5 +509,21 @@ struct LogServiceView: View {
             }
         }
         dismiss()
+    }
+
+    /// A clean form for the next entry, keeping the kind and date.
+    private func startAnother() {
+        var next = GarageStore.ServiceDraft()
+        next.kind = draft.kind
+        next.date = draft.date
+        draft = next
+        reading = nil
+        auxReading = nil
+        cost = nil
+        selected = []
+        customJobs = []
+        receiptNote = nil
+        addingAnother = false
+        savedInRow += 1
     }
 }

@@ -24,6 +24,8 @@ struct VehicleDetailView: View {
     @State private var confirmingRetire = false
     @State private var routed = false
     @State private var importing = false
+    @State private var storing = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -31,7 +33,7 @@ struct VehicleDetailView: View {
             VStack(alignment: .leading, spacing: Theme.lg) {
                 hero
                 actions
-                if vehicle.isRetired { retiredNote }
+                if vehicle.isRetired { retiredNote } else if vehicle.storedSince != nil { storedNote }
                 recallBanner
                 dueSection
                 exploreSection.id("explore")
@@ -59,6 +61,7 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .serviceRecord) }
         .sheet(isPresented: $showingLimitPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .sheet(isPresented: $importing) { ImportView(preselected: vehicle) }
+        .sheet(isPresented: $storing) { StorageSheet(vehicle: vehicle) }
         .task(id: vehicle.objectID) {
             if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
                 routed = true
@@ -106,7 +109,10 @@ struct VehicleDetailView: View {
     }
 
     private var actions: some View {
-        HStack(spacing: Theme.sm) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: Theme.sm))
+            : AnyLayout(HStackLayout(spacing: Theme.sm))
+        return layout {
             Button {
                 Haptics.tap()
                 logPreset = []
@@ -121,15 +127,16 @@ struct VehicleDetailView: View {
                     updatingReading = true
                 } label: {
                     VStack(spacing: 0) {
-                        Text(Format.reading(vehicle.reading, vehicle.meter))
+                        Text(vehicle.reading > 0 ? Format.reading(vehicle.reading, vehicle.meter) : "\(vehicle.meter.meterName) not set")
                             .font(Theme.figure(16))
-                        Text("Update")
+                            .multilineTextAlignment(.center)
+                        Text(vehicle.reading > 0 ? "Update" : "Add")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(Theme.secondaryInk)
                     }
                 }
                 .buttonStyle(SecondaryButtonStyle())
-                .accessibilityLabel("\(vehicle.meter.meterName) \(Format.reading(vehicle.reading, vehicle.meter)). Update")
+                .accessibilityLabel(vehicle.reading > 0 ? "\(vehicle.meter.meterName) \(Format.reading(vehicle.reading, vehicle.meter)). Update" : "\(vehicle.meter.meterName) not set. Add")
             }
         }
     }
@@ -146,6 +153,30 @@ struct VehicleDetailView: View {
             }
         }
         .card()
+    }
+
+    private var storedNote: some View {
+        VStack(alignment: .leading, spacing: Theme.sm) {
+            Label {
+                Text(storedText)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "moon.zzz.fill").foregroundStyle(Theme.brass)
+            }
+            Button("Back on the road") { storing = true }
+                .font(.subheadline.weight(.semibold))
+                .accessibilityIdentifier("vehicle.unstore")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+
+    private var storedText: String {
+        let since = vehicle.storedSince.map { " since \(Format.shortDate($0))" } ?? ""
+        let until = vehicle.storedUntil.map { "You'll get a nudge \(Format.shortDate($0))." } ?? "Its reminders are paused."
+        return "In storage\(since). \(until)"
     }
 
     // MARK: - Recalls
@@ -243,17 +274,18 @@ struct VehicleDetailView: View {
     private var exploreSection: some View {
         VStack(alignment: .leading, spacing: Theme.sm) {
             SectionHeader(title: "Explore")
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: Theme.sm), GridItem(.flexible(), spacing: Theme.sm)], spacing: Theme.sm) {
+            LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize
+                      ? [GridItem(.flexible())]
+                      : [GridItem(.flexible(), spacing: Theme.sm), GridItem(.flexible(), spacing: Theme.sm)], spacing: Theme.sm) {
                 tile("What it's worth", detail: valueDetail, symbol: "dollarsign.circle.fill") { ValueView(vehicle: vehicle) }
                 tile("Parts and tools", detail: "For what's due next", symbol: "wrench.and.screwdriver.fill") { GearView(vehicle: vehicle) }
                 tile("Upgrades", detail: "Popular add-ons", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
                 tile("Clubs", detail: "Owners like you", symbol: "person.3.fill") { ClubsView(vehicle: vehicle) }
                 tile("Photos", detail: "Others like it", symbol: "photo.on.rectangle.angled") { GalleryView(vehicle: vehicle) }
                 if vehicle.kind.hasNHTSARecords {
-                    tile("Recalls", detail: recallDetail, symbol: "exclamationmark.shield.fill") { RecallsView(vehicle: vehicle, recalls: recalls) }
-                } else {
-                    tile("Insights", detail: "Where the money goes", symbol: "chart.bar.fill") { InsightsView(vehicles: [vehicle]) }
+                    tile(RecallRegion.isUS ? "Recalls" : "US recalls", detail: recallDetail, symbol: "exclamationmark.shield.fill") { RecallsView(vehicle: vehicle, recalls: recalls) }
                 }
+                tile("Insights", detail: "Where the money goes", symbol: "chart.bar.fill") { InsightsView(vehicles: [vehicle]) }
             }
         }
     }
@@ -262,7 +294,9 @@ struct VehicleDetailView: View {
         if let latest = (vehicle.valuations ?? []).max(by: { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }) {
             return "Last noted \(Format.money(latest.amount))"
         }
-        return vehicle.kind == .car || vehicle.kind == .truck || vehicle.kind == .suv || vehicle.kind == .van ? "Kelley Blue Book and more" : "Price guides"
+        let isRoad = [.car, .truck, .suv, .van].contains(vehicle.kind)
+        if isRoad, let first = ValueSource.sources(for: vehicle).first { return "\(first.name) and more" }
+        return "Price guides"
     }
 
     private var recallDetail: String {
@@ -285,7 +319,7 @@ struct VehicleDetailView: View {
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
             }
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
             .card(padding: Theme.sm)
@@ -446,6 +480,17 @@ struct VehicleDetailView: View {
             }
             .card(padding: Theme.md)
 
+            if !vehicle.isRetired, vehicle.storedSince == nil {
+                Button {
+                    storing = true
+                } label: {
+                    Label("Put in storage", systemImage: "moon.zzz")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .font(.subheadline)
+                .accessibilityIdentifier("vehicle.store")
+            }
             if garage.isShared(vehicle) {
                 Text("Shared with you. Only the owner can retire or delete it.")
                     .font(.footnote)
@@ -482,17 +527,19 @@ struct VehicleDetailView: View {
     }
 
     private func detailRow(_ label: String, _ value: String, copyable: Bool = false) -> some View {
-        HStack {
+        let stacked = dynamicTypeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
+        return layout {
             Text(label).font(.subheadline).foregroundStyle(Theme.secondaryInk)
-                .fixedSize()
-            Spacer(minLength: Theme.sm)
+                .fixedSize(horizontal: !stacked, vertical: stacked)
+            if !stacked { Spacer(minLength: Theme.sm) }
             Text(value)
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundStyle(Theme.ink)
                 .textSelection(.enabled)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+                .multilineTextAlignment(stacked ? .leading : .trailing)
+                .lineLimit(stacked ? 4 : 1)
+                .minimumScaleFactor(stacked ? 1 : 0.6)
             if copyable {
                 Button {
                     UIPasteboard.general.string = value
@@ -511,6 +558,7 @@ struct VehicleDetailView: View {
 struct TaskRow: View {
     let due: TaskDue
     let vehicle: Vehicle
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         HStack(spacing: Theme.sm) {
@@ -520,15 +568,22 @@ struct TaskRow: View {
                 .frame(width: 32, height: 32)
                 .background(due.result.status.color.opacity(0.12), in: Circle())
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
+                let layout = dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+                layout {
                     Text(due.name)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
-                        .lineLimit(1)
-                    Spacer()
-                    Text(due.result.status == .ok ? "" : due.result.status.label)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(due.result.status.color)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: Theme.xs) }
+                    if due.result.status != .ok {
+                        Text(due.result.status.label)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(due.result.status.color)
+                            .fixedSize()
+                    }
                 }
                 Text(due.dueLine())
                     .font(.footnote)

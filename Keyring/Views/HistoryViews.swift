@@ -142,14 +142,40 @@ struct VehicleHistoryView: View {
 
     var body: some View {
         List {
-            ForEach(vehicle.sortedEntries) { entry in
-                NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false) }
-                    .listRowBackground(Theme.surface)
+            ForEach(years, id: \.year) { group in
+                Section {
+                    ForEach(group.entries) { entry in
+                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false) }
+                            .listRowBackground(Theme.surface)
+                    }
+                } header: {
+                    HStack {
+                        Text(group.year == 0 ? "Undated" : String(group.year))
+                        Spacer()
+                        if group.total > 0, !AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) {
+                            Text(Format.money(group.total)).monospacedDigit()
+                        }
+                    }
+                }
             }
         }
         .paperBackground()
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var years: [(year: Int, entries: [ServiceEntry], total: Double)] {
+        var result: [(year: Int, entries: [ServiceEntry], total: Double)] = []
+        for entry in vehicle.sortedEntries {
+            let year = entry.date.map { Calendar.current.component(.year, from: $0) } ?? 0
+            if result.last?.year == year {
+                result[result.count - 1].entries.append(entry)
+                result[result.count - 1].total += entry.cost
+            } else {
+                result.append((year, [entry], entry.cost))
+            }
+        }
+        return result
     }
 }
 
@@ -167,10 +193,17 @@ struct EntryRow: View {
                     .font(Theme.figure(18))
                     .foregroundStyle(Theme.ink)
                 Text(entry.date?.formatted(.dateTime.month(.abbreviated)).uppercased() ?? "")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.secondaryInk)
+                if let date = entry.date, !Calendar.current.isDate(date, equalTo: .now, toGranularity: .year) {
+                    Text(date.formatted(.dateTime.year()))
+                        .font(.caption2)
+                        .foregroundStyle(Theme.faintInk)
+                }
             }
-            .frame(width: 38)
+            .frame(minWidth: 38)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(entry.date?.formatted(date: .long, time: .omitted) ?? "")
             VStack(alignment: .leading, spacing: 3) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(entry.title ?? "Service")

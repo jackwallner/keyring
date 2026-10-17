@@ -101,7 +101,7 @@ struct GearView: View {
         let dues = garage.dues(for: vehicle)
         let groups = dues.compactMap { due -> (TaskDue, [GearSuggestion])? in
             guard let key = due.catalogKey,
-                  let item = MaintenanceCatalog.item(key: key, kind: vehicle.kind, powertrain: vehicle.powertrain),
+                  let item = MaintenanceCatalog.item(key: key, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)),
                   !item.gear.isEmpty else { return nil }
             return (due, item.gear)
         }
@@ -147,7 +147,7 @@ struct UpgradesView: View {
     let vehicle: Vehicle
 
     var body: some View {
-        let upgrades = UpgradeCatalog.upgrades(for: vehicle.kind, powertrain: vehicle.powertrain)
+        let upgrades = UpgradeCatalog.upgrades(for: vehicle)
         List {
             ForEach(Upgrade.Category.allCases, id: \.self) { category in
                 let items = upgrades.filter { $0.category == category }
@@ -210,6 +210,22 @@ struct ClubsView: View {
 
 // MARK: - Recalls
 
+/// NHTSA covers vehicles sold in the US. Elsewhere the list is still useful
+/// for the same model, but it says whose list it is and points home.
+enum RecallRegion {
+    static var region: String? { Locale.current.region?.identifier }
+    static var isUS: Bool { region == nil || region == "US" || region == "PR" }
+
+    static var localLookup: (title: String, url: URL)? {
+        switch region {
+        case "CA": ("Transport Canada recalls", URL(string: "https://tc.canada.ca/en/road-transportation/defects-recalls-vehicles-tires-child-car-seats")!)
+        case "GB": ("DVSA vehicle recalls", URL(string: "https://www.check-vehicle-recalls.service.gov.uk")!)
+        case "AU": ("Australian recalls", URL(string: "https://www.productsafety.gov.au/recalls")!)
+        default: nil
+        }
+    }
+}
+
 struct RecallsView: View {
     @EnvironmentObject private var garage: GarageStore
     @ObservedObject var vehicle: Vehicle
@@ -258,12 +274,19 @@ struct RecallsView: View {
                 } header: {
                     Text(Format.count(recalls.count, "recall", "recalls") + " for this model")
                 } footer: {
-                    Text("From NHTSA. Recall repairs are free at a dealer. Logging the fix adds it to the history, so everyone in the garage and any buyer sees it was done.")
+                    Text(RecallRegion.isUS
+                         ? "From NHTSA. Recall repairs are free at a dealer. Logging the fix adds it to the history, so everyone in the garage and any buyer sees it was done."
+                         : "From NHTSA, the US safety agency. Models sold elsewhere often share these recalls, but check your own country's list too. Logging a fix adds it to the history.")
+                }
+            }
+            if !RecallRegion.isUS, let local = RecallRegion.localLookup {
+                Section {
+                    LinkRow(title: local.title, detail: "Your country's official list", symbol: "globe", url: local.url)
                 }
             }
         }
         .paperBackground()
-        .navigationTitle("Safety recalls")
+        .navigationTitle(RecallRegion.isUS ? "Safety recalls" : "US safety recalls")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task {

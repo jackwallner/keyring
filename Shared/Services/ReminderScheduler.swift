@@ -59,11 +59,21 @@ final class ReminderScheduler {
         dues: [(vehicle: String, vehicleID: String, due: TaskDue)],
         now: Date,
         hour: Int,
+        returns: [(vehicle: String, vehicleID: String, date: Date)] = [],
         calendar: Calendar = .current
     ) -> [Planned] {
         var planned: [Planned] = []
         func atHour(_ date: Date) -> Date {
             calendar.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
+        }
+        for (vehicle, vehicleID, date) in returns where atHour(date) > now {
+            planned.append(Planned(
+                id: "storage-\(vehicleID)",
+                title: "\(vehicle) comes out of storage",
+                body: "Tap to update the meter and see what's due before its first trip.",
+                fireDate: atHour(date),
+                vehicleID: vehicleID
+            ))
         }
         for (vehicle, vehicleID, due) in dues {
             guard due.result.status != .noRecord, due.result.status != .overdue,
@@ -114,12 +124,16 @@ final class ReminderScheduler {
 
     func schedule(for store: GarageStore) {
         let muted = mutedVehicleIDs
-        let dues = store.vehicles
-            .filter { !muted.contains($0.id?.uuidString ?? "") }
+        let listening = store.vehicles.filter { !muted.contains($0.id?.uuidString ?? "") }
+        let dues = listening
+            .filter { $0.storedSince == nil }
             .flatMap { vehicle in
                 store.dues(for: vehicle).map { (vehicle: vehicle.displayName, vehicleID: vehicle.id?.uuidString ?? "", due: $0) }
             }
-        let plan = Self.plan(dues: dues, now: .now, hour: reminderHour)
+        let returns = listening.compactMap { vehicle in
+            vehicle.storedUntil.map { (vehicle: vehicle.displayName, vehicleID: vehicle.id?.uuidString ?? "", date: $0) }
+        }
+        let plan = Self.plan(dues: dues, now: .now, hour: reminderHour, returns: returns)
         pending?.cancel()
         pending = Task { [center] in
             let status = await center.notificationSettings().authorizationStatus

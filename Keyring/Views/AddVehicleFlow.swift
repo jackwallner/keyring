@@ -13,6 +13,8 @@ struct AddVehicleFlow: View {
 
     @State private var draft = NewVehicle()
     @State private var step: Step = .kind
+    /// Where it goes when this person also belongs to someone else's garage.
+    @State private var destination: Garage?
 
     enum Step { case kind, details, history }
 
@@ -25,12 +27,12 @@ struct AddVehicleFlow: View {
                         draft.kind = kind
                         draft.powertrain = kind.defaultPowertrain
                         draft.meter = Locale.current.measurementSystem == .metric && kind.defaultMeter == .miles ? .kilometers : kind.defaultMeter
-                        draft.tint = .defaultTint(for: kind)
+                        draft.tint = freshTint(for: kind)
                         withAnimation(.snappy) { step = .details }
                     }
                 case .details:
-                    VehicleDetailsForm(draft: $draft) {
-                        withAnimation(.snappy) { step = coreItems.isEmpty ? .history : .history }
+                    VehicleDetailsForm(draft: $draft, destination: $destination, destinations: destinations) {
+                        withAnimation(.snappy) { step = .history }
                     }
                 case .history:
                     LastDoneStep(draft: $draft, items: coreItems, finish: finish)
@@ -54,11 +56,26 @@ struct AddVehicleFlow: View {
     }
 
     private var coreItems: [CatalogItem] {
-        MaintenanceCatalog.items(for: draft.kind, powertrain: draft.powertrain).filter(\.isCore).prefix(4).map { $0 }
+        MaintenanceCatalog.items(for: draft.kind, powertrain: draft.powertrain, year: draft.year).filter(\.isCore).prefix(4).map { $0 }
+    }
+
+    private var destinations: [Garage] {
+        let joined = garage.joinedGarages
+        guard !joined.isEmpty else { return [] }
+        return [garage.ownGarage].compactMap { $0 } + joined
+    }
+
+    /// The kind's own color unless another vehicle already wears it, so two
+    /// cars don't end up the same navy tag.
+    private func freshTint(for kind: VehicleKind) -> VehicleTint {
+        let used = Set(garage.vehicles.map(\.tint))
+        let preferred = VehicleTint.defaultTint(for: kind)
+        guard used.contains(preferred) else { return preferred }
+        return VehicleTint.allCases.first { !used.contains($0) && $0 != .cream && $0 != .silver } ?? preferred
     }
 
     private func finish() {
-        let vehicle = garage.addVehicle(draft)
+        let vehicle = garage.addVehicle(draft, to: destination)
         AppGroup.defaults.set(true, forKey: AppGroup.Key.hasCompletedSetup)
         Haptics.success()
         // Reminders are the point of a schedule, so ask right after the first
@@ -85,6 +102,13 @@ struct AddVehicleFlow: View {
 /// Nineteen kinds, read as four groups.
 struct KindPicker: View {
     let pick: (VehicleKind) -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var columns: [GridItem] {
+        dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.flexible())]
+            : [GridItem(.adaptive(minimum: 100), spacing: Theme.xs)]
+    }
 
     var body: some View {
         ScrollView {
@@ -96,13 +120,16 @@ struct KindPicker: View {
                 ForEach(VehicleKind.pickerSections, id: \.title) { section in
                     VStack(alignment: .leading, spacing: Theme.sm) {
                         Eyebrow(text: section.title)
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: Theme.xs)], spacing: Theme.xs) {
+                        LazyVGrid(columns: columns, spacing: Theme.xs) {
                             ForEach(section.kinds) { kind in
                                 Button {
                                     Haptics.selected()
                                     pick(kind)
                                 } label: {
-                                    VStack(spacing: Theme.xs) {
+                                    let layout = dynamicTypeSize.isAccessibilitySize
+                                        ? AnyLayout(HStackLayout(spacing: Theme.sm))
+                                        : AnyLayout(VStackLayout(spacing: Theme.xs))
+                                    layout {
                                         Image(systemName: kind.symbol)
                                             .font(.system(size: 26))
                                             .foregroundStyle(VehicleTint.defaultTint(for: kind).isLight ? Theme.brass : VehicleTint.defaultTint(for: kind).color)
@@ -110,9 +137,13 @@ struct KindPicker: View {
                                         Text(kind.title)
                                             .font(.footnote.weight(.semibold))
                                             .foregroundStyle(Theme.ink)
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.8)
+                                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
+                                            .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.8)
+                                            .multilineTextAlignment(.leading)
+                                        if dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
                                     }
+                                    .padding(.horizontal, dynamicTypeSize.isAccessibilitySize ? Theme.md : 0)
+                                    .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? Theme.sm : 0)
                                     .frame(maxWidth: .infinity, minHeight: 84)
                                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
@@ -137,8 +168,19 @@ struct VehicleDetailsForm: View {
     @Binding var draft: NewVehicle
     var buttonTitle = "Continue"
     var title: String?
+    /// Someone else's vehicle: its meter is theirs to change.
+    var meterLocked = false
+    /// A new vehicle guesses its powertrain from the make and model until the
+    /// person picks one; an edit never second-guesses what's saved.
+    var infersPowertrain = true
+    var destination: Binding<Garage?>?
+    var destinations: [Garage] = []
     let next: () -> Void
 
+    @State private var powertrainPicked = false
+    @FocusState private var focus: Field?
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var lookingUp = false
     @State private var lookupMessage: String?
     @State private var decoded: DecodedVIN?
@@ -150,8 +192,24 @@ struct VehicleDetailsForm: View {
 
     var body: some View {
         Form {
+            if let destination, destinations.count > 1 {
+                Section {
+                    Picker("Add to", selection: Binding(
+                        get: { destination.wrappedValue ?? destinations.first },
+                        set: { destination.wrappedValue = $0 }
+                    )) {
+                        ForEach(destinations, id: \.objectID) { option in
+                            Text(option.displayName).tag(Optional(option))
+                        }
+                    }
+                } footer: {
+                    Text("Vehicles in a shared garage show up for everyone in it.")
+                }
+            }
             Section {
-                HStack(spacing: Theme.sm) {
+                let stacked = dynamicTypeSize.isAccessibilitySize
+                let header = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.sm)) : AnyLayout(HStackLayout(spacing: Theme.sm))
+                header {
                     ZStack {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill((draft.tint ?? .defaultTint(for: draft.kind)).color)
                         if let data = draft.photo, let image = UIImage(data: data) {
@@ -163,12 +221,15 @@ struct VehicleDetailsForm: View {
                     }
                     .frame(width: 72, height: 72)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(draft.kind.title).font(Theme.title(22))
+                        // The nav bar already names the kind; at large sizes
+                        // the second copy only crowds the photo button.
+                        if !stacked { Text(draft.kind.title).font(Theme.title(22)) }
                         PhotosPicker(selection: $photoItem, matching: .images) {
                             Text(draft.photo == nil ? "Add a photo" : "Change photo").font(.subheadline.weight(.semibold))
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
             }
@@ -197,7 +258,9 @@ struct VehicleDetailsForm: View {
                         .disabled(lookingUp)
                     }
                 } footer: {
-                    if let lookupMessage { Text(lookupMessage) } else {
+                    if let lookupMessage { Text(lookupMessage) } else if shortVIN {
+                        Text("VINs before 1981 are shorter and can't be looked up, so fill in the details below. It's saved as typed.")
+                    } else {
                         Text("On the driver's side of the windshield or the door jamb. Keyring fills in the year, make, model and engine from NHTSA.")
                     }
                 }
@@ -208,8 +271,7 @@ struct VehicleDetailsForm: View {
                     NumberField(title: "Year", value: $yearValue, grouping: false)
                         .multilineTextAlignment(.trailing)
                 }
-                TextField("Make", text: $draft.make)
-                    .textInputAutocapitalization(.words)
+                textRow("Make", prompt: Makes.common(for: draft.kind).first ?? "Make", text: $draft.make, field: .make)
                 if draft.make.isEmpty, !Makes.common(for: draft.kind).isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
@@ -227,40 +289,45 @@ struct VehicleDetailsForm: View {
                         }
                     }
                 }
-                TextField("Model", text: $draft.model)
-                    .textInputAutocapitalization(.words)
-                let matches = modelSuggestions.filter { !draft.model.isEmpty && $0.lowercased().hasPrefix(draft.model.lowercased()) && $0.lowercased() != draft.model.lowercased() }
-                if !matches.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(matches.prefix(8), id: \.self) { model in
-                                Button(model) { draft.model = model }
-                                    .font(.footnote.weight(.semibold))
-                                    .padding(.horizontal, 10).padding(.vertical, 6)
-                                    .background(Theme.raised, in: Capsule())
-                                    .foregroundStyle(Theme.ink)
-                                    .buttonStyle(.plain)
-                            }
-                        }
-                    }
+                textRow("Model", prompt: "Model", text: $draft.model, field: .model)
+                if !modelMatches.isEmpty, focus != .model {
+                    modelChips
                 }
-                TextField("Trim (optional)", text: $draft.trim)
-                TextField("Nickname (optional)", text: $draft.nickname)
+                textRow("Trim", prompt: "Optional", text: $draft.trim, field: .trim)
+                textRow("Nickname", prompt: "Optional", text: $draft.nickname, field: .nickname)
+            }
+            .toolbar {
+                if focus == .model, !modelMatches.isEmpty {
+                    ToolbarItem(placement: .keyboard) { modelChips }
+                }
             }
 
             Section {
                 if draft.kind.powertrainChoices.count > 1 {
-                    Picker("Powertrain", selection: $draft.powertrain) {
+                    Picker("Powertrain", selection: Binding(
+                        get: { draft.powertrain },
+                        set: { draft.powertrain = $0; powertrainPicked = true }
+                    )) {
                         ForEach(draft.kind.powertrainChoices) { Text($0.title).tag($0) }
                     }
                 }
                 Picker("Meter", selection: $draft.meter) {
                     ForEach(MeterUnit.allCases) { Text($0.title).tag($0) }
                 }
+                .disabled(meterLocked)
                 if draft.meter.hasReading {
                     LabeledContent("Current \(draft.meter.meterName.lowercased())") {
                         NumberField(title: "0", value: $reading, suffix: draft.meter.short, allowsDecimal: draft.meter == .hours)
                             .multilineTextAlignment(.trailing)
+                    }
+                    Picker(draft.meter == .hours ? "Hours a year" : "Usual use", selection: $draft.yearlyUse) {
+                        Text("Not sure").tag(0.0)
+                        ForEach(draft.meter.yearlyUseChoices, id: \.self) { value in
+                            Text(yearlyUseLabel(value)).tag(value)
+                        }
+                        if draft.yearlyUse > 0, !draft.meter.yearlyUseChoices.contains(draft.yearlyUse) {
+                            Text(yearlyUseLabel(draft.yearlyUse)).tag(draft.yearlyUse)
+                        }
                     }
                 }
                 if draft.kind.offersAuxMeter {
@@ -336,6 +403,7 @@ struct VehicleDetailsForm: View {
             yearValue = draft.year > 0 ? Double(draft.year) : nil
             reading = draft.reading > 0 ? draft.reading : nil
         }
+        .onChange(of: "\(draft.make)|\(draft.model)|\(draft.trim)") { _, _ in inferPowertrain() }
         .onChange(of: yearValue) { _, _ in commitNumbers() }
         .onChange(of: reading) { _, _ in commitNumbers() }
         .onChange(of: draft.meter) { old, new in
@@ -345,6 +413,9 @@ struct VehicleDetailsForm: View {
             } else {
                 reading = nil
             }
+            draft.yearlyUse = old.convert(draft.yearlyUse, to: new).flatMap { converted in
+                new.yearlyUseChoices.min { abs($0 - converted) < abs($1 - converted) }
+            } ?? 0
         }
         .task(id: "\(draft.make)|\(draft.year)") {
             guard draft.kind.hasNHTSARecords, draft.make.count >= 2 else { modelSuggestions = []; return }
@@ -367,8 +438,76 @@ struct VehicleDetailsForm: View {
         }
     }
 
+    enum Field: Hashable { case make, model, trim, nickname }
+
+    /// A label that stays put once the field is filled, and Next on the
+    /// keyboard to the following one.
+    private func textRow(_ label: String, prompt: String, text: Binding<String>, field: Field) -> some View {
+        LabeledContent(label) {
+            TextField(label, text: text, prompt: Text(prompt))
+                .multilineTextAlignment(dynamicTypeSize.isAccessibilitySize ? .leading : .trailing)
+                .textInputAutocapitalization(.words)
+                .focused($focus, equals: field)
+                .submitLabel(field == .nickname ? .done : .next)
+                .onSubmit {
+                    switch field {
+                    case .make: focus = .model
+                    case .model: focus = .trim
+                    case .trim: focus = .nickname
+                    case .nickname: focus = nil
+                    }
+                }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { focus = field }
+    }
+
+    private var modelMatches: [String] {
+        modelSuggestions.filter { !draft.model.isEmpty && $0.lowercased().hasPrefix(draft.model.lowercased()) && $0.lowercased() != draft.model.lowercased() }
+    }
+
+    private var modelChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach(modelMatches.prefix(8), id: \.self) { model in
+                    Button(model) {
+                        draft.model = model
+                        Haptics.selected()
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(Theme.raised, in: Capsule())
+                    .foregroundStyle(Theme.ink)
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var shortVIN: Bool {
+        let cleaned = draft.vin.filter { $0.isLetter || $0.isNumber }
+        return cleaned.count >= 5 && cleaned.count < 17
+    }
+
+    private func yearlyUseLabel(_ value: Double) -> String {
+        let choices = draft.meter.yearlyUseChoices
+        let figure = Format.reading(value, draft.meter)
+        if value == choices.first { return "Under \(figure) a year" }
+        if value == choices.last { return "\(figure) or more" }
+        return "About \(figure) a year"
+    }
+
+    private func inferPowertrain() {
+        guard infersPowertrain, !powertrainPicked,
+              let guess = Makes.inferredPowertrain(make: draft.make, model: draft.model, trim: draft.trim),
+              draft.kind.powertrainChoices.contains(guess) else { return }
+        draft.powertrain = guess
+    }
+
     private var meterFooter: String {
         var text = draft.meter == .hours ? "Engine hours drive the schedule for boats, planes and equipment." : "The schedule picks jobs for this powertrain. You can change any of it later."
+        if draft.meter.hasReading { text += " \(draft.meter == .hours ? "Hours a year" : "Usual use") sets due dates until a couple of readings show the real pace." }
+        if meterLocked { text = "Only the person who shared this vehicle can change its meter. " + text }
         if draft.kind.offersAuxMeter {
             text += " A second hour meter tracks a generator or second engine on its own schedule."
         }
@@ -394,7 +533,7 @@ struct VehicleDetailsForm: View {
             if !result.make.isEmpty { draft.make = result.make }
             if !result.model.isEmpty { draft.model = result.model }
             if !result.trim.isEmpty { draft.trim = result.trim }
-            if let powertrain = result.powertrain, draft.kind.powertrainChoices.contains(powertrain) { draft.powertrain = powertrain }
+            if let powertrain = result.powertrain, draft.kind.powertrainChoices.contains(powertrain) { draft.powertrain = powertrain; powertrainPicked = true }
             lookupMessage = ["Found it: \(result.year.map(String.init) ?? "") \(result.make) \(result.model)".trimmed, result.summary].filter { !$0.isEmpty }.joined(separator: ". ")
             Haptics.success()
         } catch let error as NHTSAClient.LookupError {
@@ -434,6 +573,7 @@ struct LastDoneStep: View {
     }
 
     @State private var answers: [String: Answer] = [:]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private func answerChips(for item: CatalogItem, in options: [Answer] = Answer.allCases) -> some View {
         ForEach(options) { answer in
@@ -444,8 +584,7 @@ struct LastDoneStep: View {
             } label: {
                 Text(answer.title)
                     .font(.footnote.weight(.semibold))
-                    .lineLimit(1)
-                    .fixedSize()
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 36)
                     .padding(.horizontal, Theme.xs)
                     .foregroundStyle(chosen ? Theme.onAction : Theme.ink)
@@ -477,12 +616,18 @@ struct LastDoneStep: View {
                         Text(Format.interval(distance: item.distanceInterval(for: draft.meter) ?? 0, months: item.months ?? 0, meter: draft.meter))
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
-                        // Chips wrap to two rows instead of truncating at large text.
-                        ViewThatFits(in: .horizontal) {
-                            HStack(spacing: Theme.xs) { answerChips(for: item) }
-                            Grid(horizontalSpacing: Theme.xs, verticalSpacing: Theme.xs) {
-                                GridRow { answerChips(for: item, in: [.recently, .months]) }
-                                GridRow { answerChips(for: item, in: [.year, .unsure]) }
+                        // One row, then two, then one chip per line at the
+                        // largest text sizes, so nothing is ever cut off.
+                        if dynamicTypeSize.isAccessibilitySize {
+                            VStack(spacing: Theme.xs) { answerChips(for: item) }
+                        } else {
+                            ViewThatFits(in: .horizontal) {
+                                HStack(spacing: Theme.xs) { answerChips(for: item) }
+                                Grid(horizontalSpacing: Theme.xs, verticalSpacing: Theme.xs) {
+                                    GridRow { answerChips(for: item, in: [.recently, .months]) }
+                                    GridRow { answerChips(for: item, in: [.year, .unsure]) }
+                                }
+                                VStack(spacing: Theme.xs) { answerChips(for: item) }
                             }
                         }
                     }
@@ -527,21 +672,56 @@ struct EditVehicleView: View {
             kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
             year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
             nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
-            reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", photo: vehicle.photo, tint: vehicle.tint
+            reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", yearlyUse: vehicle.yearlyUse,
+            photo: vehicle.photo, tint: vehicle.tint
         ))
     }
 
+    @State private var confirmingMeter = false
+
     var body: some View {
         NavigationStack {
-            VehicleDetailsForm(draft: $draft, buttonTitle: "Save", title: "Edit \(vehicle.displayName)", next: save)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            VehicleDetailsForm(
+                draft: $draft, buttonTitle: "Save", title: "Edit \(vehicle.displayName)",
+                meterLocked: garage.isShared(vehicle), infersPowertrain: false, next: attemptSave
+            )
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .confirmationDialog(meterWarningTitle, isPresented: $confirmingMeter, titleVisibility: .visible) {
+                Button("Switch to \(draft.meter.title.lowercased())", role: .destructive, action: save)
+                Button("Keep \(vehicle.meter.title.lowercased())", role: .cancel) { draft.meter = vehicle.meter }
+            } message: {
+                Text(meterWarning)
+            }
         }
+    }
+
+    /// Miles and kilometers convert cleanly; a switch to or from hours drops
+    /// every saved reading, so it asks first.
+    private var meterSwitchLosesReadings: Bool {
+        draft.meter != vehicle.meter
+            && vehicle.meter.convert(1, to: draft.meter) == nil
+            && (!vehicle.mainReadings.isEmpty || (vehicle.entries ?? []).contains(where: \.hasReading))
+    }
+
+    private var meterWarningTitle: String { "Switch \(vehicle.displayName) to \(draft.meter.title.lowercased())?" }
+
+    private var meterWarning: String {
+        let readings = vehicle.mainReadings.count
+        let entries = (vehicle.entries ?? []).filter(\.hasReading).count
+        var parts: [String] = []
+        if readings > 0 { parts.append(readings == 1 ? "1 saved reading" : "\(readings) saved readings") }
+        if entries > 0 { parts.append(entries == 1 ? "the \(vehicle.meter.meterName.lowercased()) on 1 entry" : "the \(vehicle.meter.meterName.lowercased()) on \(entries) entries") }
+        return "\(vehicle.meter.title) can't convert to \(draft.meter.title.lowercased()), so \(parts.joined(separator: " and ")) will be cleared. Dates, costs and notes stay."
+    }
+
+    private func attemptSave() {
+        if meterSwitchLosesReadings { confirmingMeter = true } else { save() }
     }
 
     private func save() {
         let powertrainChanged = vehicle.powertrain != draft.powertrain
         let readingTyped = draft.reading != vehicle.reading
-        garage.changeMeter(vehicle, to: draft.meter)
+        if !garage.isShared(vehicle) { garage.changeMeter(vehicle, to: draft.meter) }
         vehicle.powertrain = draft.powertrain
         vehicle.year = Int16(clamping: draft.year)
         vehicle.make = draft.make.trimmed.nilIfEmpty
@@ -552,6 +732,7 @@ struct EditVehicleView: View {
         vehicle.plate = draft.plate.trimmed.uppercased().nilIfEmpty
         vehicle.photo = draft.photo
         vehicle.tint = draft.tint ?? vehicle.tint
+        vehicle.yearlyUse = vehicle.meter.hasReading ? draft.yearlyUse : 0
         garage.saveVehicleEdits()
         let auxName = vehicle.kind.offersAuxMeter ? draft.auxMeterName.trimmed.nilIfEmpty : nil
         if auxName != vehicle.auxMeterName { garage.setAuxMeter(vehicle, name: auxName) }
@@ -561,8 +742,9 @@ struct EditVehicleView: View {
         }
         if powertrainChanged {
             // New powertrain, new core jobs; the old ones stay with their history.
-            let core = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain).filter(\.isCore)
+            let core = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)).filter(\.isCore)
             garage.addCatalogItems(core, to: vehicle)
+            garage.switchOffInapplicableTasks(on: vehicle)
         }
         dismiss()
     }

@@ -10,7 +10,7 @@ struct ScheduleView: View {
     var body: some View {
         let dues = garage.dues(for: vehicle)
         let enabledKeys = Set(vehicle.enabledTasks.compactMap(\.catalogKey))
-        let available = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain).filter { !enabledKeys.contains($0.key) }
+        let available = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)).filter { !enabledKeys.contains($0.key) }
         List {
             Section {
                 ForEach(dues) { due in
@@ -95,7 +95,7 @@ struct TaskDetailView: View {
     @State private var settingLast = false
 
     private var task: MaintenanceTask? { (vehicle.tasks ?? []).first { $0.id == taskID } }
-    private var item: CatalogItem? { task?.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain) } }
+    private var item: CatalogItem? { task?.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)) } }
     private var due: TaskDue? { garage.dues(for: vehicle).first { $0.taskID == taskID } }
 
     var body: some View {
@@ -153,7 +153,7 @@ struct TaskDetailView: View {
             Text(task.displayName)
                 .font(Theme.title(28))
                 .foregroundStyle(Theme.ink)
-            if let detail = item?.detail {
+            if let detail = item?.detail(for: vehicle.meter) {
                 Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
             }
             HStack(spacing: Theme.xs) {
@@ -189,7 +189,7 @@ struct TaskDetailView: View {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Eyebrow(text: "Next")
-                        Text(due.dueLine())
+                        Text(nextText(due))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
                             .multilineTextAlignment(.trailing)
@@ -210,6 +210,16 @@ struct TaskDetailView: View {
         let date = due.lastDate.map { hasLoggedEntry ? Format.shortDate($0) : "About " + $0.formatted(.dateTime.month(.abbreviated).year()) }
         let parts = [date, due.lastReading.map { Format.reading($0, due.meter) }].compactMap { $0 }
         return parts.isEmpty ? "Not recorded" : parts.joined(separator: " · ")
+    }
+
+    /// The exact due date when the calendar sets it (an annual signed off
+    /// March 3 shows "Mar 31"), the relative line when the pace estimates it.
+    private func nextText(_ due: TaskDue) -> String {
+        guard due.result.status != .noRecord else { return "Not set" }
+        guard due.result.status != .overdue, let date = due.result.dueDate, !due.result.dateIsEstimated else { return due.dueLine() }
+        let day = date.formatted(.dateTime.month(.abbreviated).day().year())
+        if let reading = due.result.dueReading, due.meter.hasReading { return "\(day) or \(Format.reading(reading, due.meter))" }
+        return day
     }
 
     private func gearSection(_ gear: [GearSuggestion]) -> some View {

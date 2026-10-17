@@ -170,6 +170,11 @@ struct RootView: View {
             }
         }
         .animation(.snappy, value: hasCompletedSetup)
+        // Someone who joined a garage on a fresh install never saw
+        // onboarding; leaving it later shouldn't send them there.
+        .onChange(of: garage.vehicles.isEmpty) { _, empty in
+            if !empty, !hasCompletedSetup { hasCompletedSetup = true }
+        }
     }
 }
 
