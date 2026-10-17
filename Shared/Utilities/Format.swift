@@ -18,12 +18,15 @@ enum Format {
         }
     }
 
-    /// "Every 7,500 mi or 1 year", "Every year", "As needed".
-    static func interval(distance: Double, months: Int, meter: MeterUnit) -> String {
+    /// "Every 7,500 mi or 1 year", "Every year", "As needed". A second meter's
+    /// name goes in front of its hours: "Every 150 generator hrs".
+    static func interval(distance: Double, months: Int, meter: MeterUnit, auxName: String? = nil) -> String {
         let usesDistance = distance > 0 && meter.hasReading
+        var amount = reading(distance, meter)
+        if let auxName, meter == .hours { amount = amount.replacingOccurrences(of: " hrs", with: " \(auxName.lowercased()) hrs") }
         switch (usesDistance, months > 0) {
-        case (true, true): return "Every \(reading(distance, meter)) or \(monthsText(months))"
-        case (true, false): return "Every \(reading(distance, meter))"
+        case (true, true): return "Every \(amount) or \(monthsText(months))"
+        case (true, false): return "Every \(amount)"
         case (false, true): return months == 12 ? "Every year" : months == 1 ? "Every month" : "Every \(monthsText(months))"
         case (false, false): return "As needed"
         }

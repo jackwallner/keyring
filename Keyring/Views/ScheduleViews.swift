@@ -22,7 +22,7 @@ struct ScheduleView: View {
                                 StatusDot(status: due.result.status)
                                 Text(due.name).font(.body.weight(.medium))
                             }
-                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter))
+                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter, auxName: due.usesAuxMeter ? vehicle.auxMeterName : nil))
                                 .font(.footnote)
                                 .foregroundStyle(Theme.secondaryInk)
                         }
@@ -55,7 +55,8 @@ struct ScheduleView: View {
                                     Text(Format.interval(
                                         distance: (vehicle.hasAuxMeter ? item.auxHours : nil) ?? item.distanceInterval(for: vehicle.meter) ?? 0,
                                         months: item.months ?? 0,
-                                        meter: vehicle.hasAuxMeter && item.auxHours != nil ? .hours : vehicle.meter
+                                        meter: vehicle.hasAuxMeter && item.auxHours != nil ? .hours : vehicle.meter,
+                                        auxName: vehicle.hasAuxMeter && item.auxHours != nil ? vehicle.auxMeterName : nil
                                     ))
                                         .font(.footnote)
                                         .foregroundStyle(Theme.secondaryInk)
@@ -156,7 +157,7 @@ struct TaskDetailView: View {
                 Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
             }
             HStack(spacing: Theme.xs) {
-                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: task.countingMeter), systemImage: "arrow.clockwise")
+                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: task.countingMeter, auxName: task.countsOnAuxMeter ? vehicle.auxMeterName : nil), systemImage: "arrow.clockwise")
                 if let difficulty = item?.difficulty {
                     Text("·")
                     Text(difficulty.title)

@@ -44,7 +44,7 @@ enum RecordBuilder {
             }
             return ServiceRecord.ScheduleRow(
                 name: due.name,
-                interval: Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter),
+                interval: Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter, auxName: due.usesAuxMeter ? vehicle.auxMeterName : nil),
                 last: last.isEmpty ? "Not recorded" : last,
                 next: next.isEmpty ? "Not recorded" : next,
                 status: due.result.status

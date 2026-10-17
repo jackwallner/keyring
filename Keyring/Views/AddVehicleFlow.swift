@@ -136,6 +136,7 @@ struct KindPicker: View {
 struct VehicleDetailsForm: View {
     @Binding var draft: NewVehicle
     var buttonTitle = "Continue"
+    var title: String?
     let next: () -> Void
 
     @State private var lookingUp = false
@@ -329,7 +330,7 @@ struct VehicleDetailsForm: View {
             }
         }
         .paperBackground()
-        .navigationTitle(draft.kind.title)
+        .navigationTitle(title ?? draft.kind.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             yearValue = draft.year > 0 ? Double(draft.year) : nil
@@ -516,24 +517,24 @@ struct EditVehicleView: View {
     @EnvironmentObject private var garage: GarageStore
     @Environment(\.dismiss) private var dismiss
     let vehicle: Vehicle
-    @State private var draft = NewVehicle()
-    @State private var loaded = false
+    /// Filled before the form first appears, so its year and meter fields
+    /// start from the vehicle rather than blank.
+    @State private var draft: NewVehicle
+
+    init(vehicle: Vehicle) {
+        self.vehicle = vehicle
+        _draft = State(initialValue: NewVehicle(
+            kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
+            year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
+            nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
+            reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", photo: vehicle.photo, tint: vehicle.tint
+        ))
+    }
 
     var body: some View {
         NavigationStack {
-            VehicleDetailsForm(draft: $draft, buttonTitle: "Save", next: save)
+            VehicleDetailsForm(draft: $draft, buttonTitle: "Save", title: "Edit \(vehicle.displayName)", next: save)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-                .navigationTitle("Edit \(vehicle.displayName)")
-        }
-        .onAppear {
-            guard !loaded else { return }
-            loaded = true
-            draft = NewVehicle(
-                kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
-                year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
-                nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
-                reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", photo: vehicle.photo, tint: vehicle.tint
-            )
         }
     }
 
