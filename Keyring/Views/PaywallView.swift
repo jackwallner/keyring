@@ -341,9 +341,16 @@ private struct PlanCard: View {
                     if dynamicTypeSize.isAccessibilitySize {
                         Text(package.priceLabel).font(Theme.figure(15)).foregroundStyle(Theme.ink)
                     }
-                    if let secondary {
-                        Text(secondary).font(.caption).foregroundStyle(Theme.secondaryInk)
-                            .fixedSize(horizontal: false, vertical: true)
+                    if !secondaryParts.isEmpty {
+                        // One line with a dot when it fits; stacked, without the dot, when it doesn't.
+                        ViewThatFits(in: .horizontal) {
+                            Text(secondaryParts.joined(separator: " · ")).lineLimit(1)
+                            VStack(alignment: .leading, spacing: 1) {
+                                ForEach(secondaryParts, id: \.self) { Text($0).fixedSize(horizontal: false, vertical: true) }
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryInk)
                     }
                 }
                 Spacer(minLength: Theme.xs)
@@ -371,10 +378,10 @@ private struct PlanCard: View {
         }
     }
 
-    private var secondary: String? {
+    private var secondaryParts: [String] {
         let parts = [trialLabel, perMonth].compactMap { $0 }
-        if parts.isEmpty, package.planKind == .lifetime { return "One-time purchase" }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        if parts.isEmpty, package.planKind == .lifetime { return ["One-time purchase"] }
+        return parts
     }
 
     private func badge(_ text: String) -> some View {

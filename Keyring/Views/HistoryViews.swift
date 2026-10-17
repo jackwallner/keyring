@@ -42,13 +42,7 @@ struct HistoryView: View {
                                 .listRowBackground(Theme.surface)
                         }
                     } header: {
-                        HStack {
-                            Text(group.title)
-                            Spacer()
-                            if group.total > 0, !hideCosts {
-                                Text(Format.money(group.total)).monospacedDigit()
-                            }
-                        }
+                        GroupHeader(title: group.title, total: hideCosts ? 0 : group.total)
                     }
                 }
             }
@@ -149,13 +143,10 @@ struct VehicleHistoryView: View {
                             .listRowBackground(Theme.surface)
                     }
                 } header: {
-                    HStack {
-                        Text(group.year == 0 ? "Undated" : String(group.year))
-                        Spacer()
-                        if group.total > 0, !AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) {
-                            Text(Format.money(group.total)).monospacedDigit()
-                        }
-                    }
+                    GroupHeader(
+                        title: group.year == 0 ? "Undated" : String(group.year),
+                        total: AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) ? 0 : group.total
+                    )
                 }
             }
         }
@@ -180,13 +171,69 @@ struct VehicleHistoryView: View {
 }
 
 /// A logged job in a list.
+/// A month or year with its total, which drops under the title when large text won't fit both.
+struct GroupHeader: View {
+    let title: String
+    let total: Double
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                Text(title).lineLimit(1)
+                Spacer()
+                amount
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                amount
+            }
+        }
+    }
+
+    @ViewBuilder private var amount: some View {
+        if total > 0 { Text(Format.money(total)).monospacedDigit().lineLimit(1) }
+    }
+}
+
 struct EntryRow: View {
     @ObservedObject var entry: ServiceEntry
     let showsVehicle: Bool
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var hideCosts: Bool { AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) }
 
     var body: some View {
+        if dynamicTypeSize.isAccessibilitySize { stacked } else { columns }
+    }
+
+    /// At the largest sizes three columns leave a word per line, so everything stacks.
+    private var stacked: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            if let date = entry.date {
+                Text(Calendar.current.isDate(date, equalTo: .now, toGranularity: .year)
+                     ? date.formatted(.dateTime.month(.abbreviated).day())
+                     : date.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.secondaryInk)
+            }
+            Text(entry.title ?? "Service")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+            if entry.cost > 0, !hideCosts {
+                Text(Format.money(entry.cost))
+                    .font(Theme.figure(14, weight: .medium))
+                    .foregroundStyle(Theme.ink)
+            }
+            Text(subtitle)
+                .font(.footnote)
+                .foregroundStyle(Theme.secondaryInk)
+                .lineLimit(3)
+        }
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+    }
+
+    private var columns: some View {
         HStack(alignment: .top, spacing: Theme.sm) {
             VStack(spacing: 0) {
                 Text(entry.date?.formatted(.dateTime.day()) ?? "")

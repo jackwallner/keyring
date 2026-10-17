@@ -189,9 +189,11 @@ struct VehicleDetailView: View {
                 RecallsView(vehicle: vehicle, recalls: recalls)
             } label: {
                 HStack(spacing: Theme.sm) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.title3)
-                        .foregroundStyle(Theme.overdue)
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.title3)
+                            .foregroundStyle(Theme.overdue)
+                    }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(open.count == 1 ? "1 safety recall may apply" : "\(open.count) safety recalls may apply")
                             .font(.subheadline.weight(.semibold))
@@ -201,8 +203,10 @@ struct VehicleDetailView: View {
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.leading)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                    Spacer(minLength: 0)
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                    }
                 }
                 .card()
             }
@@ -229,10 +233,15 @@ struct VehicleDetailView: View {
             NavigationLink {
                 ScheduleView(vehicle: vehicle)
             } label: {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Maintenance").font(Theme.title(20)).foregroundStyle(Theme.ink)
-                    Spacer()
-                    Text("Schedule").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.brass)
+                let title = Text("Maintenance").font(Theme.title(20)).foregroundStyle(Theme.ink)
+                let link = Text("Schedule").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.brass)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        title.lineLimit(1)
+                        Spacer()
+                        link.lineLimit(1)
+                    }
+                    VStack(alignment: .leading, spacing: Theme.xs) { title; link }
                 }
             }
             .buttonStyle(.plain)
@@ -368,12 +377,15 @@ struct VehicleDetailView: View {
     private var historySection: some View {
         let entries = vehicle.sortedEntries
         return VStack(alignment: .leading, spacing: Theme.sm) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("History").font(Theme.title(20)).foregroundStyle(Theme.ink)
-                Spacer()
-                if entries.count > 3 {
-                    NavigationLink("All \(entries.count)") { VehicleHistoryView(vehicle: vehicle) }
-                        .font(.subheadline.weight(.semibold))
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("History").font(Theme.title(20)).foregroundStyle(Theme.ink).lineLimit(1)
+                    Spacer()
+                    allHistoryLink(entries.count).lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: Theme.xs) {
+                    Text("History").font(Theme.title(20)).foregroundStyle(Theme.ink)
+                    allHistoryLink(entries.count)
                 }
             }
             if entries.isEmpty {
@@ -404,6 +416,13 @@ struct VehicleDetailView: View {
                 }
                 .card(padding: Theme.sm)
             }
+        }
+    }
+
+    @ViewBuilder private func allHistoryLink(_ count: Int) -> some View {
+        if count > 3 {
+            NavigationLink("All \(count)") { VehicleHistoryView(vehicle: vehicle) }
+                .font(.subheadline.weight(.semibold))
         }
     }
 
@@ -603,6 +622,8 @@ struct TaskRow: View {
                 .foregroundStyle(due.result.status.color)
                 .frame(width: 32, height: 32)
                 .background(due.result.status.color.opacity(0.12), in: Circle())
+                // Fixed badge, so the symbol stops growing before it spills out of it.
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             VStack(alignment: .leading, spacing: 4) {
                 let layout = dynamicTypeSize.isAccessibilitySize
                     ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))

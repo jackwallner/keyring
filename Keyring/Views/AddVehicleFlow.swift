@@ -137,9 +137,9 @@ struct KindPicker: View {
                                         Text(kind.title)
                                             .font(.footnote.weight(.semibold))
                                             .foregroundStyle(Theme.ink)
-                                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
-                                            .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.8)
-                                            .multilineTextAlignment(.leading)
+                                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2)
+                                            .multilineTextAlignment(dynamicTypeSize.isAccessibilitySize ? .leading : .center)
+                                            .fixedSize(horizontal: false, vertical: true)
                                         if dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
                                     }
                                     .padding(.horizontal, dynamicTypeSize.isAccessibilitySize ? Theme.md : 0)

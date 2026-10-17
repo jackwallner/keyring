@@ -68,19 +68,34 @@ struct SectionHeader: View {
     var action: (() -> Void)?
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .font(Theme.title(20))
-                .foregroundStyle(Theme.ink)
-                .accessibilityAddTraits(.isHeader)
-            Spacer()
-            if let trailing, let action {
-                Button(trailing, action: action)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.brass)
+        // The action drops under the title when both won't fit on one line.
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline) {
+                heading.lineLimit(1)
+                Spacer()
+                button.lineLimit(1)
+            }
+            VStack(alignment: .leading, spacing: Theme.xs) {
+                heading
+                button
             }
         }
         .padding(.top, Theme.xs)
+    }
+
+    private var heading: some View {
+        Text(title)
+            .font(Theme.title(20))
+            .foregroundStyle(Theme.ink)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder private var button: some View {
+        if let trailing, let action {
+            Button(trailing, action: action)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.brass)
+        }
     }
 }
 
@@ -122,7 +137,7 @@ extension DueStatus {
 extension TaskDue {
     /// "Due in 3 weeks", "Overdue by 400 mi", "Due around Mar 12", on the
     /// meter this job counts.
-    func dueLine(now: Date = .now) -> String {
+    func dueLine(now: Date = .now, notingPace: Bool = true) -> String {
         let meter = self.meter
         let current = currentReading
         switch result.status {
@@ -140,7 +155,7 @@ extension TaskDue {
                 return "Up to date"
             }
             let when = Format.relative(date, now: now)
-            return result.dateIsEstimated ? "Due \(when), by your pace" : "Due \(when)"
+            return result.dateIsEstimated && notingPace ? "Due \(when), by your pace" : "Due \(when)"
         }
     }
 }

@@ -95,6 +95,7 @@ struct StorageSheet: View {
                     Image(systemName: item.symbol)
                         .foregroundStyle(item.result.status.color)
                         .frame(width: 24)
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(item.name).foregroundStyle(Theme.ink)
                         Text(item.dueLine()).font(.footnote).foregroundStyle(Theme.secondaryInk)

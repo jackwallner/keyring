@@ -23,23 +23,13 @@ struct ServiceRecordView: View {
                 } else {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                VStack(spacing: Theme.sm) {
-                    HStack(spacing: Theme.sm) {
-                        Button {
-                            print()
-                        } label: {
-                            Label("Print", systemImage: "printer")
-                        }
-                        .buttonStyle(SecondaryButtonStyle())
-                        Button {
-                            share()
-                        } label: {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-                    }
+                // Side by side until large text would split the words, then stacked.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.sm) { recordButtons }
+                    VStack(spacing: Theme.sm) { recordButtons }
                 }
                 .font(.subheadline)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .padding(Theme.margin)
                 .background(Theme.surface)
             }
@@ -72,6 +62,21 @@ struct ServiceRecordView: View {
     private func share() {
         let record = RecordBuilder.record(for: vehicle, store: garage, showCosts: showCosts, includeReceipts: includeReceipts, includeSchedule: includeSchedule, includeNotes: includeNotes)
         if let url = try? ServiceRecordPDF.url(for: record) { file = SharedFile(url: url) }
+    }
+
+    @ViewBuilder private var recordButtons: some View {
+        Button {
+            print()
+        } label: {
+            Label("Print", systemImage: "printer").lineLimit(1)
+        }
+        .buttonStyle(SecondaryButtonStyle())
+        Button {
+            share()
+        } label: {
+            Label("Share", systemImage: "square.and.arrow.up").lineLimit(1)
+        }
+        .buttonStyle(PrimaryButtonStyle())
     }
 
     private func print() {

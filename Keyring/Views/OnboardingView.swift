@@ -17,6 +17,7 @@ struct OnboardingView: View {
     @State private var errorText: String?
     @State private var joining = false
     @State private var showingPaywall = false
+    @State private var pageHeight: CGFloat = 0
     @FocusState private var nameFocused: Bool
 
     private let lastPage = 3
@@ -30,10 +31,14 @@ struct OnboardingView: View {
                 trial.tag(3)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { pageHeight = $0 }
             .animation(.snappy, value: page)
             .animation(.snappy, value: nameFocused)
             // The tall footer would squeeze the name field under the keyboard.
-            if !nameFocused { footer }
+            if !nameFocused {
+                // Capped so the largest text sizes leave the pages room to read.
+                footer.dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            }
         }
         .background(Theme.paper.ignoresSafeArea())
         .sheet(isPresented: $joining) { JoinGarageView() }
@@ -46,13 +51,21 @@ struct OnboardingView: View {
 
     // MARK: - Pages
 
+    /// An iPhone SE leaves about 440pt above the fixed footer, so the art
+    /// shrinks and the spacing tightens rather than pushing text off the page.
+    private var compact: Bool {
+        pageHeight > 0 && pageHeight < 540 && !dynamicTypeSize.isAccessibilitySize
+    }
+
+    private var pageTitleSize: CGFloat { compact ? 30 : 36 }
+
     private func pageLayout<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
+            VStack(alignment: .leading, spacing: compact ? Theme.md : Theme.lg) {
                 content()
             }
             .padding(.horizontal, Theme.xl)
-            .padding(.top, Theme.xxl)
+            .padding(.top, compact ? Theme.md : Theme.xxl)
             .frame(maxWidth: 560, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
@@ -62,10 +75,11 @@ struct OnboardingView: View {
     private var welcome: some View {
         pageLayout {
             KeyringStack()
-                .frame(height: 230)
+                .scaleEffect(compact ? 0.72 : 1)
+                .frame(height: compact ? 166 : 230)
                 .frame(maxWidth: .infinity)
             Text("Every vehicle,\none keyring")
-                .font(Theme.title(36))
+                .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
             Text("Cars, trucks, boats, bikes, RVs, planes and the mower. What's due, what was done, and every receipt, for the whole family.")
                 .font(.body)
@@ -89,7 +103,7 @@ struct OnboardingView: View {
             }
             .card(padding: Theme.xs)
             Text("It knows\nwhat's due")
-                .font(Theme.title(36))
+                .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
             Text("Pick the kind of vehicle and Keyring builds its schedule: miles for the truck, engine hours for the boat. It learns how much you drive and reminds you a week ahead.")
                 .font(.body)
@@ -111,10 +125,10 @@ struct OnboardingView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, Theme.lg)
+            .padding(.vertical, compact ? 0 : Theme.lg)
             }
             Text("Log it together")
-                .font(Theme.title(36))
+                .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
             Text("Share the garage with one code. Whoever takes the car in logs it from their own iPhone, and everyone sees who did what.")
                 .font(.body)
@@ -136,13 +150,13 @@ struct OnboardingView: View {
     private var trial: some View {
         pageLayout {
             Image(systemName: "key.horizontal.fill")
-                .font(.system(size: 36, weight: .semibold))
+                .font(.system(size: compact ? 28 : 36, weight: .semibold))
                 .foregroundStyle(Theme.brass)
-                .frame(width: 84, height: 84)
+                .frame(width: compact ? 64 : 84, height: compact ? 64 : 84)
                 .background(Theme.brassSoft, in: Circle())
                 .frame(maxWidth: .infinity)
             Text(store.isPro ? "Keyring Pro is on your account" : trialTitle)
-                .font(Theme.title(32))
+                .font(Theme.title(compact ? 28 : 32))
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
@@ -194,13 +208,14 @@ struct OnboardingView: View {
                 .foregroundStyle(status.color)
                 .frame(width: 32, height: 32)
                 .background(status.color.opacity(0.12), in: Circle())
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                 Text(detail).font(.footnote).foregroundStyle(Theme.secondaryInk)
             }
             Spacer()
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, compact ? 6 : 10)
         .padding(.horizontal, Theme.xs)
         .accessibilityElement(children: .combine)
     }

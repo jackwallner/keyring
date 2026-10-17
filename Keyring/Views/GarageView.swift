@@ -8,6 +8,7 @@ struct GarageView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var sharing: SharingService
     @ObservedObject private var router = NotificationRouter.shared
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var path = NavigationPath()
     @State private var showingAdd = false
@@ -117,6 +118,8 @@ struct GarageView: View {
         }
     }
 
+    private var largeText: Bool { dynamicTypeSize.isAccessibilitySize }
+
     private var sections: [(title: String, vehicles: [Vehicle])] {
         var result: [(String, [Vehicle])] = []
         if let own = garage.ownGarage {
@@ -147,19 +150,24 @@ struct GarageView: View {
                 ForEach(items, id: \.0.objectID) { vehicle, open in
                     NavigationLink(value: RecallRoute(vehicle: vehicle.objectID)) {
                         HStack(spacing: Theme.sm) {
-                            Image(systemName: open.contains { $0.parkIt } ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(Theme.overdue)
+                            // At the largest sizes the icon and chevron would leave one word per line.
+                            if !largeText {
+                                Image(systemName: open.contains { $0.parkIt } ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                                    .foregroundStyle(Theme.overdue)
+                            }
                             VStack(alignment: .leading, spacing: 1) {
                                 Text("\(vehicle.displayName): \(open.count == 1 ? open[0].componentTitle : "\(open.count) recalls")")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.ink)
-                                    .lineLimit(2)
+                                    .lineLimit(largeText ? nil : 2)
                                 Text(open.contains { $0.parkIt } ? "NHTSA says don't drive it until it's fixed" : "May apply. Check your VIN, then log the fix")
                                     .font(.footnote)
                                     .foregroundStyle(Theme.secondaryInk)
                             }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                            Spacer(minLength: 0)
+                            if !largeText {
+                                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                            }
                         }
                         .contentShape(Rectangle())
                     }
@@ -179,27 +187,31 @@ struct GarageView: View {
         .sorted { TaskDue.ordering($0.1, $1.1) }
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: Theme.sm) {
-                HStack {
+                let header = largeText ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
+                header {
                     Eyebrow(text: items.contains { $0.1.result.status == .overdue } ? "Needs attention" : "Coming up", color: Theme.brass)
-                    Spacer()
+                    if !largeText { Spacer() }
                     Text(Format.count(items.count, "job", "jobs"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Theme.secondaryInk)
                 }
                 ForEach(items.prefix(showingAllAttention ? items.count : 3), id: \.1.id) { vehicle, due in
                     Button { logging = LogRequest(vehicle: vehicle, preselected: [due.taskID]) } label: {
-                        HStack(spacing: Theme.sm) {
-                            Circle().fill(vehicle.tint.color).frame(width: 10, height: 10)
+                        let row = largeText ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.xs)) : AnyLayout(HStackLayout(spacing: Theme.sm))
+                        row {
+                            if !largeText {
+                                Circle().fill(vehicle.tint.color).frame(width: 10, height: 10)
+                            }
                             VStack(alignment: .leading, spacing: 1) {
                                 Text("\(vehicle.displayName): \(due.name)")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.ink)
-                                    .lineLimit(2)
+                                    .lineLimit(largeText ? nil : 2)
                                 Text(due.dueLine())
                                     .font(.footnote)
                                     .foregroundStyle(due.result.status.color)
                             }
-                            Spacer()
+                            if !largeText { Spacer() }
                             Text("Log")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Theme.ink)
@@ -361,19 +373,22 @@ struct VehicleCard: View {
 
     private func statusChip(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> some View {
         let quiet = headline.status == .ok || vehicle.storedSince != nil
-        return HStack(spacing: 6) {
+        return HStack(alignment: .top, spacing: 6) {
             Circle()
                 .fill(quiet ? vehicle.tint.foreground.opacity(0.7) : headline.status.color)
                 .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: quiet ? 0 : 1))
                 .frame(width: 8, height: 8)
+                .padding(.top, 5)
             Text(statusText(headline))
                 .font(.footnote.weight(.semibold))
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(vehicle.tint.foreground)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(.black.opacity(vehicle.tint.isLight ? 0.08 : 0.22), in: Capsule())
+        // Rounded rather than a capsule so a long job name can wrap to a second line.
+        .background(.black.opacity(vehicle.tint.isLight ? 0.08 : 0.22), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func statusText(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> String {
@@ -383,7 +398,7 @@ struct VehicleCard: View {
         guard let next = headline.next else {
             return garage.dues(for: vehicle).isEmpty ? "No schedule yet" : "Add when jobs were last done"
         }
-        let line = next.dueLine()
+        let line = next.dueLine(notingPace: false)
         if headline.urgentCount > 1 {
             let dues = garage.dues(for: vehicle)
             let overdue = dues.filter { $0.result.status == .overdue }.count

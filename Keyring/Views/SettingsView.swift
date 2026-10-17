@@ -7,6 +7,7 @@ struct SettingsView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var sharing: SharingService
     @EnvironmentObject private var community: CommunityPhotos
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.openURL) private var openURL
 
     @AppStorage(AppGroup.Key.hideCosts, store: AppGroup.defaults) private var hideCosts = false
@@ -191,17 +192,21 @@ struct SettingsView: View {
             } else {
                 Button { showingPaywall = true } label: {
                     HStack(spacing: Theme.sm) {
-                        Image(systemName: "key.horizontal.fill")
-                            .foregroundStyle(Theme.brass)
-                            .frame(width: 40, height: 40)
-                            .background(Theme.brassSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        if !dynamicTypeSize.isAccessibilitySize {
+                            Image(systemName: "key.horizontal.fill")
+                                .foregroundStyle(Theme.brass)
+                                .frame(width: 40, height: 40)
+                                .background(Theme.brassSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Keyring Pro").font(.headline).foregroundStyle(Theme.ink)
                             Text("Every vehicle, the Service Record, receipt reading and insights")
                                 .font(.footnote).foregroundStyle(Theme.secondaryInk)
                         }
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                        Spacer(minLength: 0)
+                        if !dynamicTypeSize.isAccessibilitySize {
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                        }
                     }
                 }
                 .accessibilityIdentifier("settings.pro")
