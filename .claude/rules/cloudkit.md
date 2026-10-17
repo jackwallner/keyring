@@ -35,8 +35,8 @@ reset Production. `ServiceEntry.kindRaw` and `recallCampaign` were added and dep
 Added 2026-10-17 and deployed to Production the same day (build 5): Vehicle
 `soldDate`, `soldPrice`, `auxMeterName`, `auxReading`, `auxReadingDate`, `storedSince`, `storedUntil`, `yearlyUse`;
 MaintenanceTask `usesAuxMeter`; ServiceEntry `auxReading`; MeterReading `isAux`.
-Fill-ups added 2026-10-17 (initialized in Development, Production deploy pending Jack's OK): ServiceEntry
-`fuelVolume`, `fuelUnitPrice`, `fuelGrade`, `fuelPartial`. No build that writes them goes to TestFlight before that deploy.
+Fill-ups added 2026-10-17 and deployed to Production the same day (build 6): ServiceEntry
+`fuelVolume`, `fuelUnitPrice`, `fuelGrade`, `fuelPartial`.
 
 ## Sharing
 One `CKShare` per garage, `publicPermission = .readWrite` so a link or QR joins anyone (contact-only invites fail when
