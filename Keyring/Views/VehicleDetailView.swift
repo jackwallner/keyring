@@ -25,6 +25,7 @@ struct VehicleDetailView: View {
     @State private var routed = false
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.lg) {
                 hero
@@ -32,7 +33,7 @@ struct VehicleDetailView: View {
                 if vehicle.isRetired { retiredNote }
                 recallBanner
                 dueSection
-                exploreSection
+                exploreSection.id("explore")
                 historySection
                 factsSection
                 recordSection
@@ -57,11 +58,21 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .serviceRecord) }
         .sheet(isPresented: $showingLimitPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .task(id: vehicle.objectID) {
-            await loadRecalls()
-            if !routed, ScreenshotConfig.value(after: "-ScreenshotRoute") == "record" {
+            if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
                 routed = true
-                showingRecord = true
+                if route == "record" { showingRecord = true }
+                if route == "explore" {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    proxy.scrollTo("explore", anchor: .top)
+                }
             }
+            await loadRecalls()
+            // The recall banner can land above Explore once it loads.
+            if ScreenshotConfig.value(after: "-ScreenshotRoute") == "explore" {
+                try? await Task.sleep(for: .milliseconds(300))
+                proxy.scrollTo("explore", anchor: .top)
+            }
+        }
         }
         .onChange(of: vehicle.isDeleted) { _, deleted in if deleted { dismiss() } }
     }
