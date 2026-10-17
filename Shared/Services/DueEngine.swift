@@ -28,6 +28,9 @@ struct DueInput: Sendable {
     var currentReading: Double
     var dailyUse: Double              // vehicle's pace, in its own meter
     var meter: MeterUnit
+    /// FAA-style "calendar months": due at the end of the month the interval
+    /// lands in, so an annual signed off on March 3 runs to March 31 next year.
+    var calendarMonths = false
 }
 
 struct DueResult: Equatable, Sendable {
@@ -66,7 +69,7 @@ enum DueEngine {
         var overdue = false
 
         if knowsTime, let last = input.lastDate,
-           let due = calendar.date(byAdding: .month, value: input.intervalMonths, to: last) {
+           let due = timeDue(after: last, input: input, calendar: calendar) {
             candidates.append((due, false))
             let total = due.timeIntervalSince(last)
             if total > 0 { progress = max(progress, now.timeIntervalSince(last) / total) }
@@ -107,6 +110,12 @@ enum DueEngine {
             progress: max(0, progress),
             dateIsEstimated: earliest?.estimated ?? false
         )
+    }
+
+    private static func timeDue(after last: Date, input: DueInput, calendar: Calendar) -> Date? {
+        guard let due = calendar.date(byAdding: .month, value: input.intervalMonths, to: last) else { return nil }
+        guard input.calendarMonths, let month = calendar.dateInterval(of: .month, for: due) else { return due }
+        return month.end.addingTimeInterval(-1)
     }
 
     /// Use per day from the vehicle's own history: readings and service

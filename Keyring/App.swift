@@ -38,6 +38,7 @@ struct KeyringApp: App {
                 .environmentObject(community)
                 .tint(Theme.brass)
                 .preferredColorScheme(Appearance(rawValue: appearance)?.colorScheme)
+                .onOpenURL { NotificationRouter.shared.open($0) }
                 .alert("Couldn't join this garage", isPresented: Binding(
                     get: { sharing.invitationError != nil },
                     set: { if !$0 { sharing.invitationError = nil } }
@@ -191,6 +192,10 @@ struct MainTabView: View {
                 .tag(Tab.settings)
         }
         .onReceive(router.$destination.compactMap { $0 }) { _ in tab = .garage }
+        .sheet(item: Binding(
+            get: { router.importFile.map(SharedFile.init(url:)) },
+            set: { if $0 == nil { router.importFile = nil } }
+        )) { file in ImportView(fileURL: file.url) }
     }
 
     static var initialTab: Tab {

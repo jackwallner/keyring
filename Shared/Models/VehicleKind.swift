@@ -103,6 +103,15 @@ enum VehicleKind: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
+    /// Kinds that often carry a second hour meter: an RV or boat generator, or
+    /// a boat's second engine.
+    var offersAuxMeter: Bool {
+        switch self {
+        case .rv, .camper, .boat, .sailboat: true
+        default: false
+        }
+    }
+
     /// Typical use per day in the vehicle's own meter, used to estimate when a
     /// distance-based item comes due until the owner's real pace is known.
     var typicalDailyUse: Double {

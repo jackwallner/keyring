@@ -7,6 +7,7 @@ struct HistoryView: View {
     @State private var filter: NSManagedObjectID?
     @State private var search = ""
     @State private var exportFile: SharedFile?
+    @State private var importing = false
 
     var body: some View {
         let entries = filtered
@@ -65,13 +66,17 @@ struct HistoryView: View {
                     } label: {
                         Label("Export spreadsheet (CSV)", systemImage: "tablecells")
                     }
+                    Button { importing = true } label: {
+                        Label("Import from another app", systemImage: "tray.and.arrow.down")
+                    }
                 } label: {
                     Image(systemName: "square.and.arrow.up")
                 }
-                .accessibilityLabel("Export")
+                .accessibilityLabel("Export or import")
             }
         }
         .sheet(item: $exportFile) { file in ShareSheet(items: [file.url]) }
+        .sheet(isPresented: $importing) { ImportView() }
     }
 
     private var hideCosts: Bool { AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) }
@@ -330,6 +335,7 @@ struct EntryDetailView: View {
         let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
         var items: [(String, String)] = []
         if entry.hasReading, vehicle.meter.hasReading { items.append((vehicle.meter.meterName, Format.reading(entry.reading, vehicle.meter))) }
+        if entry.hasAuxReading, vehicle.hasAuxMeter { items.append(("\(vehicle.auxMeterName ?? "Second meter") hours", Format.reading(entry.auxReading, .hours))) }
         if entry.cost > 0, !hideCosts { items.append(("Cost", Format.money(entry.cost))) }
         items.append(("Done by", entry.isDIY ? (entry.loggedBy.map { "\($0), DIY" } ?? "DIY") : (entry.shop ?? "A shop")))
         if let by = entry.loggedBy { items.append(("Logged by", by)) }

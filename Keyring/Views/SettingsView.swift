@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var showingPaywall = false
     @State private var showingFamily = false
     @State private var exportFile: SharedFile?
+    @State private var importing = false
 
     var body: some View {
         Form {
@@ -105,6 +106,10 @@ struct SettingsView: View {
                 } label: {
                     Label("Export everything (CSV)", systemImage: "tablecells")
                 }
+                Button { importing = true } label: {
+                    Label("Import from another app", systemImage: "tray.and.arrow.down")
+                }
+                .accessibilityIdentifier("settings.import")
                 if !garage.retiredVehicles.isEmpty {
                     NavigationLink { RetiredVehiclesView() } label: { Label("Sold and retired", systemImage: "archivebox") }
                 }
@@ -115,7 +120,7 @@ struct SettingsView: View {
                 Text("Your data")
             } footer: {
                 Text(sharing.iCloudAvailable
-                     ? "Everything syncs through your iCloud. The spreadsheet is always free, so your history is always yours."
+                     ? "Everything syncs through your iCloud. Export and import are always free, so your history is always yours."
                      : "iCloud is off, so everything stays on this iPhone. Sign in to iCloud to back it up and share it. The spreadsheet is always free.")
             }
 
@@ -149,6 +154,7 @@ struct SettingsView: View {
         .sheet(isPresented: $showingPaywall) { PaywallView() }
         .sheet(isPresented: $showingFamily) { NavigationStack { FamilyView() } }
         .sheet(item: $exportFile) { file in ShareSheet(items: [file.url]) }
+        .sheet(isPresented: $importing) { ImportView() }
         .task {
             name = garage.ownerName ?? ""
             garageName = garage.ownGarage?.name ?? ""

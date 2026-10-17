@@ -23,6 +23,7 @@ struct VehicleDetailView: View {
     @State private var confirmingDelete = false
     @State private var confirmingRetire = false
     @State private var routed = false
+    @State private var importing = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -57,6 +58,7 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $showingRecord) { ServiceRecordView(vehicle: vehicle) }
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .serviceRecord) }
         .sheet(isPresented: $showingLimitPaywall) { PaywallView(focus: .unlimitedVehicles) }
+        .sheet(isPresented: $importing) { ImportView(preselected: vehicle) }
         .task(id: vehicle.objectID) {
             if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
                 routed = true
@@ -76,6 +78,12 @@ struct VehicleDetailView: View {
         }
         }
         .onChange(of: vehicle.isDeleted) { _, deleted in if deleted { dismiss() } }
+    }
+
+    private var retiredText: String {
+        guard let sold = vehicle.soldDate else { return "Retired. Its history is kept and reminders are off." }
+        let price = vehicle.soldPrice > 0 && !AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) ? " for \(Format.money(vehicle.soldPrice))" : ""
+        return "Sold \(Format.shortDate(sold))\(price). Its history is kept and reminders are off."
     }
 
     // MARK: - Hero
@@ -128,7 +136,7 @@ struct VehicleDetailView: View {
 
     private var retiredNote: some View {
         HStack {
-            Text("Retired. Its history is kept and reminders are off.")
+            Text(retiredText)
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             Spacer()
@@ -299,10 +307,19 @@ struct VehicleDetailView: View {
                 }
             }
             if entries.isEmpty {
-                Text("Nothing logged yet. Log a job and it shows here, signed with your name for the rest of the family.")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.secondaryInk)
-                    .card()
+                VStack(alignment: .leading, spacing: Theme.sm) {
+                    Text("Nothing logged yet. Log a job and it shows here, signed with your name for the rest of the family.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                    if !vehicle.isRetired {
+                        Button { importing = true } label: {
+                            Label("Import from another app", systemImage: "tray.and.arrow.down")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .accessibilityIdentifier("vehicle.import")
+                    }
+                }
+                .card()
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(entries.prefix(3).enumerated()), id: \.element.objectID) { index, entry in
@@ -407,6 +424,14 @@ struct VehicleDetailView: View {
                 }
                 detailRow("Powertrain", vehicle.powertrain.title)
                 Divider().overlay(Theme.hairline)
+                if vehicle.hasAuxMeter {
+                    Button { updatingReading = true } label: {
+                        detailRow("\(vehicle.auxMeterName ?? "Second meter") hours", Format.reading(vehicle.auxReading, .hours))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Update")
+                    Divider().overlay(Theme.hairline)
+                }
                 if let garageName = vehicle.garage?.displayName {
                     detailRow("Garage", garage.isShared(vehicle) ? "\(garageName) (shared with you)" : garageName)
                     Divider().overlay(Theme.hairline)
@@ -437,14 +462,7 @@ struct VehicleDetailView: View {
                 .font(.subheadline)
             }
         }
-        .confirmationDialog("Mark \(vehicle.displayName) sold or retired?", isPresented: $confirmingRetire, titleVisibility: .visible) {
-                Button("Sold or retired") {
-                    garage.retire(vehicle, true)
-                    dismiss()
-                }
-            } message: {
-                Text("Its history is kept and its reminders stop. You can restore it from Sold and retired at the bottom of the garage.")
-            }
+        .sheet(isPresented: $confirmingRetire) { RetireVehicleSheet(vehicle: vehicle) }
             .confirmationDialog("Delete \(vehicle.displayName)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                 Button("Delete vehicle and history", role: .destructive) {
                     garage.delete(vehicle)
@@ -512,7 +530,7 @@ struct TaskRow: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(due.result.status.color)
                 }
-                Text(due.dueLine(meter: vehicle.meter, current: vehicle.reading))
+                Text(due.dueLine())
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
                 if due.result.status != .noRecord {
@@ -536,12 +554,15 @@ struct UpdateReadingSheet: View {
     @ObservedObject var vehicle: Vehicle
 
     @State private var value: Double?
+    @State private var auxValue: Double?
     @State private var showingScanner = false
     @State private var confirmingJump = false
 
     private var readings: [MeterReading] {
         (vehicle.readings ?? []).sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
     }
+
+    private var auxName: String { vehicle.auxMeterName ?? "Second meter" }
 
     var body: some View {
         NavigationStack {
@@ -565,11 +586,21 @@ struct UpdateReadingSheet: View {
                         Text("Last updated \(vehicle.readingDate.map { Format.relative($0) } ?? "never"). Keyring learns your pace from these and estimates when things come due.")
                     }
                 }
+                if vehicle.hasAuxMeter {
+                    Section {
+                        NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
+                            .font(Theme.figure(28))
+                    } header: {
+                        Text("\(auxName) hours")
+                    } footer: {
+                        Text("Last updated \(vehicle.auxReadingDate.map { Format.relative($0) } ?? "never").")
+                    }
+                }
                 if !readings.isEmpty {
                     Section {
                         ForEach(readings.prefix(12)) { reading in
                             HStack {
-                                Text(Format.reading(reading.value, vehicle.meter))
+                                Text(reading.isAux ? "\(auxName) \(Format.reading(reading.value, .hours))" : Format.reading(reading.value, vehicle.meter))
                                     .font(Theme.figure(15, weight: .medium))
                                     .foregroundStyle(Theme.ink)
                                 Spacer()
@@ -595,7 +626,7 @@ struct UpdateReadingSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        guard let value else { return }
+                        guard let value else { return saveAux() }
                         if garage.isSuspiciousJump(value, for: vehicle) {
                             confirmingJump = true
                         } else {
@@ -603,7 +634,7 @@ struct UpdateReadingSheet: View {
                         }
                     }
                     .fontWeight(.semibold)
-                    .disabled(value == nil)
+                    .disabled(value == nil && auxValue == nil)
                 }
             }
             .confirmationDialog(
@@ -629,6 +660,11 @@ struct UpdateReadingSheet: View {
 
     private func commit(_ value: Double) {
         garage.updateReading(vehicle, to: value)
+        saveAux()
+    }
+
+    private func saveAux() {
+        if let auxValue { garage.updateAuxReading(vehicle, to: auxValue) }
         Haptics.success()
         dismiss()
     }
@@ -688,6 +724,124 @@ struct FactsEditor: View {
                 }
             }
             .onAppear { facts = vehicle.facts }
+        }
+    }
+}
+
+/// Sold or retired. A sale keeps its date and price, then offers the
+/// history to hand the buyer.
+struct RetireVehicleSheet: View {
+    @EnvironmentObject private var garage: GarageStore
+    @EnvironmentObject private var store: StoreService
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var vehicle: Vehicle
+
+    @State private var sold = true
+    @State private var date = Date.now
+    @State private var price: Double?
+    @State private var handingOver = false
+    @State private var showingRecord = false
+    @State private var showingPaywall = false
+    @State private var exportFile: SharedFile?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if handingOver { handover } else { form }
+            }
+            .paperBackground()
+            .navigationTitle(handingOver ? "Sold" : vehicle.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if !handingOver {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                }
+            }
+            .sheet(isPresented: $showingRecord) { ServiceRecordView(vehicle: vehicle) }
+            .sheet(isPresented: $showingPaywall) { PaywallView(focus: .serviceRecord) }
+            .sheet(item: $exportFile) { file in ShareSheet(items: [file.url]) }
+        }
+        .interactiveDismissDisabled(handingOver)
+    }
+
+    private var form: some View {
+        Form {
+            Section {
+                Picker("What happened", selection: $sold) {
+                    Text("Sold").tag(true)
+                    Text("Retired").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+            }
+            if sold {
+                Section {
+                    DatePicker("Sold on", selection: $date, in: ...Date.now, displayedComponents: .date)
+                    LabeledContent("Price") {
+                        NumberField(title: "Optional", value: $price, isCurrency: true)
+                            .multilineTextAlignment(.trailing)
+                    }
+                } footer: {
+                    Text("Kept with its history, so you know what it cost to own.")
+                }
+            }
+            Section {
+                Button(sold ? "Mark sold" : "Retire") { save() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                    .accessibilityIdentifier("retire.save")
+            } footer: {
+                Text("Its history stays, reminders stop, and it no longer counts toward the free limit. Restore it any time from Sold and retired.")
+            }
+        }
+    }
+
+    private var handover: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.lg) {
+                Image(systemName: "key.horizontal.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(Theme.brass)
+                    .padding(.top, Theme.lg)
+                Text("Hand over its history").font(Theme.title(28)).foregroundStyle(Theme.ink)
+                Text("A clean record of every job helps the buyer trust the price, and it's the last favor you do for \(vehicle.displayName).")
+                    .foregroundStyle(Theme.secondaryInk)
+                VStack(spacing: Theme.sm) {
+                    Button {
+                        if store.isPro { showingRecord = true } else { showingPaywall = true }
+                    } label: {
+                        Label("Service Record (PDF)", systemImage: "doc.richtext")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("retire.record")
+                    Button {
+                        if let url = try? CSVExport.url(for: [vehicle], name: "\(vehicle.displayName) service log") { exportFile = SharedFile(url: url) }
+                    } label: {
+                        Label("Spreadsheet (CSV)", systemImage: "tablecells")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+                Button("Done") { dismiss() }
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, Theme.sm)
+                    .accessibilityIdentifier("retire.done")
+            }
+            .padding(.horizontal, Theme.margin)
+            .padding(.bottom, Theme.xl)
+        }
+    }
+
+    private func save() {
+        Haptics.success()
+        if sold {
+            garage.markSold(vehicle, on: date, price: price)
+            withAnimation(.snappy) { handingOver = true }
+        } else {
+            garage.retire(vehicle, true)
+            dismiss()
         }
     }
 }

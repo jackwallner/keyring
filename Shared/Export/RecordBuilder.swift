@@ -31,20 +31,20 @@ enum RecordBuilder {
             )
         }
         let schedule = !includeSchedule ? [] : store.dues(for: vehicle).map { due -> ServiceRecord.ScheduleRow in
-            let last = [due.lastDate.map { Format.shortDate($0) }, due.lastReading.map { Format.reading($0, vehicle.meter) }]
+            let last = [due.lastDate.map { Format.shortDate($0) }, due.lastReading.map { Format.reading($0, due.meter) }]
                 .compactMap { $0 }.joined(separator: " · ")
             var next = ""
             if due.result.status == .overdue {
                 next = "Overdue"
             } else if let date = due.result.dueDate {
                 next = (due.result.dateIsEstimated ? "About " : "") + Format.shortDate(date)
-                if let reading = due.result.dueReading, vehicle.meter.hasReading { next += " · \(Format.reading(reading, vehicle.meter))" }
+                if let reading = due.result.dueReading, due.meter.hasReading { next += " · \(Format.reading(reading, due.meter))" }
             } else if let reading = due.result.dueReading {
-                next = Format.reading(reading, vehicle.meter)
+                next = Format.reading(reading, due.meter)
             }
             return ServiceRecord.ScheduleRow(
                 name: due.name,
-                interval: Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: vehicle.meter),
+                interval: Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter),
                 last: last.isEmpty ? "Not recorded" : last,
                 next: next.isEmpty ? "Not recorded" : next,
                 status: due.result.status
@@ -121,7 +121,8 @@ enum CSVExport {
 
     @MainActor
     static func url(for vehicles: [Vehicle], name: String = "Keyring-Service-Log") throws -> URL {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).csv")
+        let safe = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(safe).csv")
         try csv(for: vehicles).write(to: url, atomically: true, encoding: .utf8)
         return url
     }
@@ -183,7 +184,7 @@ struct CostInsights: Equatable {
         var unit = "mi"
         for vehicle in vehicles where vehicle.meter == .miles || vehicle.meter == .kilometers {
             let points = vehicle.sortedEntries.filter { $0.hasReading && ($0.date ?? .distantPast) >= yearAgo }.map(\.reading)
-                + (vehicle.readings ?? []).filter { ($0.date ?? .distantPast) >= yearAgo }.map(\.value)
+                + vehicle.mainReadings.filter { ($0.date ?? .distantPast) >= yearAgo }.map(\.value)
             guard let low = points.min(), let high = points.max(), high - low > 500 else { continue }
             distance += high - low
             spend += vehicle.sortedEntries.filter { ($0.date ?? .distantPast) >= yearAgo }.reduce(0) { $0 + $1.cost }

@@ -22,7 +22,7 @@ struct ScheduleView: View {
                                 StatusDot(status: due.result.status)
                                 Text(due.name).font(.body.weight(.medium))
                             }
-                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: vehicle.meter))
+                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter))
                                 .font(.footnote)
                                 .foregroundStyle(Theme.secondaryInk)
                         }
@@ -52,7 +52,11 @@ struct ScheduleView: View {
                                     .frame(width: 28)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.name).foregroundStyle(Theme.ink)
-                                    Text(Format.interval(distance: item.distanceInterval(for: vehicle.meter) ?? 0, months: item.months ?? 0, meter: vehicle.meter))
+                                    Text(Format.interval(
+                                        distance: (vehicle.hasAuxMeter ? item.auxHours : nil) ?? item.distanceInterval(for: vehicle.meter) ?? 0,
+                                        months: item.months ?? 0,
+                                        meter: vehicle.hasAuxMeter && item.auxHours != nil ? .hours : vehicle.meter
+                                    ))
                                         .font(.footnote)
                                         .foregroundStyle(Theme.secondaryInk)
                                 }
@@ -152,7 +156,7 @@ struct TaskDetailView: View {
                 Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
             }
             HStack(spacing: Theme.xs) {
-                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: vehicle.meter), systemImage: "arrow.clockwise")
+                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: task.countingMeter), systemImage: "arrow.clockwise")
                 if let difficulty = item?.difficulty {
                     Text("·")
                     Text(difficulty.title)
@@ -184,7 +188,7 @@ struct TaskDetailView: View {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Eyebrow(text: "Next")
-                        Text(due.dueLine(meter: vehicle.meter, current: vehicle.reading))
+                        Text(due.dueLine())
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
                             .multilineTextAlignment(.trailing)
@@ -203,7 +207,7 @@ struct TaskDetailView: View {
     /// as a month, not a made-up day.
     private func lastText(_ due: TaskDue) -> String {
         let date = due.lastDate.map { hasLoggedEntry ? Format.shortDate($0) : "About " + $0.formatted(.dateTime.month(.abbreviated).year()) }
-        let parts = [date, due.lastReading.map { Format.reading($0, vehicle.meter) }].compactMap { $0 }
+        let parts = [date, due.lastReading.map { Format.reading($0, due.meter) }].compactMap { $0 }
         return parts.isEmpty ? "Not recorded" : parts.joined(separator: " · ")
     }
 
@@ -259,28 +263,40 @@ struct TaskEditor: View {
     @State private var distance: Double?
     @State private var months: Double?
     @State private var notes = ""
+    @State private var onAuxMeter = false
+
+    private var meter: MeterUnit {
+        if let task { return task.countingMeter }
+        return onAuxMeter && vehicle.hasAuxMeter ? .hours : vehicle.meter
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Job") {
                     TextField("Name", text: $name)
+                    if task == nil, vehicle.hasAuxMeter {
+                        Picker("Counts on", selection: $onAuxMeter) {
+                            Text(vehicle.meter.meterName).tag(false)
+                            Text("\(vehicle.auxMeterName ?? "Second") hours").tag(true)
+                        }
+                    }
                 }
                 Section {
-                    if vehicle.meter.hasReading {
+                    if meter.hasReading {
                         LabeledContent("Every") {
-                            NumberField(title: "None", value: $distance, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                            NumberField(title: "None", value: $distance, suffix: meter.short, allowsDecimal: meter == .hours)
                                 .multilineTextAlignment(.trailing)
                         }
                     }
-                    LabeledContent(vehicle.meter.hasReading ? "Or every" : "Every") {
+                    LabeledContent(meter.hasReading ? "Or every" : "Every") {
                         NumberField(title: "None", value: $months, suffix: "months")
                             .multilineTextAlignment(.trailing)
                     }
                 } header: {
                     Text("How often")
                 } footer: {
-                    Text(vehicle.meter.hasReading ? "Whichever comes first. Leave one empty to use only the other." : "Leave empty for a job you log only as needed.")
+                    Text(meter.hasReading ? "Whichever comes first. Leave one empty to use only the other." : "Leave empty for a job you log only as needed.")
                 }
                 Section("Notes") {
                     TextField("Part numbers, torque specs, the shop you trust", text: $notes, axis: .vertical).lineLimit(2...6)
@@ -306,7 +322,7 @@ struct TaskEditor: View {
                         if let task {
                             garage.update(task, name: name, distance: distance ?? 0, months: Int(months ?? 0), notes: notes)
                         } else {
-                            let created = garage.addCustomTask(name: name, distance: distance ?? 0, months: Int(months ?? 0), to: vehicle)
+                            let created = garage.addCustomTask(name: name, distance: distance ?? 0, months: Int(months ?? 0), onAuxMeter: onAuxMeter, to: vehicle)
                             created.notes = notes.trimmed.nilIfEmpty
                             garage.saveVehicleEdits()
                         }
@@ -341,9 +357,9 @@ struct LastDoneSheet: View {
             Form {
                 Section {
                     DatePicker("Date", selection: $date, in: ...Date.now, displayedComponents: .date)
-                    if vehicle.meter.hasReading {
-                        LabeledContent(vehicle.meter.meterName) {
-                            NumberField(title: "If you know it", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                    if task.countingMeter.hasReading {
+                        LabeledContent(task.meterLabel) {
+                            NumberField(title: "If you know it", value: $reading, suffix: task.countingMeter.short, allowsDecimal: task.countingMeter == .hours)
                                 .multilineTextAlignment(.trailing)
                         }
                     }

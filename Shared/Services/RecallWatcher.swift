@@ -93,6 +93,21 @@ final class NotificationRouter: NSObject, ObservableObject, UNUserNotificationCe
 
     @Published var destination: Destination?
 
+    /// A CSV opened in Keyring from Files, Mail or another app.
+    @Published var importFile: URL?
+
+    /// Opens `WidgetSnapshot.url(forVehicle:)` links and shared spreadsheets.
+    func open(_ url: URL) {
+        if url.isFileURL {
+            importFile = url
+            return
+        }
+        guard url.scheme == "keyring", url.host() == "vehicle" else { return }
+        let parts = url.pathComponents.filter { $0 != "/" }
+        guard let raw = parts.first, let id = UUID(uuidString: raw) else { return }
+        destination = Destination(vehicleID: id, showsRecalls: parts.dropFirst().first == "recalls")
+    }
+
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse

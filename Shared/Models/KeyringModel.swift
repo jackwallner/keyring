@@ -8,12 +8,13 @@ import Foundation
 enum KeyringModel {
     nonisolated(unsafe) static let model: NSManagedObjectModel = build()
 
-    /// The model 1.0 builds 1 to 3 shipped, before entries had a kind. SQLite
-    /// stores carry their own model, so Core Data migrates them by itself;
-    /// this is kept so a test proves those logs still open.
-    nonisolated(unsafe) static let firstRelease: NSManagedObjectModel = build(entryKinds: false)
+    /// The model 1.0 builds 1 to 3 shipped, before entries had a kind, sales
+    /// or second meters. SQLite stores carry their own model, so Core Data
+    /// migrates them by itself; this is kept so a test proves those logs
+    /// still open.
+    nonisolated(unsafe) static let firstRelease: NSManagedObjectModel = build(current: false)
 
-    private static func build(entryKinds: Bool = true) -> NSManagedObjectModel {
+    private static func build(current: Bool = true) -> NSManagedObjectModel {
         let garage = entity("Garage", Garage.self)
         let vehicle = entity("Vehicle", Vehicle.self)
         let task = entity("MaintenanceTask", MaintenanceTask.self)
@@ -50,7 +51,13 @@ enum KeyringModel {
             attr("notes", .stringAttributeType),
             attr("sortIndex", .integer16AttributeType, default: 0),
             attr("isRetired", .booleanAttributeType, default: false),
-        ]
+        ] + (current ? [
+            attr("soldDate", .dateAttributeType),
+            attr("soldPrice", .doubleAttributeType, default: 0.0),
+            attr("auxMeterName", .stringAttributeType),
+            attr("auxReading", .doubleAttributeType, default: 0.0),
+            attr("auxReadingDate", .dateAttributeType),
+        ] : [])
         task.properties = [
             attr("id", .UUIDAttributeType),
             attr("createdAt", .dateAttributeType),
@@ -63,7 +70,7 @@ enum KeyringModel {
             attr("baselineReading", .doubleAttributeType, default: -1.0),
             attr("isEnabled", .booleanAttributeType, default: true),
             attr("notes", .stringAttributeType),
-        ]
+        ] + (current ? [attr("usesAuxMeter", .booleanAttributeType, default: false)] : [])
         entry.properties = [
             attr("id", .UUIDAttributeType),
             attr("createdAt", .dateAttributeType),
@@ -76,9 +83,10 @@ enum KeyringModel {
             attr("isDIY", .booleanAttributeType, default: false),
             attr("notes", .stringAttributeType),
             attr("loggedBy", .stringAttributeType),
-        ] + (entryKinds ? [
+        ] + (current ? [
             attr("kindRaw", .stringAttributeType, default: EntryKind.service.rawValue),
             attr("recallCampaign", .stringAttributeType),
+            attr("auxReading", .doubleAttributeType, default: -1.0),
         ] : [])
         attachment.properties = [
             attr("id", .UUIDAttributeType),
@@ -91,7 +99,7 @@ enum KeyringModel {
             attr("date", .dateAttributeType),
             attr("value", .doubleAttributeType, default: 0.0),
             attr("loggedBy", .stringAttributeType),
-        ]
+        ] + (current ? [attr("isAux", .booleanAttributeType, default: false)] : [])
         valuation.properties = [
             attr("id", .UUIDAttributeType),
             attr("date", .dateAttributeType),
@@ -216,6 +224,13 @@ final class Vehicle: NSManagedObject, Identifiable {
     @NSManaged var notes: String?
     @NSManaged var sortIndex: Int16
     @NSManaged var isRetired: Bool
+    /// Set when the owner marks it sold rather than just retired.
+    @NSManaged var soldDate: Date?
+    @NSManaged var soldPrice: Double
+    /// A second hour meter, such as an RV's generator. Nil when there's none.
+    @NSManaged var auxMeterName: String?
+    @NSManaged var auxReading: Double
+    @NSManaged var auxReadingDate: Date?
     @NSManaged var garage: Garage?
     @NSManaged var tasks: Set<MaintenanceTask>?
     @NSManaged var entries: Set<ServiceEntry>?
@@ -268,6 +283,12 @@ final class Vehicle: NSManagedObject, Identifiable {
         [make, model].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
     }
 
+    var hasAuxMeter: Bool { auxMeterName?.isEmpty == false }
+
+    /// Main-meter readings only; the second meter keeps its own.
+    var mainReadings: [MeterReading] { (readings ?? []).filter { !$0.isAux } }
+    var auxReadings: [MeterReading] { (readings ?? []).filter(\.isAux) }
+
     var enabledTasks: [MaintenanceTask] {
         (tasks ?? []).filter(\.isEnabled).sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
     }
@@ -313,10 +334,22 @@ final class MaintenanceTask: NSManagedObject, Identifiable {
     @NSManaged var baselineReading: Double
     @NSManaged var isEnabled: Bool
     @NSManaged var notes: String?
+    /// Counted on the vehicle's second hour meter instead of its main one.
+    @NSManaged var usesAuxMeter: Bool
     @NSManaged var vehicle: Vehicle?
 
     var displayName: String { name ?? "Maintenance" }
     var displaySymbol: String { symbol ?? "wrench.adjustable" }
+
+    var countsOnAuxMeter: Bool { usesAuxMeter && vehicle?.hasAuxMeter == true }
+
+    /// The meter this job is counted on.
+    var countingMeter: MeterUnit { countsOnAuxMeter ? .hours : (vehicle?.meter ?? .none) }
+
+    /// "Odometer", "Generator hours".
+    var meterLabel: String {
+        countsOnAuxMeter ? "\(vehicle?.auxMeterName ?? "Second meter") hours" : countingMeter.meterName
+    }
 }
 
 @objc(ServiceEntry)
@@ -336,6 +369,8 @@ final class ServiceEntry: NSManagedObject, Identifiable {
     @NSManaged var kindRaw: String?
     /// The NHTSA campaign a recall visit closed, so the whole family sees it fixed.
     @NSManaged var recallCampaign: String?
+    /// The second hour meter that day; negative when not given.
+    @NSManaged var auxReading: Double
     @NSManaged var vehicle: Vehicle?
     @NSManaged var attachments: Set<Attachment>?
 
@@ -350,6 +385,7 @@ final class ServiceEntry: NSManagedObject, Identifiable {
     }
 
     var hasReading: Bool { reading >= 0 }
+    var hasAuxReading: Bool { auxReading >= 0 }
 
     var sortedAttachments: [Attachment] {
         (attachments ?? []).sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
@@ -373,6 +409,8 @@ final class MeterReading: NSManagedObject, Identifiable {
     @NSManaged var date: Date?
     @NSManaged var value: Double
     @NSManaged var loggedBy: String?
+    /// From the second hour meter rather than the main one.
+    @NSManaged var isAux: Bool
     @NSManaged var vehicle: Vehicle?
 }
 

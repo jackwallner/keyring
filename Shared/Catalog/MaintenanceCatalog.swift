@@ -16,6 +16,11 @@ struct CatalogItem: Identifiable, Hashable, Sendable {
     /// Interval when the vehicle's meter reads engine hours.
     var hours: Double? = nil
     var months: Int? = nil
+    /// Interval on a second hour meter (an RV's generator) when the vehicle
+    /// has one.
+    var auxHours: Double? = nil
+    /// Due at the end of the calendar month, the way the FAA counts.
+    var calendarMonths = false
     /// Core items are switched on for a new vehicle; the rest wait in "Add from
     /// the catalog" so a new garage starts calm.
     var isCore = true
@@ -99,6 +104,11 @@ enum MaintenanceCatalog {
         var seen = Set<String>()
         let unique = list.filter { seen.insert($0.key).inserted }
         return unique.filter(\.isCore) + unique.filter { !$0.isCore }
+    }
+
+    static func usesCalendarMonths(key: String?, kind: VehicleKind) -> Bool {
+        guard let key, kind == .aircraft else { return false }
+        return aircraft(.piston).first { $0.key == key }?.calendarMonths ?? false
     }
 
     static func item(key: String, kind: VehicleKind, powertrain: Powertrain) -> CatalogItem? {
@@ -347,7 +357,8 @@ enum MaintenanceCatalog {
         ),
         CatalogItem(key: "slides", name: "Slide-out seals and lube", detail: "Clean, condition and lube the slide mechanism.", symbol: "rectangle.expand.vertical", months: 12, isCore: false),
         CatalogItem(key: "houseBattery", name: "House batteries", detail: "Check water levels on flooded batteries, and terminals on all of them.", symbol: "battery.75", months: 3, isCore: false),
-        CatalogItem(key: "generator", name: "Generator service", detail: "Oil change and an exercise run. Generators hate sitting.", symbol: "bolt.circle", months: 12, isCore: false, difficulty: .moderate),
+        CatalogItem(key: "generator", name: "Generator service", detail: "Oil and filter about every 150 hours or once a year, plus a monthly exercise run. Generators hate sitting.", symbol: "bolt.circle", months: 12, auxHours: 150, isCore: false, difficulty: .moderate,
+                    gear: [.init(title: "Generator oil filter", query: "RV generator oil filter")]),
         CatalogItem(key: "acFilters", name: "A/C filters", detail: "Wash the roof unit filters.", symbol: "air.conditioner.horizontal", months: 6, isCore: false),
     ]
 
@@ -456,6 +467,7 @@ enum MaintenanceCatalog {
         CatalogItem(key: "bottom", name: "Bottom paint and hull", detail: "Boats kept in the water need fresh antifouling every year or two.", symbol: "paintbrush", months: 24, isCore: false, difficulty: .shop),
         CatalogItem(key: "wax", name: "Wash and wax", detail: "Gelcoat oxidizes in the sun. Wax twice a season.", symbol: "sparkles", months: 6, isCore: false,
                     gear: [.init(title: "Marine wax", query: "marine gelcoat wax")]),
+        CatalogItem(key: "generator", name: "Generator service", detail: "Oil, impeller and zinc about every 150 hours or once a season.", symbol: "bolt.circle", months: 12, auxHours: 150, isCore: false, difficulty: .moderate),
     ]
 
     static let sailboatRig: [CatalogItem] = [
@@ -482,19 +494,19 @@ enum MaintenanceCatalog {
         var items: [CatalogItem] = [
             CatalogItem(
                 key: "annual", name: "Annual inspection", detail: "Required every 12 calendar months under 14 CFR 91.409.",
-                symbol: "checkmark.seal", months: 12, difficulty: .shop, source: "14 CFR 91.409"
+                symbol: "checkmark.seal", months: 12, calendarMonths: true, difficulty: .shop, source: "14 CFR 91.409"
             ),
             CatalogItem(
                 key: "elt", name: "ELT inspection", detail: "Required every 12 calendar months under 14 CFR 91.207(d). Check the battery expiration too.",
-                symbol: "antenna.radiowaves.left.and.right", months: 12, difficulty: .shop, source: "14 CFR 91.207"
+                symbol: "antenna.radiowaves.left.and.right", months: 12, calendarMonths: true, difficulty: .shop, source: "14 CFR 91.207"
             ),
             CatalogItem(
                 key: "transponder", name: "Transponder check", detail: "Every 24 calendar months under 14 CFR 91.413.",
-                symbol: "dot.radiowaves.right", months: 24, difficulty: .shop, source: "14 CFR 91.413"
+                symbol: "dot.radiowaves.right", months: 24, calendarMonths: true, difficulty: .shop, source: "14 CFR 91.413"
             ),
             CatalogItem(
                 key: "pitotStatic", name: "Pitot-static and altimeter", detail: "Every 24 calendar months for IFR flight under 14 CFR 91.411.",
-                symbol: "gauge.with.dots.needle.33percent", months: 24, difficulty: .shop, source: "14 CFR 91.411"
+                symbol: "gauge.with.dots.needle.33percent", months: 24, calendarMonths: true, difficulty: .shop, source: "14 CFR 91.411"
             ),
             CatalogItem(
                 key: "registration", name: "Registration renewal", detail: "FAA aircraft registration runs seven years.",

@@ -27,6 +27,11 @@ struct WidgetSnapshot: Codable, Sendable {
     var vehicles: [VehicleSummary]
     var updatedAt: Date
 
+    /// `keyring://vehicle/<id>`, which the app opens on that vehicle.
+    static func url(forVehicle id: String) -> URL? {
+        URL(string: "keyring://vehicle/\(id)")
+    }
+
     static let empty = WidgetSnapshot(vehicles: [], updatedAt: .distantPast)
 
     static func read() -> WidgetSnapshot {

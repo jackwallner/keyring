@@ -120,8 +120,11 @@ extension DueStatus {
 }
 
 extension TaskDue {
-    /// "Due in 3 weeks", "Overdue by 400 mi", "Due around Mar 12".
-    func dueLine(meter: MeterUnit, current: Double, now: Date = .now) -> String {
+    /// "Due in 3 weeks", "Overdue by 400 mi", "Due around Mar 12", on the
+    /// meter this job counts.
+    func dueLine(now: Date = .now) -> String {
+        let meter = self.meter
+        let current = currentReading
         switch result.status {
         case .noRecord:
             return "When was it last done?"

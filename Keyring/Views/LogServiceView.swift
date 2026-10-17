@@ -19,6 +19,7 @@ struct LogServiceView: View {
 
     @State private var draft = GarageStore.ServiceDraft()
     @State private var reading: Double?
+    @State private var auxReading: Double?
     @State private var cost: Double?
     @State private var selected: Set<UUID> = []
     @State private var photoItems: [PhotosPickerItem] = []
@@ -213,7 +214,7 @@ struct LogServiceView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(due.name).foregroundStyle(Theme.ink)
                             if due.result.status <= .dueSoon {
-                                Text(due.dueLine(meter: vehicle.meter, current: vehicle.reading))
+                                Text(due.dueLine())
                                     .font(.caption)
                                     .foregroundStyle(due.result.status.color)
                             }
@@ -267,6 +268,12 @@ struct LogServiceView: View {
             if vehicle.meter.hasReading {
                 LabeledContent(vehicle.meter.meterName) {
                     NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+            if vehicle.hasAuxMeter {
+                LabeledContent("\(vehicle.auxMeterName ?? "Second meter") hours") {
+                    NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxReading, suffix: "hrs", allowsDecimal: true)
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -399,6 +406,7 @@ struct LogServiceView: View {
             draft.isDIY = editing.isDIY
             draft.notes = editing.notes ?? ""
             reading = editing.hasReading ? editing.reading : nil
+            auxReading = editing.hasAuxReading ? editing.auxReading : nil
             cost = editing.cost > 0 ? editing.cost : nil
             selected = Set(editing.coveredTaskIDs)
             // A custom title that matches the generated one stays generated.
@@ -456,6 +464,7 @@ struct LogServiceView: View {
     private func save() {
         if draft.kind == .service, draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
         draft.reading = reading
+        draft.auxReading = auxReading
         draft.cost = cost ?? 0
         draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }
         garage.log(draft, for: vehicle, editing: editing)

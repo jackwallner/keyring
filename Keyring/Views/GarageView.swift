@@ -193,7 +193,7 @@ struct GarageView: View {
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.ink)
                                     .lineLimit(2)
-                                Text(due.dueLine(meter: vehicle.meter, current: vehicle.reading))
+                                Text(due.dueLine())
                                     .font(.footnote)
                                     .foregroundStyle(due.result.status.color)
                             }
@@ -376,7 +376,7 @@ struct VehicleCard: View {
         guard let next = headline.next else {
             return garage.dues(for: vehicle).isEmpty ? "No schedule yet" : "Add when jobs were last done"
         }
-        let line = next.dueLine(meter: vehicle.meter, current: vehicle.reading)
+        let line = next.dueLine()
         if headline.urgentCount > 1 {
             let dues = garage.dues(for: vehicle)
             let overdue = dues.filter { $0.result.status == .overdue }.count
@@ -428,7 +428,7 @@ struct RetiredVehiclesView: View {
                             VehicleArt(vehicle: vehicle).frame(width: 44, height: 44)
                             VStack(alignment: .leading) {
                                 Text(vehicle.displayName).font(.body.weight(.semibold))
-                                Text(vehicle.descriptor).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                                Text(subtitle(vehicle)).font(.footnote).foregroundStyle(Theme.secondaryInk)
                             }
                         }
                     }
@@ -440,5 +440,10 @@ struct RetiredVehiclesView: View {
         .paperBackground()
         .navigationTitle("Sold and retired")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func subtitle(_ vehicle: Vehicle) -> String {
+        let status = vehicle.soldDate.map { "Sold " + $0.formatted(.dateTime.month(.abbreviated).year()) } ?? "Retired"
+        return [vehicle.descriptor.nilIfEmpty, status].compactMap { $0 }.joined(separator: " · ")
     }
 }

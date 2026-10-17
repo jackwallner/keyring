@@ -52,9 +52,9 @@ struct UpcomingWidgetView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else if family == .systemSmall {
-                small(items[0])
+                small(items[0]).widgetURL(WidgetSnapshot.url(forVehicle: items[0].vehicle.id))
             } else if family == .accessoryRectangular {
-                accessory(items[0])
+                accessory(items[0]).widgetURL(WidgetSnapshot.url(forVehicle: items[0].vehicle.id))
             } else {
                 list(Array(items.prefix(family == .systemLarge ? 6 : 3)))
             }
@@ -102,24 +102,32 @@ struct UpcomingWidgetView: View {
                 .font(.system(.subheadline, design: .serif, weight: .semibold))
                 .foregroundStyle(Theme.ink)
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                HStack(spacing: 8) {
-                    Image(systemName: item.vehicle.symbol)
-                        .font(.caption)
-                        .foregroundStyle(.white)
-                        .frame(width: 24, height: 24)
-                        .background(Color(hex: item.vehicle.tintHex), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(item.item.name).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-                        Text(item.vehicle.name).font(.caption2).foregroundStyle(Theme.secondaryInk).lineLimit(1)
-                    }
-                    Spacer()
-                    Text(when(item.item))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(color(item.item.statusRaw))
-                        .lineLimit(1)
+                if let url = WidgetSnapshot.url(forVehicle: item.vehicle.id) {
+                    Link(destination: url) { row(item) }
+                } else {
+                    row(item)
                 }
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    private func row(_ item: (vehicle: WidgetSnapshot.VehicleSummary, item: WidgetSnapshot.Item)) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: item.vehicle.symbol)
+                .font(.caption)
+                .foregroundStyle(.white)
+                .frame(width: 24, height: 24)
+                .background(Color(hex: item.vehicle.tintHex), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            VStack(alignment: .leading, spacing: 0) {
+                Text(item.item.name).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+                Text(item.vehicle.name).font(.caption2).foregroundStyle(Theme.secondaryInk).lineLimit(1)
+            }
+            Spacer()
+            Text(when(item.item))
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(color(item.item.statusRaw))
+                .lineLimit(1)
         }
     }
 

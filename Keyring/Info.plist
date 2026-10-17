@@ -24,6 +24,35 @@
 	<string>The camera photographs your vehicles and receipts, reads a VIN or odometer, and scans a family invite code. Photos stay in your iCloud unless you choose to share one.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose photos of your vehicles and receipts to keep with their service records.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.jackwallner.keyring</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>keyring</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Spreadsheet</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.comma-separated-values-text</string>
+				<string>public.tab-separated-values-text</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
 	<key>CKSharingSupported</key>
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>

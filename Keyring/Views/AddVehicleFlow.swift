@@ -262,10 +262,23 @@ struct VehicleDetailsForm: View {
                             .multilineTextAlignment(.trailing)
                     }
                 }
+                if draft.kind.offersAuxMeter {
+                    Toggle("Second hour meter", isOn: Binding(
+                        get: { !draft.auxMeterName.isEmpty },
+                        set: { draft.auxMeterName = $0 ? "Generator" : "" }
+                    ))
+                    if !draft.auxMeterName.isEmpty {
+                        LabeledContent("Name") {
+                            TextField("Generator", text: $draft.auxMeterName)
+                                .multilineTextAlignment(.trailing)
+                                .textInputAutocapitalization(.words)
+                        }
+                    }
+                }
             } header: {
                 Text("Engine and meter")
             } footer: {
-                Text(draft.meter == .hours ? "Engine hours drive the schedule for boats, planes and equipment." : "The schedule picks jobs for this powertrain. You can change any of it later.")
+                Text(meterFooter)
             }
 
             Section {
@@ -351,6 +364,14 @@ struct VehicleDetailsForm: View {
                 Task { await lookUp() }
             }
         }
+    }
+
+    private var meterFooter: String {
+        var text = draft.meter == .hours ? "Engine hours drive the schedule for boats, planes and equipment." : "The schedule picks jobs for this powertrain. You can change any of it later."
+        if draft.kind.offersAuxMeter {
+            text += " A second hour meter tracks a generator or second engine on its own schedule."
+        }
+        return text
     }
 
     private var isValid: Bool {
@@ -511,7 +532,7 @@ struct EditVehicleView: View {
                 kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
                 year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
                 nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
-                reading: vehicle.reading, photo: vehicle.photo, tint: vehicle.tint
+                reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", photo: vehicle.photo, tint: vehicle.tint
             )
         }
     }
@@ -531,6 +552,8 @@ struct EditVehicleView: View {
         vehicle.photo = draft.photo
         vehicle.tint = draft.tint ?? vehicle.tint
         garage.saveVehicleEdits()
+        let auxName = vehicle.kind.offersAuxMeter ? draft.auxMeterName.trimmed.nilIfEmpty : nil
+        if auxName != vehicle.auxMeterName { garage.setAuxMeter(vehicle, name: auxName) }
         // Edit sets the meter exactly, so a typo can be walked back.
         if draft.meter.hasReading, readingTyped, draft.reading > 0 {
             garage.correctReading(vehicle, to: draft.reading)

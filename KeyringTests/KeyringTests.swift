@@ -63,6 +63,22 @@ final class DueEngineTests: XCTestCase {
         XCTAssertNil(result.dueReading)
     }
 
+    func testFAACalendarMonthsRunToTheEndOfTheMonth() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        let signed = utc.date(from: DateComponents(year: 2026, month: 3, day: 3))!
+        let april = utc.date(from: DateComponents(year: 2027, month: 3, day: 20))!
+        let value = DueInput(intervalDistance: 0, intervalMonths: 12, lastDate: signed, lastReading: nil,
+                             currentReading: 0, dailyUse: 0, meter: .hours, calendarMonths: true)
+        let result = DueEngine.evaluate(value, now: april, calendar: utc)
+        let due = utc.dateComponents([.year, .month, .day], from: result.dueDate!)
+        XCTAssertEqual([due.year, due.month, due.day], [2027, 3, 31])
+        XCTAssertEqual(result.status, .dueSoon)
+        XCTAssertEqual(DueEngine.evaluate(value, now: utc.date(from: DateComponents(year: 2027, month: 4, day: 1))!, calendar: utc).status, .overdue)
+        XCTAssertTrue(MaintenanceCatalog.usesCalendarMonths(key: "annual", kind: .aircraft))
+        XCTAssertFalse(MaintenanceCatalog.usesCalendarMonths(key: "annual", kind: .golfCart))
+    }
+
     func testDailyUseNeedsTwoWeeksOfSpread() {
         let points = [(now.addingTimeInterval(-5 * 86_400), 100.0), (now, 400.0)]
         XCTAssertEqual(DueEngine.dailyUse(readings: points, fallback: 33, now: now), 33)
@@ -269,6 +285,42 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(due.result.status, .ok)
     }
 
+    func testGeneratorCountsOnItsOwnMeter() {
+        let store = makeStore()
+        var draft = NewVehicle()
+        draft.kind = .rv
+        draft.reading = 20_000
+        draft.auxMeterName = "Generator"
+        let rv = store.addVehicle(draft)
+        let generator = rv.enabledTasks.first { $0.catalogKey == "generator" }!
+        XCTAssertTrue(generator.usesAuxMeter)
+        XCTAssertEqual(generator.intervalDistance, 150)
+        var log = GarageStore.ServiceDraft()
+        log.taskIDs = [generator.id!]
+        log.auxReading = 100
+        store.log(log, for: rv)
+        store.updateAuxReading(rv, to: 260)
+        let due = store.dues(for: rv).first { $0.catalogKey == "generator" }!
+        XCTAssertEqual(due.meter, .hours)
+        XCTAssertEqual(due.result.status, .overdue)
+        XCTAssertEqual(due.dueLine(), "Overdue by 10 hrs")
+        XCTAssertEqual(rv.reading, 20_000)
+        store.setAuxMeter(rv, name: nil)
+        XCTAssertFalse(rv.enabledTasks.first { $0.catalogKey == "generator" }!.usesAuxMeter)
+    }
+
+    func testSellingKeepsTheDateAndPriceUntilRestored() {
+        let store = makeStore()
+        let car = store.addVehicle(NewVehicle())
+        store.markSold(car, on: .now, price: 12_500)
+        XCTAssertTrue(car.isRetired)
+        XCTAssertEqual(car.soldPrice, 12_500)
+        XCTAssertEqual(store.ownedVehicleCount, 0)
+        store.retire(car, false)
+        XCTAssertNil(car.soldDate)
+        XCTAssertEqual(car.soldPrice, 0)
+    }
+
     func testCorrectingATypoLowersTheMeter() {
         let store = makeStore()
         let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 52_000))
@@ -357,6 +409,96 @@ final class ReminderPlanTests: XCTestCase {
         XCTAssertEqual(plan.filter { $0.id.hasPrefix("day-") }.count, 1)
         XCTAssertEqual(plan.filter { $0.id == "weekend-overdue" }.count, 1)
         XCTAssertEqual(plan.first { $0.id == "weekend-overdue" }?.title, "2 jobs are overdue")
+    }
+}
+
+final class ImportTests: XCTestCase {
+    private let us = Locale(identifier: "en_US")
+
+    func testFuellyStyleSplitsFillUpsFromServices() {
+        let fuel = """
+        car_name,model,mpg,odometer,miles,gallons,price,city_percentage,fuelup_date,date_added,tags,notes,missed_fuelup,partial_fuelup
+        Tacoma,Tacoma,19.2,41200,288,15,3.49,50,2024-03-02,2024-03-02 10:00,,,0,0
+        Tacoma,Tacoma,18.7,41510,310,16.6,3.59,50,2024-03-15,2024-03-15 09:00,,,0,0
+        """
+        let result = ServiceImport.parse(fuel, locale: us)
+        XCTAssertEqual(result.source, .fuelly)
+        XCTAssertEqual(result.fillUps.count, 2)
+        XCTAssertTrue(result.services.isEmpty)
+        XCTAssertEqual(result.fillUps.last?.reading, 41_510)
+    }
+
+    func testStackedSectionsSkipExpensesAndReadEuropeanFigures() {
+        let file = """
+        ##Refuelling
+        Date;Odometer;Liters;Total
+        12/03/2024;45.120;40,2;71,50
+        ##Service
+        Date;Odometer;Service;Total cost;Place;Notes
+        01/02/2024;44.900;Oil change, tire rotation;89,90;Midas;synthetic
+        05/01/2024;44.100;Brake pads;240,00;;
+        ##Expense
+        Date;Odometer;Expense;Total
+        06/01/2024;44.200;Insurance;600,00
+        """
+        let result = ServiceImport.parse(file, locale: Locale(identifier: "en_GB"))
+        XCTAssertEqual(result.fillUps.count, 1)
+        XCTAssertEqual(result.services.count, 2)
+        XCTAssertEqual(result.skippedExpenses, 1)
+        let oil = result.services.last!
+        XCTAssertEqual(oil.reading, 44_900)
+        XCTAssertEqual(oil.cost, 89.90, accuracy: 0.001)
+        XCTAssertEqual(oil.shop, "Midas")
+        // Day first: 1 February, not January 2.
+        XCTAssertEqual(Calendar.current.component(.month, from: oil.date), 2)
+        XCTAssertEqual(ServiceImport.catalogKeys(for: oil.work), ["rotate", "oil"])
+    }
+
+    func testOwnExportRoundTrips() {
+        let file = """
+        Vehicle,Year,Make,Model,Date,Odometer,Unit,Type,Work,Covered jobs,Cost,Shop,DIY,Notes,Logged by
+        Tacoma,2019,Toyota,Tacoma,2025-06-01,52000,mi,Repair,Water pump,,420.00,Dave's,,"Leaking, replaced",Dana
+        """
+        let row = ServiceImport.parse(file, locale: us).services[0]
+        XCTAssertEqual(row.kind, .repair)
+        XCTAssertEqual(row.unit, .miles)
+        XCTAssertEqual(row.notes, "Leaking, replaced")
+        XCTAssertEqual(row.loggedBy, "Dana")
+        XCTAssertEqual(row.make, "Toyota")
+    }
+
+    func testSpecificJobsWinOverEngineOil() {
+        XCTAssertEqual(ServiceImport.catalogKeys(for: "Lower unit gear oil"), ["gearOil", "diffs"])
+        XCTAssertEqual(ServiceImport.catalogKeys(for: "Transmission oil"), ["transmission", "transmissionFluid", "hydraulic"])
+        XCTAssertEqual(ServiceImport.catalogKeys(for: "Fixed oil leak"), [])
+        XCTAssertEqual(ServiceImport.catalogKeys(for: "LOF"), ["oil"])
+    }
+
+    func testNumbers() {
+        XCTAssertEqual(ServiceImport.number("$1,234.50"), 1_234.5)
+        XCTAssertEqual(ServiceImport.number("1.234,50 €"), 1_234.5)
+        XCTAssertEqual(ServiceImport.number("45,000"), 45_000)
+        XCTAssertEqual(ServiceImport.number("12,5"), 12.5)
+        XCTAssertNil(ServiceImport.number("n/a"))
+    }
+
+    @MainActor
+    func testImportingTwiceAddsNothingAndRestartsTheSchedule() {
+        let store = GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+        var draft = NewVehicle()
+        draft.reading = 30_000
+        let vehicle = store.addVehicle(draft)
+        let file = """
+        Date,Odometer,Service,Cost
+        2025-01-10,28000,Oil change,59.99
+        """
+        let rows = ServiceImport.parse(file, locale: us).services
+        let first = store.importHistory(rows, into: vehicle)
+        XCTAssertEqual(first.added, 1)
+        XCTAssertEqual(first.jobsUpdated, 1)
+        XCTAssertEqual(store.importHistory(rows, into: vehicle).duplicates, 1)
+        let oil = store.dues(for: vehicle).first { $0.catalogKey == "oil" }!
+        XCTAssertEqual(oil.lastReading, 28_000)
     }
 }
 
