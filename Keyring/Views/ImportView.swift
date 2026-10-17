@@ -13,6 +13,7 @@ struct ImportView: View {
     var fileURL: URL?
 
     enum Target: Hashable {
+        case unchosen
         case vehicle(NSManagedObjectID)
         case new
         case skip
@@ -178,6 +179,7 @@ struct ImportView: View {
         let fills = result.fillUps.filter { $0.vehicleName == name }
         return Section {
             Picker("Add to", selection: binding(for: name)) {
+                if targets[name] == .unchosen { Text("Choose").tag(Target.unchosen) }
                 ForEach(garage.vehicles) { vehicle in
                     Text(vehicle.displayName).tag(Target.vehicle(vehicle.objectID))
                 }
@@ -237,6 +239,7 @@ struct ImportView: View {
     }
 
     private func importTitle(_ result: ServiceImport.Result) -> String {
+        if targets.values.contains(.unchosen) { return "Choose a vehicle" }
         let names = Set(targets.filter { $0.value != .skip }.map(\.key))
         let services = result.services.filter { names.contains($0.vehicleName) }.count
         if services > 0 { return "Import \(Format.count(services, "service", "services"))" }
@@ -245,6 +248,7 @@ struct ImportView: View {
     }
 
     private func canImport(_ result: ServiceImport.Result) -> Bool {
+        guard !targets.values.contains(.unchosen) else { return false }
         let names = Set(targets.filter { $0.value != .skip }.map(\.key))
         return result.services.contains { names.contains($0.vehicleName) }
             || (keepFillUps && result.fillUps.contains { names.contains($0.vehicleName) && $0.reading != nil })
@@ -277,6 +281,8 @@ struct ImportView: View {
                 targets[name] = .vehicle(preselected.objectID)
             } else if name.isEmpty, garage.vehicles.count == 1, let only = garage.vehicles.first {
                 targets[name] = .vehicle(only.objectID)
+            } else if name.isEmpty, !garage.vehicles.isEmpty {
+                targets[name] = .unchosen
             } else {
                 targets[name] = .new
             }
@@ -319,7 +325,7 @@ struct ImportView: View {
 
     private func vehicle(for name: String, rows: [ServiceImport.Row]) -> Vehicle? {
         switch targets[name] ?? .skip {
-        case .skip:
+        case .skip, .unchosen:
             return nil
         case let .vehicle(id):
             return garage.vehicles.first { $0.objectID == id }

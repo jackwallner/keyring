@@ -224,7 +224,7 @@ enum ServiceImport {
                     let nextFilled = next.map(\.trimmed).filter { !$0.isEmpty }
                     if nextFilled.isEmpty { index += 1; if body.isEmpty { continue } else { break } }
                     if let other = headerMapping(next), other[.date] != nil, other.count >= 2 { break }
-                    if nextFilled.count == 1, next.count > 1, isSectionTitle(nextFilled[0]) { break }
+                    if nextFilled.count == 1, isSectionTitle(nextFilled[0]) { break }
                     body.append(next)
                     index += 1
                 }

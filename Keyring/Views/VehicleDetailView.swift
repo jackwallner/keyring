@@ -778,8 +778,8 @@ struct RetireVehicleSheet: View {
             if sold {
                 Section {
                     DatePicker("Sold on", selection: $date, in: ...Date.now, displayedComponents: .date)
-                    LabeledContent("Price") {
-                        NumberField(title: "Optional", value: $price, isCurrency: true)
+                    LabeledContent("Price (optional)") {
+                        NumberField(title: "0", value: $price, isCurrency: true)
                             .multilineTextAlignment(.trailing)
                     }
                 } footer: {
@@ -806,7 +806,7 @@ struct RetireVehicleSheet: View {
                     .foregroundStyle(Theme.brass)
                     .padding(.top, Theme.lg)
                 Text("Hand over its history").font(Theme.title(28)).foregroundStyle(Theme.ink)
-                Text("A clean record of every job helps the buyer trust the price, and it's the last favor you do for \(vehicle.displayName).")
+                Text("A clean record of every job helps the buyer trust the price.")
                     .foregroundStyle(Theme.secondaryInk)
                 VStack(spacing: Theme.sm) {
                     Button {

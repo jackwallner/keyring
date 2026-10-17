@@ -474,6 +474,16 @@ final class ImportTests: XCTestCase {
         XCTAssertEqual(ServiceImport.catalogKeys(for: "LOF"), ["oil"])
     }
 
+    @MainActor
+    func testWidgetLinksOpenTheVehicle() {
+        let id = UUID()
+        let router = NotificationRouter()
+        router.open(WidgetSnapshot.url(forVehicle: id.uuidString)!)
+        XCTAssertEqual(router.destination, .init(vehicleID: id, showsRecalls: false))
+        router.open(URL(fileURLWithPath: "/tmp/log.csv"))
+        XCTAssertEqual(router.importFile?.lastPathComponent, "log.csv")
+    }
+
     func testNumbers() {
         XCTAssertEqual(ServiceImport.number("$1,234.50"), 1_234.5)
         XCTAssertEqual(ServiceImport.number("1.234,50 €"), 1_234.5)
