@@ -354,6 +354,8 @@ struct NumberField: View {
     var isCurrency = false
     /// Off for years, which never take a thousands separator.
     var grouping = true
+    /// Pumps show gallons and the price per gallon to a tenth of a cent.
+    var fractionDigits = 2
 
     @State private var text = ""
     @FocusState private var focused: Bool
@@ -371,14 +373,14 @@ struct NumberField: View {
                 Text(suffix).foregroundStyle(Theme.secondaryInk)
             }
         }
-        .onAppear { text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping) }
+        .onAppear { text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping, fractionDigits: fractionDigits) }
         .onChange(of: value) { _, newValue in
             guard !focused else { return }
-            text = Self.display(newValue, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping)
+            text = Self.display(newValue, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping, fractionDigits: fractionDigits)
         }
         .onChange(of: focused) { _, isFocused in
             guard !isFocused else { return }
-            text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping)
+            text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping, fractionDigits: fractionDigits)
         }
         .toolbar {
             if focused {
@@ -401,16 +403,16 @@ struct NumberField: View {
     private static var symbol: String { Locale.current.currencySymbol ?? "$" }
 
     /// Grouped and, for money, led by the symbol; `parse` strips both back out.
-    static func display(_ value: Double?, allowsDecimal: Bool, isCurrency: Bool = false, grouping: Bool = true) -> String {
+    static func display(_ value: Double?, allowsDecimal: Bool, isCurrency: Bool = false, grouping: Bool = true, fractionDigits: Int = 2) -> String {
         guard let value else { return "" }
         if isCurrency {
             let digits = value == value.rounded()
                 ? Int(value).formatted()
-                : value.formatted(.number.precision(.fractionLength(2)))
+                : value.formatted(.number.precision(.fractionLength(2...max(2, fractionDigits))))
             return symbol + digits
         }
         if allowsDecimal, value != value.rounded() {
-            return value.formatted(.number.precision(.fractionLength(0...2)).grouping(grouping ? .automatic : .never))
+            return value.formatted(.number.precision(.fractionLength(0...fractionDigits)).grouping(grouping ? .automatic : .never))
         }
         return Int(value.rounded()).formatted(.number.grouping(grouping ? .automatic : .never))
     }

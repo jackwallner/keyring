@@ -310,7 +310,10 @@ struct TaskEditor: View {
                     Text(meter.hasReading ? "Whichever comes first. Leave one empty to use only the other." : "Leave empty for a job you log only as needed.")
                 }
                 Section("Notes") {
-                    TextField("Part numbers, torque specs, the shop you trust", text: $notes, axis: .vertical).lineLimit(2...6)
+                    HStack(alignment: .top) {
+                        TextField("Part numbers, torque specs, the shop you trust", text: $notes, axis: .vertical).lineLimit(2...6)
+                        ScanFieldButton(kind: .text) { notes = notes.trimmed.isEmpty ? $0 : notes + "\n" + $0 }
+                    }
                 }
                 if let task {
                     Section {
@@ -370,8 +373,11 @@ struct LastDoneSheet: View {
                     DatePicker("Date", selection: $date, in: ...Date.now, displayedComponents: .date)
                     if task.countingMeter.hasReading {
                         LabeledContent(task.meterLabel) {
-                            NumberField(title: "If you know it", value: $reading, suffix: task.countingMeter.short, allowsDecimal: task.countingMeter == .hours)
-                                .multilineTextAlignment(.trailing)
+                            HStack(spacing: Theme.xs) {
+                                NumberField(title: "If you know it", value: $reading, suffix: task.countingMeter.short, allowsDecimal: task.countingMeter == .hours)
+                                    .multilineTextAlignment(.trailing)
+                                ScanFieldButton(kind: .reading(last: 0, meter: task.countingMeter)) { reading = Double($0) }
+                            }
                         }
                     }
                 } footer: {

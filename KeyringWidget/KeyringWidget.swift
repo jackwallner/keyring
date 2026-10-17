@@ -46,7 +46,7 @@ struct UpcomingWidgetView: View {
             if items.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Image(systemName: "key.horizontal.fill").foregroundStyle(Theme.brass)
-                    Text(entry.snapshot.vehicles.isEmpty ? "Add a vehicle in Keyring" : "All caught up")
+                    Text(entry.snapshot.vehicles.isEmpty ? "Add a vehicle in the app" : "All caught up")
                         .font(.system(.subheadline, design: .serif, weight: .semibold))
                     Spacer()
                 }

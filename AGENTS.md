@@ -1,6 +1,6 @@
-# Keyring Project Guide
+# Vehicle Maintenance Log Project Guide
 
-Keyring: Car Maintenance Log. A shared service log for every vehicle a family owns (cars, trucks, motorcycles, boats, aircraft, RVs, ATVs, mowers). XcodeGen project/scheme: `Keyring`, sim lease owner `keyring`.
+Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared service log for every vehicle a family owns (cars, trucks, motorcycles, boats, aircraft, RVs, ATVs, mowers). XcodeGen project/scheme: `Keyring`, sim lease owner `keyring`. User-facing copy says "Vehicle Maintenance Log" (home screen "Maintenance Log", paid tier "Pro"); bundle IDs, the CloudKit container, product IDs and type names keep `keyring` because changing them orphans data and the ASC record.
 
 ## Tech Stack
 - Swift 6 / SwiftUI (strict concurrency), iOS 17+
@@ -15,7 +15,7 @@ Keyring: Car Maintenance Log. A shared service log for every vehicle a family ow
 - App Group `group.com.jackwallner.keyring`, iCloud `iCloud.com.jackwallner.keyring`
 - ASC app `6823808045`. RevenueCat project `proj634d6667`
 - Products: `com.jackwallner.keyring.monthly` ($1.99, 1-week trial), `.yearly` ($14.99, 1-week trial), `.lifetime` ($29.99)
-- Free tier: 2 active vehicles, unlimited logging, reminders, recalls, sharing, CSV. Pro: unlimited vehicles, Service Record PDF, receipt auto-fill, insights. Limit lives in `ProFeature.freeVehicleLimit`.
+- Free tier: 2 active vehicles, unlimited logging, reminders, recalls, sharing, CSV. Pro: unlimited vehicles, Service Record PDF, receipt and pump-photo auto-fill, insights. Fill-ups, odometer photo reading and photo fill for typed fields are free. Limit lives in `ProFeature.freeVehicleLimit`.
 
 ## Architecture
 - `Shared/Models`: `KeyringModel` (code-built Core Data model: Garage, Vehicle, MaintenanceTask, ServiceEntry, MeterReading, Valuation, Attachment), `VehicleKind` (kinds, powertrains, meters)
@@ -25,11 +25,11 @@ Keyring: Car Maintenance Log. A shared service log for every vehicle a family ow
 - `Keyring/Views`: Garage (key-tag cards), VehicleDetail, LogService, Schedule, History, Explore (value, gear, upgrades, clubs, recalls, gallery, insights), Family, AddVehicleFlow, Paywall, Onboarding, Settings
 
 ## Rules that hold everywhere
-- Third-party values (KBB, Edmunds, J.D. Power, Aircraft Bluebook) are deep links only. Never show one as Keyring's own number.
+- Third-party values (KBB, Edmunds, J.D. Power, Aircraft Bluebook) are deep links only. Never show one as the app's own number.
 - Amazon links open in Safari, never an in-app webview or the PDF. `AmazonLinks.associateTag` is empty; the disclosure only shows once a tag is set.
 - Community photos need terms consent, report, block and 24-hour review (App Review 1.2). Keep all four.
 - `StoreService` never configures the `appl_` key on the simulator.
-- Debug launch args: `-SeedDemo`, `-DemoPro`, `-EmptyLog`, `-ScreenshotRoute vehicle|explore|record|log|family|add|history|settings`, `-PaywallSnapshot monthly|yearly|lifetime`.
+- Debug launch args: `-SeedDemo`, `-DemoPro`, `-EmptyLog`, `-ScreenshotRoute vehicle|explore|record|log|fuel|fuelcard|family|add|history|settings`, `-PaywallSnapshot monthly|yearly|lifetime`.
 
 ## Deep notes (load on demand)
 | File | Covers | Read when |
@@ -38,7 +38,8 @@ Keyring: Car Maintenance Log. A shared service log for every vehicle a family ow
 
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.
-- Support/privacy/terms pages: `docs/` on GitHub Pages (`jackwallner.github.io/keyring`).
+- Support/privacy/terms pages: `docs/` on GitHub Pages (`jackwallner.github.io/keyring`), mirrored to `jackwallner.com/ios/vehicle-maintenance-log/` (old `/ios/keyring/` redirects).
+- Recalls: NHTSA's per-VIN repair status is behind reCAPTCHA, so `RecallMatcher` closes a recall from the log instead (a logged fix, or its NHTSA or maker code in an entry's notes or a saved receipt's OCR text).
 
 ---
 Shared iOS conventions (build, simulator, release/TestFlight, ASC key, signing, ratings ask, gotchas):

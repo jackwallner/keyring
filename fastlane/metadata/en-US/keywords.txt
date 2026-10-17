@@ -1,1 +1,1 @@
-oil,change,reminder,garage,care,vin,decoder,recall,motorcycle,rv,aircraft,logbook,truck,mileage,my
+oil,change,reminder,garage,vin,decoder,motorcycle,rv,aircraft,logbook,truck,mileage,car,boat,gas,suv

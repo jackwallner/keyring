@@ -134,10 +134,10 @@ struct SettingsView: View {
                      : "iCloud is off, so everything stays on this iPhone. Sign in to iCloud to back it up and share it. The spreadsheet is always free.")
             }
 
-            Section("Keyring") {
-                Button { openURL(AppLinks.writeReview) } label: { Label("Rate Keyring", systemImage: "star") }
+            Section("Vehicle Maintenance Log") {
+                Button { openURL(AppLinks.writeReview) } label: { Label("Rate the app", systemImage: "star") }
                 Button { openURL(AppLinks.feedback) } label: { Label("Send feedback", systemImage: "envelope") }
-                ShareLink(item: AppLinks.shareApp, message: Text("Keyring keeps our maintenance for every vehicle in one place.")) {
+                ShareLink(item: AppLinks.shareApp, message: Text("Vehicle Maintenance Log keeps the maintenance for every vehicle we own in one place.")) {
                     Label("Tell a friend", systemImage: "square.and.arrow.up")
                 }
                 Button { openURL(AppLinks.support) } label: { Label("Help", systemImage: "questionmark.circle") }
@@ -149,7 +149,7 @@ struct SettingsView: View {
                 Link("Terms of Use", destination: AppLinks.standardEULA)
                 Link("Community guidelines", destination: AppLinks.communityGuidelines)
             } footer: {
-                Text("Maintenance intervals are typical figures for normal use, not manufacturer schedules. Always follow your owner's manual. Keyring is not an official aircraft or vessel logbook and doesn't replace one.\n\nKeyring \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
+                Text("Maintenance intervals are typical figures for normal use, not manufacturer schedules. Always follow your owner's manual. This app is not an official aircraft or vessel logbook and doesn't replace one.\n\nVehicle Maintenance Log \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
             }
             .foregroundStyle(Theme.ink)
 
@@ -185,7 +185,7 @@ struct SettingsView: View {
         Section {
             if store.isPro {
                 HStack {
-                    Label("Keyring Pro", systemImage: "checkmark.seal.fill").foregroundStyle(Theme.brass)
+                    Label("Pro", systemImage: "checkmark.seal.fill").foregroundStyle(Theme.brass)
                     Spacer()
                     Link("Manage", destination: AppLinks.manageSubscriptions).font(.subheadline.weight(.semibold))
                 }
@@ -193,13 +193,13 @@ struct SettingsView: View {
                 Button { showingPaywall = true } label: {
                     HStack(spacing: Theme.sm) {
                         if !dynamicTypeSize.isAccessibilitySize {
-                            Image(systemName: "key.horizontal.fill")
+                            Image(systemName: "book.closed.fill")
                                 .foregroundStyle(Theme.brass)
                                 .frame(width: 40, height: 40)
                                 .background(Theme.brassSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Keyring Pro").font(.headline).foregroundStyle(Theme.ink)
+                            Text("Vehicle Maintenance Log Pro").font(.headline).foregroundStyle(Theme.ink)
                             Text("Every vehicle, the Service Record, receipt reading and insights")
                                 .font(.footnote).foregroundStyle(Theme.secondaryInk)
                         }

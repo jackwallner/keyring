@@ -184,7 +184,6 @@ struct VehicleDetailsForm: View {
     @State private var lookingUp = false
     @State private var lookupMessage: String?
     @State private var decoded: DecodedVIN?
-    @State private var showingVINScanner = false
     @State private var modelSuggestions: [String] = []
     @State private var photoItem: PhotosPickerItem?
     @State private var yearValue: Double?
@@ -242,9 +241,9 @@ struct VehicleDetailsForm: View {
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                             .font(.body.monospaced())
-                        if LiveTextScanner.isAvailable {
-                            Button { showingVINScanner = true } label: { Image(systemName: "camera.viewfinder") }
-                                .accessibilityLabel("Scan VIN")
+                        ScanFieldButton(kind: .vin) { vin in
+                            draft.vin = vin
+                            Task { await lookUp() }
                         }
                     }
                     if NHTSAClient.normalizedVIN(draft.vin) != nil {
@@ -262,7 +261,7 @@ struct VehicleDetailsForm: View {
                     if let lookupMessage { Text(lookupMessage) } else if shortVIN {
                         Text("VINs before 1981 are shorter and can't be looked up, so fill in the details below. It's saved as typed.")
                     } else {
-                        Text("On the driver's side of the windshield or the door jamb. Keyring fills in the year, make, model and engine from NHTSA.")
+                        Text("On the driver's side of the windshield or the door jamb. The year, make, model and engine fill in from NHTSA.")
                     }
                 }
             }
@@ -318,8 +317,11 @@ struct VehicleDetailsForm: View {
                 .disabled(meterLocked)
                 if draft.meter.hasReading {
                     LabeledContent("Current \(draft.meter.meterName.lowercased())") {
-                        NumberField(title: "0", value: $reading, suffix: draft.meter.short, allowsDecimal: draft.meter == .hours)
-                            .multilineTextAlignment(.trailing)
+                        HStack(spacing: Theme.xs) {
+                            NumberField(title: "0", value: $reading, suffix: draft.meter.short, allowsDecimal: draft.meter == .hours)
+                                .multilineTextAlignment(.trailing)
+                            ScanFieldButton(kind: .reading(last: 0, meter: draft.meter)) { reading = Double($0) }
+                        }
                     }
                     Picker(draft.meter == .hours ? "Hours a year" : "Usual use", selection: $draft.yearlyUse) {
                         Text("Not sure").tag(0.0)
@@ -351,12 +353,25 @@ struct VehicleDetailsForm: View {
             }
 
             Section {
-                TextField(draft.kind.registrationLabel + " (optional)", text: $draft.plate)
-                    .textInputAutocapitalization(.characters)
+                LabeledContent(draft.kind.registrationLabel) {
+                    HStack(spacing: Theme.xs) {
+                        TextField("Optional", text: $draft.plate)
+                            .textInputAutocapitalization(.characters)
+                            .multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("add.plate")
+                        ScanFieldButton(kind: .plate) { draft.plate = $0 }
+                    }
+                }
                 if !draft.kind.hasNHTSARecords {
-                    TextField(draft.kind.identifierLabel + " (optional)", text: $draft.vin)
-                        .textInputAutocapitalization(.characters)
-                        .font(.body.monospaced())
+                    LabeledContent(draft.kind.identifierLabel) {
+                        HStack(spacing: Theme.xs) {
+                            TextField("Optional", text: $draft.vin)
+                                .textInputAutocapitalization(.characters)
+                                .multilineTextAlignment(.trailing)
+                                .font(.body.monospaced())
+                            ScanFieldButton(kind: .text) { draft.vin = $0.uppercased() }
+                        }
+                    }
                 }
             }
 
@@ -428,13 +443,6 @@ struct VehicleDetailsForm: View {
                 if let data = try? await item?.loadTransferable(type: Data.self) {
                     draft.photo = ImageTools.jpeg(data, maxDimension: 1600, quality: 0.8)
                 }
-            }
-        }
-        .sheet(isPresented: $showingVINScanner) {
-            VINScanner { vin in
-                draft.vin = vin
-                showingVINScanner = false
-                Task { await lookUp() }
             }
         }
     }
@@ -604,7 +612,7 @@ struct LastDoneStep: View {
                     Text("When were these last done?")
                         .font(Theme.title(28))
                         .foregroundStyle(Theme.ink)
-                    Text("Rough is fine. It sets the first due dates; Keyring learns the rest from what you log.")
+                    Text("Rough is fine. It sets the first due dates; the app learns the rest from what you log.")
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }

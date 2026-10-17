@@ -25,7 +25,7 @@ struct ValueView: View {
             } footer: {
                 Text(vehicle.descriptor.isEmpty
                      ? "Add the year, make and model so these open on your exact vehicle."
-                     : "Opens on the \(vehicle.descriptor)\(vehicle.meter == .miles && vehicle.reading > 0 ? " with \(Format.reading(vehicle.reading, vehicle.meter))" : ""). Keyring isn't affiliated with these guides.")
+                     : "Opens on the \(vehicle.descriptor)\(vehicle.meter == .miles && vehicle.reading > 0 ? " with \(Format.reading(vehicle.reading, vehicle.meter))" : ""). This app isn't affiliated with these guides.")
             }
 
             Section {
@@ -64,8 +64,11 @@ struct ValueView: View {
             NavigationStack {
                 Form {
                     LabeledContent("Value") {
-                        NumberField(title: "0", value: $amount, isCurrency: true)
-                            .multilineTextAlignment(.trailing)
+                        HStack(spacing: Theme.xs) {
+                            NumberField(title: "0", value: $amount, isCurrency: true)
+                                .multilineTextAlignment(.trailing)
+                            ScanFieldButton(kind: .amount) { amount = Double($0) }
+                        }
                     }
                     TextField("Source, such as KBB trade-in", text: $source)
                 }
@@ -199,7 +202,7 @@ struct ClubsView: View {
             } footer: {
                 Text(vehicle.make == nil
                      ? "Add the make and model to see clubs and forums for yours."
-                     : "Independent communities. Keyring isn't affiliated with any of them.")
+                     : "Independent communities. This app isn't affiliated with any of them.")
             }
         }
         .paperBackground()
@@ -234,11 +237,12 @@ struct RecallsView: View {
     @State private var failed = false
     @State private var dismissed: Set<String> = []
     @State private var fixing: Recall?
+    @State private var receiptsRead = 0
 
     var body: some View {
         List {
             if vehicle.year <= 0 || vehicle.make == nil || vehicle.model == nil {
-                EmptyStateView(symbol: "exclamationmark.shield", title: "Add year, make and model", message: "Keyring checks NHTSA's recall database once it knows exactly what you drive.")
+                EmptyStateView(symbol: "exclamationmark.shield", title: "Add year, make and model", message: "Recalls are checked against NHTSA's database once the app knows exactly what you drive.")
                     .listRowBackground(Color.clear)
             } else if loading && recalls.isEmpty {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
@@ -246,7 +250,7 @@ struct RecallsView: View {
                 EmptyStateView(symbol: "wifi.exclamationmark", title: "Couldn't reach NHTSA", message: "Check your connection and pull to try again.")
                     .listRowBackground(Color.clear)
             } else if recalls.isEmpty {
-                EmptyStateView(symbol: "checkmark.shield", title: "No recalls on file", message: "NHTSA lists no safety recalls for the \(vehicle.descriptor). Keyring keeps checking and lets you know if one is issued.")
+                EmptyStateView(symbol: "checkmark.shield", title: "No recalls on file", message: "NHTSA lists no safety recalls for the \(vehicle.descriptor). The app keeps checking and lets you know if one is issued.")
                     .listRowBackground(Color.clear)
             } else {
                 Section {
@@ -255,8 +259,10 @@ struct RecallsView: View {
                     } else {
                         LinkRow(title: "Check which apply to yours", detail: "Enter your VIN at nhtsa.gov", symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls")!)
                     }
+                } header: {
+                    Text("Already fixed by a dealer?")
                 } footer: {
-                    Text("These recalls cover every \(vehicle.descriptor). Many apply only to certain build dates, and a dealer may already have fixed yours. Your VIN shows which are open.")
+                    Text("NHTSA's VIN check shows only recalls still open. One below that it doesn't show was already fixed: tap Already fixed. Recalls named on a saved receipt or in your notes are marked fixed for you.")
                 }
                 Section {
                     ForEach(recalls) { recall in
@@ -265,6 +271,7 @@ struct RecallsView: View {
                             fix: fixEntry(for: recall),
                             dismissed: dismissed.contains(recall.campaign),
                             logFix: { fixing = recall },
+                            markFixed: { garage.markRecallFixedByDealer(recall, for: vehicle) },
                             setDismissed: { value in
                                 RecallLedger.setReviewed(recall.campaign, value, for: vehicle.id)
                                 dismissed = RecallLedger.reviewed(for: vehicle.id)
@@ -292,6 +299,7 @@ struct RecallsView: View {
         .task {
             dismissed = RecallLedger.reviewed(for: vehicle.id)
             if recalls.isEmpty { await load() }
+            if await RecallMatcher.readReceipts(on: vehicle) { receiptsRead += 1 }
         }
         .sheet(item: $fixing) { recall in
             LogServiceView(vehicle: vehicle, recall: recall)
@@ -300,7 +308,8 @@ struct RecallsView: View {
 
     private func fixEntry(for recall: Recall) -> ServiceEntry? {
         _ = garage.revision
-        return (vehicle.entries ?? []).first { $0.recallCampaign == recall.campaign && !$0.isDeleted }
+        _ = receiptsRead
+        return RecallMatcher.fix(for: recall, on: vehicle)
     }
 
     private func load() async {
@@ -322,8 +331,10 @@ private struct RecallRow: View {
     let fix: ServiceEntry?
     let dismissed: Bool
     let logFix: () -> Void
+    let markFixed: () -> Void
     let setDismissed: (Bool) -> Void
     @State private var expanded = false
+    @State private var confirming = false
 
     private var closed: Bool { fix != nil || dismissed }
 
@@ -370,13 +381,22 @@ private struct RecallRow: View {
                         Button("Undo") { setDismissed(false) }
                     } else {
                         Button("Log the fix", action: logFix)
+                        Button("Already fixed") { confirming = true }
                         Button("Doesn't apply") { setDismissed(true) }
                             .foregroundStyle(Theme.secondaryInk)
                     }
                 }
                 .font(.footnote.weight(.semibold))
                 .buttonStyle(.borderless)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
                 .padding(.top, 2)
+                .confirmationDialog("Already fixed by a dealer?", isPresented: $confirming, titleVisibility: .visible) {
+                    Button("Mark it fixed", action: markFixed)
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Use this when NHTSA's VIN check no longer lists it. It's added to the history as done by a dealer, date not known.")
+                }
             }
         }
         .padding(.vertical, 4)
@@ -384,8 +404,12 @@ private struct RecallRow: View {
 
     private var statusLine: String {
         if let fix {
+            // A recall closed by an entry that only names it on its receipt or notes.
+            let found = fix.recallCampaign != recall.campaign
+            if !found, fix.notes?.hasPrefix("Already fixed by a dealer") == true { return "Fixed by a dealer" }
             let date = fix.date.map(Format.shortDate) ?? ""
-            return ["Fixed \(date)", fix.shop].compactMap { $0 }.joined(separator: " · ")
+            return [found ? "Done \(date), named on \(fix.title ?? "a logged service")" : "Fixed \(date)", found ? nil : fix.shop]
+                .compactMap { $0 }.joined(separator: " · ")
         }
         let base = [recall.campaign, recall.reported.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · ")
         return dismissed ? "Doesn't apply · \(base)" : base
@@ -444,7 +468,7 @@ struct GalleryView: View {
                     if let shareMessage {
                         Text(shareMessage).font(.footnote).foregroundStyle(Theme.secondaryInk)
                     }
-                    Text("Owner photos are shared publicly with other Keyring users who have the same make and model. Reference photos come from Wikimedia Commons under their own licenses.")
+                    Text("Owner photos are shared publicly with other Vehicle Maintenance Log users who have the same make and model. Reference photos come from Wikimedia Commons under their own licenses.")
                         .font(.caption)
                         .foregroundStyle(Theme.faintInk)
                 }
@@ -619,7 +643,7 @@ struct CommunityTermsSheet: View {
                 VStack(alignment: .leading, spacing: Theme.md) {
                     Text("Before you share")
                         .font(Theme.title(26))
-                    Text("Photos you share are public to other Keyring users who own the same make and model.")
+                    Text("Photos you share are public to other Vehicle Maintenance Log users who own the same make and model.")
                     VStack(alignment: .leading, spacing: Theme.sm) {
                         Label("Only photos of the vehicle itself, that you took or have the right to share.", systemImage: "car.side")
                         Label("No people, plates you don't own, addresses or anything personal.", systemImage: "person.crop.circle.badge.xmark")
@@ -730,7 +754,7 @@ struct InsightsView: View {
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.center)
-                        Button("Unlock with Keyring Pro") { showingPaywall = true }
+                        Button("Unlock with Pro") { showingPaywall = true }
                             .buttonStyle(PrimaryButtonStyle())
                     }
                     .padding(Theme.xl)

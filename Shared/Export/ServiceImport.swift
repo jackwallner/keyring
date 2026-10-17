@@ -6,6 +6,7 @@ import Foundation
 enum ServiceImport {
     enum Field: String, CaseIterable, Identifiable, Sendable {
         case date, odometer, work, cost, shop, notes, vehicle, kind, diy, loggedBy, unit, year, make, model
+        case volume, volumeUnit, unitPrice, grade, partial
 
         var id: String { rawValue }
 
@@ -25,6 +26,11 @@ enum ServiceImport {
             case .year: "Year"
             case .make: "Make"
             case .model: "Model"
+            case .volume: "Fuel"
+            case .volumeUnit: "Fuel unit"
+            case .unitPrice: "Price per unit"
+            case .grade: "Grade"
+            case .partial: "Partial fill"
             }
         }
 
@@ -55,12 +61,18 @@ enum ServiceImport {
             case .year: ["year", "modelyear"]
             case .make: ["make", "manufacturer", "brand"]
             case .model: ["model"]
+            case .volume: ["gallons", "gal", "liters", "litres", "volume", "quantity", "qty", "fuelvolume", "fuelamount", "amountoffuel"]
+            case .volumeUnit: ["fuelunit", "volumeunit"]
+            case .unitPrice: ["pricepergallon", "priceperliter", "priceperlitre", "priceperunit", "unitprice", "ppg", "fuelprice",
+                              "pricegal", "pricel", "priceperl", "pricelitre", "priceliter"]
+            case .grade: ["fueltype", "fuelgrade", "grade", "octane"]
+            case .partial: ["partialfuelup", "partialfill", "partial", "partialrefuel", "partialrefueling"]
             }
         }
     }
 
     enum Source: String, Sendable {
-        case keyring = "Keyring"
+        case keyring = "a Vehicle Maintenance Log backup"
         case fuelly = "Fuelly"
         case drivvo = "Drivvo"
         case simplyAuto = "Simply Auto"
@@ -94,6 +106,12 @@ enum ServiceImport {
         var isDIY: Bool
         var loggedBy: String?
         var isFillUp: Bool
+        var volume: Double? = nil
+        /// What the volume column is in, when the header or a column says.
+        var volumeUnit: FuelVolumeUnit? = nil
+        var unitPrice: Double? = nil
+        var grade: FuelGrade? = nil
+        var partial = false
         var year: Int?
         var make: String?
         var model: String?
@@ -168,24 +186,25 @@ enum ServiceImport {
                 }
                 let value = { (field: Field) -> String in table.mapping[field].map { cell(raw, $0).trimmed } ?? "" }
                 let work = value(.work)
-                if table.role == .service, isExpense(work) {
+                let rowKind = kind(type: value(.kind), work: work)
+                if table.role == .service, rowKind != .fuel, isExpense(work) {
                     skipped += 1
                     continue
                 }
                 let reading = number(value(.odometer), thousandsDot: thousandsDot).flatMap { $0 > 0 ? $0 : nil }
-                let isFillUp = table.role == .fuel
+                let isFillUp = table.role == .fuel || rowKind == .fuel
                 if !isFillUp, work.isEmpty, reading == nil, number(value(.cost)) == nil { continue }
-                let row = Row(
+                var row = Row(
                     id: nextID,
                     vehicleName: value(.vehicle),
                     date: date,
                     reading: reading,
                     unit: unit(from: value(.unit)) ?? headerUnit,
                     work: work,
-                    cost: isFillUp ? 0 : max(0, number(value(.cost)) ?? 0),
+                    cost: max(0, number(value(.cost)) ?? 0),
                     shop: value(.shop).nilIfEmpty,
                     notes: value(.notes).nilIfEmpty,
-                    kind: kind(type: value(.kind), work: work),
+                    kind: isFillUp ? .fuel : rowKind,
                     isDIY: ["yes", "y", "true", "1", "x"].contains(value(.diy).lowercased()),
                     loggedBy: value(.loggedBy).nilIfEmpty,
                     isFillUp: isFillUp,
@@ -194,6 +213,7 @@ enum ServiceImport {
                     model: value(.model).nilIfEmpty
                 )
                 nextID += 1
+                if isFillUp { fill(&row, value: value, volumeHeader: table.mapping[.volume].map { table.headers[$0] }) }
                 if isFillUp { fillUps.append(row) } else { services.append(row) }
             }
         }
@@ -252,7 +272,8 @@ enum ServiceImport {
         // A Keyring export maps one to one.
         if normalized.starts(with: ["vehicle", "year", "make", "model", "date", "odometer", "unit", "type", "work"]) {
             var mapping: [Field: Int] = [.vehicle: 0, .year: 1, .make: 2, .model: 3, .date: 4, .odometer: 5, .unit: 6, .kind: 7, .work: 8]
-            for (field, name) in [(Field.cost, "cost"), (.shop, "shop"), (.diy, "diy"), (.notes, "notes"), (.loggedBy, "loggedby")] {
+            for (field, name) in [(Field.cost, "cost"), (.shop, "shop"), (.diy, "diy"), (.notes, "notes"), (.loggedBy, "loggedby"),
+                                  (.volume, "fuel"), (.volumeUnit, "fuelunit"), (.unitPrice, "priceperunit"), (.grade, "grade"), (.partial, "partialfill")] {
                 if let column = normalized.firstIndex(of: name) { mapping[field] = column }
             }
             return mapping
@@ -334,8 +355,32 @@ enum ServiceImport {
         return expenseWords.contains(lower) || expenseWords.contains { lower == $0 + "s" }
     }
 
+    /// A fill-up's gallons, price and grade. Fuelly's "price" is per gallon,
+    /// so a small figure beside a volume is read as the price, not the total.
+    private static func fill(_ row: inout Row, value: (Field) -> String, volumeHeader: String?) {
+        row.volume = number(value(.volume)).flatMap { $0 > 0 ? $0 : nil }
+        let header = normalize(volumeHeader ?? "")
+        if header.hasPrefix("gal") || header.contains("gallon") { row.volumeUnit = .gallons }
+        if header.hasPrefix("lit") || header == "l" { row.volumeUnit = .liters }
+        switch normalize(value(.volumeUnit)) {
+        case "gal", "gallon", "gallons": row.volumeUnit = .gallons
+        case "l", "liter", "liters", "litre", "litres": row.volumeUnit = .liters
+        default: break
+        }
+        row.unitPrice = number(value(.unitPrice)).flatMap { $0 > 0 ? $0 : nil }
+        let unit = row.volumeUnit ?? .current
+        if row.unitPrice == nil, let volume = row.volume, volume > 1, row.cost > 0, row.cost <= (unit == .gallons ? 10 : 3) {
+            row.unitPrice = row.cost
+            row.cost = 0
+        }
+        let grade = value(.grade).lowercased()
+        row.grade = FuelGrade.allCases.first { grade == $0.title.lowercased() } ?? PumpReader.grade(in: grade.isEmpty ? [] : [grade])
+        row.partial = ["yes", "y", "true", "1", "x"].contains(value(.partial).lowercased())
+    }
+
     private static func kind(type: String, work: String) -> EntryKind {
         let type = type.lowercased()
+        if type.contains("fill") || type.contains("fuel") { return .fuel }
         if type.contains("recall") { return .recall }
         if type.contains("repair") { return .repair }
         if !type.isEmpty, type.contains("maint") || type.contains("service") { return .service }

@@ -711,3 +711,226 @@ final class AuditRoundThreeTests: XCTestCase {
         }
     }
 }
+
+@MainActor
+final class FuelTests: XCTestCase {
+    private func makeStore() -> GarageStore {
+        GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+    }
+
+    func testPumpDisplayWithLabels() {
+        let lines = ["Shell", "TOTAL SALE", "$ 45.17", "GALLONS", "12.345", "PRICE PER GALLON", "3.659", "REGULAR"]
+        let fields = PumpReader.parse(lines: lines, unit: .gallons)
+        XCTAssertEqual(fields.total, 45.17)
+        XCTAssertEqual(fields.volume, 12.345)
+        XCTAssertEqual(fields.unitPrice, 3.659)
+        XCTAssertEqual(fields.grade, .regular)
+        XCTAssertEqual(fields.station, "Shell")
+    }
+
+    func testPumpFiguresFoundByMultiplyingOut() {
+        // An unlabeled display read in an odd order, with a pump number and a clock.
+        let lines = ["PUMP 7", "10:42", "3.899", "52.64", "13.501"]
+        let fields = PumpReader.parse(lines: lines, unit: .gallons)
+        XCTAssertEqual(fields.total, 52.64)
+        XCTAssertEqual(fields.volume, 13.501)
+        XCTAssertEqual(fields.unitPrice, 3.899)
+    }
+
+    func testPumpReceipt() {
+        let lines = ["COSTCO GASOLINE", "1234 MAIN ST", "10/12/2026 07:31", "PUMP 04", "UNLEADED", "GALLONS 11.204", "PRICE/GAL $3.459", "FUEL SALE $38.75", "VISA ****1234", "THANK YOU"]
+        let now = DateComponents(calendar: .current, year: 2026, month: 10, day: 17).date!
+        let fields = PumpReader.parse(lines: lines, unit: .gallons, now: now)
+        XCTAssertEqual(fields.volume, 11.204)
+        XCTAssertEqual(fields.unitPrice, 3.459)
+        XCTAssertEqual(fields.total, 38.75)
+        XCTAssertEqual(fields.grade, .regular)
+        XCTAssertEqual(fields.station, "Costco")
+        XCTAssertNotNil(fields.date)
+    }
+
+    func testCanadianPumpInCentsPerLiter() {
+        let lines = ["$ 72.34", "LITRES 45.240", "159.9 ¢/L"]
+        let fields = PumpReader.parse(lines: lines, unit: .liters)
+        XCTAssertEqual(fields.volume, 45.24)
+        XCTAssertEqual(fields.unitPrice!, 1.599, accuracy: 0.0001)
+        XCTAssertEqual(fields.total, 72.34)
+    }
+
+    func testTwoFiguresGiveTheThird() {
+        let fields = PumpReader.completed(PumpFields(volume: 10, unitPrice: 3.5))
+        XCTAssertEqual(fields.total, 35)
+        XCTAssertEqual(PumpReader.completed(PumpFields(volume: 10, total: 35)).unitPrice, 3.5)
+        XCTAssertEqual(PumpReader.completed(PumpFields(unitPrice: 3.5, total: 35)).volume, 10)
+    }
+
+    func testGradeNeedsToBeTheOnlyOne() {
+        XCTAssertNil(PumpReader.grade(in: ["REGULAR", "PLUS", "PREMIUM"]))
+        XCTAssertEqual(PumpReader.grade(in: ["SUPER UNLEADED"]), .premium)
+        XCTAssertEqual(PumpReader.grade(in: ["Diesel #2"]), .diesel)
+    }
+
+    func testOdometerPickIgnoresTripClockAndRange() {
+        let lines = ["10:41", "72°F", "TRIP A 312.4", "Range 288 mi", "48562", "mi"]
+        XCTAssertEqual(OdometerReader.pick(lines: lines, last: 48_210, meter: .miles), 48_562)
+        // Nothing plausible beside the last reading: leave the field for the owner.
+        XCTAssertNil(OdometerReader.pick(lines: ["120", "55"], last: 48_210, meter: .miles))
+        XCTAssertEqual(OdometerReader.pick(lines: ["ODO 48,562 mi"], last: 0, meter: .miles), 48_562)
+        XCTAssertEqual(OdometerReader.pick(lines: ["60", "48562i", "10:41", "72°F", "TRIP A 312.4"], last: 48_210, meter: .miles), 48_562)
+        XCTAssertEqual(OdometerReader.pick(lines: ["60", "485620i", "72°F", "10:41", "TRIP A 312.4"], last: 48_210, meter: .miles), 48_562)
+        XCTAssertEqual(OdometerReader.pick(lines: ["1,204.6 hrs"], last: 1_190, meter: .hours), 1_204.6)
+    }
+
+    func testEconomyCountsTopUpsAndSkipsTheFirstFill() {
+        let economy = FuelEconomy(meter: .miles, unit: .gallons)
+        let day: (Int) -> Date = { Date(timeIntervalSince1970: 1_790_000_000 + Double($0) * 86_400) }
+        let gal = FuelVolumeUnit.litersPerGallon
+        let fills = [
+            FuelEconomy.Fill(id: UUID(), date: day(0), reading: 10_000, liters: 12 * gal, partial: false),
+            FuelEconomy.Fill(id: UUID(), date: day(5), reading: 10_150, liters: 3 * gal, partial: true),
+            FuelEconomy.Fill(id: UUID(), date: day(9), reading: 10_300, liters: 9 * gal, partial: false),
+            FuelEconomy.Fill(id: UUID(), date: day(15), reading: 10_600, liters: 10 * gal, partial: false),
+        ]
+        let values = economy.values(fills)
+        XCTAssertNil(values[fills[0].id])
+        XCTAssertNil(values[fills[1].id])
+        XCTAssertEqual(values[fills[2].id]!, 300 / 12, accuracy: 0.01)
+        XCTAssertEqual(values[fills[3].id]!, 30, accuracy: 0.01)
+        XCTAssertEqual(economy.average(fills)!, 600 / 22, accuracy: 0.01)
+        XCTAssertEqual(economy.format(25), "25.0 mpg")
+        XCTAssertEqual(FuelEconomy(meter: .kilometers, unit: .liters).label, "L/100 km")
+        XCTAssertEqual(FuelEconomy(meter: .hours, unit: .gallons).label, "gal/hr")
+    }
+
+    func testLoggingAFillUpStoresLitersAndMovesTheOdometer() {
+        let store = makeStore()
+        let car = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 50_000))
+        var draft = GarageStore.FuelDraft()
+        draft.unit = .gallons
+        draft.reading = 50_320
+        draft.volume = 10
+        draft.unitPrice = 3.5
+        draft.grade = .regular
+        draft.station = "Costco"
+        let entry = store.logFuel(draft, for: car)
+        XCTAssertEqual(entry.kind, .fuel)
+        XCTAssertEqual(entry.cost, 35)
+        XCTAssertEqual(entry.fuelVolume, 10 * FuelVolumeUnit.litersPerGallon, accuracy: 0.0001)
+        XCTAssertEqual(FuelVolumeUnit.gallons.fromPerLiter(entry.fuelUnitPrice), 3.5, accuracy: 0.0001)
+        XCTAssertEqual(car.reading, 50_320)
+        XCTAssertEqual(car.fuelEntries.count, 1)
+        XCTAssertTrue(car.serviceEntries.isEmpty)
+        XCTAssertEqual(store.recentStations(for: car), ["Costco"])
+        // A fill-up never counts as a maintenance job done.
+        XCTAssertTrue(store.dues(for: car).allSatisfy { $0.lastDate == nil })
+    }
+}
+
+final class FuelImportTests: XCTestCase {
+    private let us = Locale(identifier: "en_US")
+
+    @MainActor
+    func testFuellyFillUpsArriveWithGallonsAndPrice() {
+        let store = GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+        let truck = store.addVehicle(NewVehicle(kind: .truck, powertrain: .gasoline, meter: .miles, make: "Toyota", model: "Tacoma", reading: 41_000))
+        let fuel = """
+        car_name,model,mpg,odometer,miles,gallons,price,city_percentage,fuelup_date,date_added,tags,notes,missed_fuelup,partial_fuelup
+        Tacoma,Tacoma,19.2,41200,288,15,3.49,50,2024-03-02,2024-03-02 10:00,,,0,0
+        Tacoma,Tacoma,18.7,41510,310,16.6,3.59,50,2024-03-15,2024-03-15 09:00,,,0,1
+        """
+        let rows = ServiceImport.parse(fuel, locale: us).fillUps
+        XCTAssertEqual(rows.first?.unitPrice, 3.49)
+        XCTAssertEqual(rows.first?.volumeUnit, .gallons)
+        XCTAssertEqual(rows.last?.partial, true)
+        let outcome = store.importHistory(rows, into: truck)
+        XCTAssertEqual(outcome.fillUps, 2)
+        XCTAssertEqual(truck.fuelEntries.count, 2)
+        let first = truck.fuelEntries.last!
+        XCTAssertEqual(first.cost, 52.35, accuracy: 0.001)
+        XCTAssertEqual(FuelVolumeUnit.gallons.fromLiters(first.fuelVolume), 15, accuracy: 0.0001)
+        XCTAssertEqual(store.importHistory(rows, into: truck).duplicates, 2)
+        XCTAssertEqual(truck.reading, 41_510)
+    }
+
+    @MainActor
+    func testOwnExportKeepsFillUps() {
+        let store = GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+        let car = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 50_000))
+        var draft = GarageStore.FuelDraft()
+        draft.unit = .gallons
+        draft.reading = 50_300
+        draft.volume = 10.5
+        draft.unitPrice = 3.659
+        draft.grade = .premium
+        draft.partial = true
+        store.logFuel(draft, for: car)
+        let csv = CSVExport.csv(for: [car])
+        let rows = ServiceImport.parse(csv, locale: us).fillUps
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows[0].kind, .fuel)
+        XCTAssertEqual(rows[0].grade, .premium)
+        XCTAssertEqual(rows[0].partial, true)
+        XCTAssertEqual(rows[0].unitPrice, 3.659)
+        XCTAssertEqual(rows[0].cost, 38.42, accuracy: 0.001)
+    }
+}
+
+final class FieldReaderTests: XCTestCase {
+    private func line(_ text: String, _ height: CGFloat) -> FieldReader.Line { FieldReader.Line(text: text, height: height) }
+
+    func testPlatePicksTheBigNumberOverTheStateAndSlogan() {
+        let lines = [line("WASHINGTON", 0.06), line("BXY 4821", 0.22), line("Evergreen State", 0.04), line("www.dol.wa.gov", 0.03)]
+        XCTAssertEqual(FieldReader.best(in: lines, for: .plate), "BXY 4821")
+        XCTAssertNil(FieldReader.best(in: [line("CALIFORNIA", 0.1), line("dmv.ca.gov", 0.03)], for: .plate))
+        XCTAssertEqual(FieldReader.tapped("7abc123", for: .plate), "7ABC123")
+    }
+
+    func testVINAmountAndReading() {
+        XCTAssertEqual(FieldReader.best(in: [line("VIN 1HGCM82633A004352", 0.05)], for: .vin), "1HGCM82633A004352")
+        XCTAssertEqual(FieldReader.best(in: [line("Trade-in range", 0.04), line("$24,150 - $26,900", 0.04), line("Private party $28,400.00", 0.04)], for: .amount), "28400")
+        XCTAssertEqual(FieldReader.best(in: [line("ODO 48,562 mi", 0.1)], for: .reading(last: 48_000, meter: .miles)), "48562")
+        XCTAssertNil(FieldReader.best(in: [line("Oil 0W-20", 0.1)], for: .text))
+        XCTAssertEqual(FieldReader.tapped(" 0W-20 full synthetic ", for: .text), "0W-20 full synthetic")
+    }
+}
+
+@MainActor
+final class RecallMatchTests: XCTestCase {
+    private let pump = Recall(
+        campaign: "20V682000", component: "FUEL SYSTEM, GASOLINE", summary: "", consequence: "",
+        remedy: "Dealers will replace the fuel pump free of charge. Toyota's numbers for this recall are 20TB02 and 20TA02 for Toyota vehicles and J16/J06.",
+        reported: nil, parkIt: false, parkOutside: false
+    )
+
+    func testMakerCodesAndNHTSAForms() {
+        XCTAssertEqual(pump.makerCodes, ["20TB02", "20TA02", "J16", "J06"])
+        XCTAssertEqual(pump.nhtsaForms, ["20V682000", "20V-682", "20V682"])
+    }
+
+    func testMentionsNeedsRecallContextForShortCodes() {
+        XCTAssertTrue(RecallMatcher.mentions(pump, in: "Performed campaign 20TA02 fuel pump"))
+        XCTAssertTrue(RecallMatcher.mentions(pump, in: "NHTSA 20V-682 complete"))
+        XCTAssertTrue(RecallMatcher.mentions(pump, in: "SAFETY RECALL J16 COMPLETED"))
+        XCTAssertFalse(RecallMatcher.mentions(pump, in: "Part J16 wiper insert"))
+        XCTAssertFalse(RecallMatcher.mentions(pump, in: "Invoice 120TA021"))
+    }
+
+    func testNotesOrADealerMarkCloseTheRecall() {
+        let store = GarageStore(persistence: Persistence(cloudKit: false, inMemory: true))
+        let car = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Toyota", model: "Tacoma", reading: 40_000))
+        let other = Recall(campaign: "19V244000", component: "AIR BAGS", summary: "", consequence: "", remedy: "", reported: nil, parkIt: false, parkOutside: false)
+        XCTAssertEqual(store.openRecalls([pump, other], for: car).count, 2)
+
+        var visit = GarageStore.ServiceDraft()
+        visit.title = "Oil change"
+        visit.notes = "Dealer also did safety recall 20TA02."
+        store.log(visit, for: car)
+        XCTAssertEqual(store.openRecalls([pump, other], for: car).map(\.campaign), [other.campaign])
+
+        store.markRecallFixedByDealer(other, for: car)
+        XCTAssertTrue(store.openRecalls([pump, other], for: car).isEmpty)
+        let marked = car.entries?.first { $0.recallCampaign == other.campaign }
+        XCTAssertEqual(marked?.kind, .recall)
+        XCTAssertEqual(marked?.shop, "Dealer")
+    }
+}

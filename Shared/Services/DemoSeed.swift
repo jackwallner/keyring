@@ -35,6 +35,31 @@ enum DemoSeed {
             VehicleFact(label: "Paint code", value: "6X3 Army Green"),
         ]
         store.addValuation(31_850, source: "Kelley Blue Book, private party", to: truck, at: ago(20))
+        // Fill-ups about every nine days, one of them a top-up.
+        let fills: [(Double, Double, Double, Double, String, Bool)] = [
+            (66, 46_000, 15.902, 3.599, "Costco", false),
+            (57, 46_310, 16.204, 3.629, "Costco", false),
+            (48, 46_605, 15.418, 3.659, "Shell", false),
+            (41, 46_830, 6.112, 3.699, "Chevron", true),
+            (33, 47_120, 9.874, 3.579, "Costco", false),
+            (24, 47_430, 16.031, 3.549, "Costco", false),
+            (14, 47_760, 17.226, 3.589, "Shell", false),
+            (4, 48_090, 16.583, 3.659, "Costco", false),
+        ]
+        for (daysAgo, reading, gallons, price, station, partial) in fills {
+            var fill = GarageStore.FuelDraft()
+            fill.unit = .gallons
+            fill.date = ago(daysAgo)
+            fill.reading = reading
+            fill.volume = gallons
+            fill.unitPrice = price
+            fill.grade = .regular
+            fill.station = station
+            fill.partial = partial
+            let entry = store.logFuel(fill, for: truck)
+            entry.loggedBy = daysAgo == 24 || daysAgo == 41 ? "Sam" : "Jack"
+        }
+        truck.reading = 48_210
 
         // Hybrid
         draft = NewVehicle(kind: .suv, powertrain: .hybrid, meter: .miles, year: 2021, make: "Toyota", model: "RAV4", trim: "XLE Hybrid", nickname: "Sam's RAV4", vin: "2T3RWRFV4MW118204", plate: "CDK7781", reading: 31_402, tint: .sky)

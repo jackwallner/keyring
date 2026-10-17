@@ -648,7 +648,8 @@ final class GarageStore: ObservableObject {
             entry.vehicle = vehicle
         }
         entry.kind = draft.kind
-        entry.recallCampaign = draft.kind == .recall ? draft.recallCampaign : nil
+        // A service visit can close a recall too, when its receipt names one.
+        entry.recallCampaign = draft.recallCampaign
         entry.date = draft.date
         entry.reading = draft.reading ?? -1
         entry.auxReading = vehicle.hasAuxMeter ? (draft.auxReading ?? -1) : -1
@@ -680,15 +681,84 @@ final class GarageStore: ObservableObject {
         return entry
     }
 
-    /// Recall campaigns someone in the garage has logged as fixed.
-    func fixedRecalls(for vehicle: Vehicle) -> Set<String> {
-        Set((vehicle.entries ?? []).compactMap(\.recallCampaign))
+    struct FuelDraft {
+        var date: Date = .now
+        var reading: Double?
+        /// In `unit`, as the pump showed it.
+        var volume: Double?
+        var unitPrice: Double?
+        var total: Double?
+        var unit: FuelVolumeUnit = .current
+        var grade: FuelGrade?
+        var partial = false
+        var station = ""
+        var pumpPhotos: [Data] = []
+        var meterPhotos: [Data] = []
     }
 
-    /// Recalls still worth a look: not fixed by anyone, not dismissed here.
+    /// A fill-up: kept in the log with its own fields, never against a
+    /// maintenance job, and its reading teaches Keyring the vehicle's pace.
+    @discardableResult
+    func logFuel(_ draft: FuelDraft, for vehicle: Vehicle, editing existing: ServiceEntry? = nil) -> ServiceEntry {
+        let entry = existing ?? ServiceEntry(context: context)
+        if existing == nil {
+            persistence.place(entry, beside: vehicle, in: context)
+            entry.id = UUID()
+            entry.createdAt = .now
+            entry.loggedBy = ownerName
+            entry.vehicle = vehicle
+        }
+        let fields = PumpReader.completed(PumpFields(volume: draft.volume, unitPrice: draft.unitPrice, total: draft.total))
+        entry.kind = .fuel
+        entry.title = EntryKind.fuel.title
+        entry.date = draft.date
+        entry.reading = draft.reading ?? -1
+        entry.fuelVolume = fields.volume.map(draft.unit.liters) ?? 0
+        entry.fuelUnitPrice = fields.unitPrice.map(draft.unit.perLiter) ?? 0
+        entry.cost = max(0, fields.total ?? 0)
+        entry.grade = draft.grade
+        entry.fuelPartial = draft.partial
+        entry.shop = draft.station.trimmed.nilIfEmpty
+        entry.isDIY = false
+        for (data, kind) in draft.pumpPhotos.map({ ($0, "receipt") }) + draft.meterPhotos.map({ ($0, "photo") }) {
+            let attachment = Attachment(context: context)
+            persistence.place(attachment, beside: vehicle, in: context)
+            attachment.id = UUID()
+            attachment.createdAt = .now
+            attachment.kindRaw = kind
+            attachment.data = data
+            attachment.entry = entry
+        }
+        if let reading = draft.reading, reading > vehicle.reading {
+            vehicle.reading = reading
+            vehicle.readingDate = draft.date
+        }
+        save()
+        return entry
+    }
+
+    /// Stations already used, most recent first, for one-tap entry.
+    func recentStations(for vehicle: Vehicle? = nil) -> [String] {
+        let entries = (vehicle?.fuelEntries ?? allEntries().filter { $0.kind == .fuel })
+        var seen = Set<String>()
+        return entries.compactMap(\.shop).filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }.prefix(5).map { $0 }
+    }
+
+    /// Recalls still worth a look: not shown fixed in the log, not dismissed here.
     func openRecalls(_ recalls: [Recall], for vehicle: Vehicle) -> [Recall] {
-        let closed = fixedRecalls(for: vehicle).union(RecallLedger.reviewed(for: vehicle.id))
-        return recalls.filter { !closed.contains($0.campaign) }
+        let reviewed = RecallLedger.reviewed(for: vehicle.id)
+        return recalls.filter { !reviewed.contains($0.campaign) && RecallMatcher.fix(for: $0, on: vehicle) == nil }
+    }
+
+    /// Recorded once the owner has checked the VIN and the dealer already did it.
+    func markRecallFixedByDealer(_ recall: Recall, for vehicle: Vehicle) {
+        var draft = ServiceDraft()
+        draft.kind = .recall
+        draft.recallCampaign = recall.campaign
+        draft.title = "Recall: \(recall.componentTitle.lowercased())"
+        draft.shop = "Dealer"
+        draft.notes = "Already fixed by a dealer, per the VIN check. Repair date not known."
+        log(draft, for: vehicle)
     }
 
     func title(for taskIDs: [UUID], on vehicle: Vehicle) -> String {
@@ -726,6 +796,7 @@ final class GarageStore: ObservableObject {
         var added = 0
         var duplicates = 0
         var readings = 0
+        var fillUps = 0
         var jobsUpdated = 0
     }
 
@@ -736,7 +807,9 @@ final class GarageStore: ObservableObject {
         var outcome = ImportOutcome()
         let calendar = Calendar.current
         let dayKey = { (date: Date, title: String) in "\(calendar.startOfDay(for: date).timeIntervalSince1970)|\(title.lowercased().trimmed)" }
-        var existing = Set((vehicle.entries ?? []).compactMap { entry in entry.date.map { dayKey($0, entry.title ?? "") } })
+        var existing = Set((vehicle.entries ?? []).compactMap { entry in
+            entry.date.map { dayKey($0, entry.kind == .fuel ? "\(EntryKind.fuel.title)|\(Int(entry.reading))" : entry.title ?? "") }
+        })
         var readingDays = Set(vehicle.mainReadings.compactMap { reading in
             reading.date.map { "\(calendar.startOfDay(for: $0).timeIntervalSince1970)|\(Int(reading.value))" }
         })
@@ -749,6 +822,35 @@ final class GarageStore: ObservableObject {
                 return (row.unit ?? vehicle.meter).convert(value, to: vehicle.meter)
             }
             if let reading, reading > (highest?.value ?? -1) { highest = (reading, row.date) }
+            if row.isFillUp, keepFillUps, row.volume != nil || row.cost > 0 {
+                // A real fill-up: gallons, price and all, so economy works from day one.
+                let key = dayKey(row.date, "\(EntryKind.fuel.title)|\(Int(reading ?? -1))")
+                guard existing.insert(key).inserted else {
+                    outcome.duplicates += 1
+                    continue
+                }
+                let unit = row.volumeUnit ?? .current
+                let figures = PumpReader.completed(PumpFields(volume: row.volume, unitPrice: row.unitPrice, total: row.cost > 0 ? row.cost : nil))
+                let entry = ServiceEntry(context: context)
+                persistence.place(entry, beside: vehicle, in: context)
+                entry.id = UUID()
+                entry.createdAt = .now
+                entry.vehicle = vehicle
+                entry.kind = .fuel
+                entry.title = EntryKind.fuel.title
+                entry.date = row.date
+                entry.reading = reading ?? -1
+                entry.fuelVolume = figures.volume.map(unit.liters) ?? 0
+                entry.fuelUnitPrice = figures.unitPrice.map(unit.perLiter) ?? 0
+                entry.cost = figures.total ?? 0
+                entry.grade = row.grade
+                entry.fuelPartial = row.partial
+                entry.shop = row.shop
+                entry.notes = row.notes
+                entry.loggedBy = row.loggedBy ?? ownerName
+                outcome.fillUps += 1
+                continue
+            }
             if row.isFillUp {
                 guard keepFillUps, let reading else { continue }
                 let key = "\(calendar.startOfDay(for: row.date).timeIntervalSince1970)|\(Int(reading))"

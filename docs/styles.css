@@ -19,7 +19,7 @@ body {
 }
 .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px 64px; }
 nav { display: flex; align-items: center; justify-content: space-between; padding: 24px 0 8px; }
-nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; }
+nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; }
 nav .brand img { width: 32px; height: 32px; border-radius: 8px; }
 nav .links a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 15px; }
 h1, h2, .serif { font-family: "New York", ui-serif, Georgia, "Times New Roman", serif; }
@@ -52,4 +52,4 @@ a { color: var(--ink); }
 .faq details p { margin: 8px 0 0; font-size: 16px; }
 footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 footer a { color: var(--muted); margin-right: 14px; }
-@media (max-width: 520px) { h1 { font-size: 36px; } .lead { font-size: 18px; } nav .links a { margin-left: 12px; } }
+@media (max-width: 520px) { h1 { font-size: 36px; } .lead { font-size: 18px; } nav { flex-wrap: wrap; row-gap: 12px; } nav .links a { margin: 0 18px 0 0; } }

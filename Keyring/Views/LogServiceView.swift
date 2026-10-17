@@ -59,8 +59,11 @@ struct LogServiceView: View {
                 whoSection
                 receiptSection
                 Section("Notes") {
-                    TextField(draft.kind == .repair ? "What went wrong, what the shop found, warranty" : "Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
-                        .lineLimit(2...6)
+                    HStack(alignment: .top) {
+                        TextField(draft.kind == .repair ? "What went wrong, what the shop found, warranty" : "Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
+                            .lineLimit(2...6)
+                        ScanFieldButton(kind: .text) { draft.notes = draft.notes.trimmed.isEmpty ? $0 : draft.notes + "\n" + $0 }
+                    }
                 }
                 if editing == nil, draft.kind != .recall {
                     Section {
@@ -135,6 +138,7 @@ struct LogServiceView: View {
         case .service: return "Log service"
         case .repair: return "Log a repair"
         case .recall: return "Log the recall fix"
+        case .fuel: return "Fill-up"
         }
     }
 
@@ -161,8 +165,11 @@ struct LogServiceView: View {
 
     private var repairSection: some View {
         Section {
-            TextField("Alternator, flat tire, cracked windshield", text: $draft.title)
-                .accessibilityIdentifier("log.repairTitle")
+            HStack {
+                TextField("Alternator, flat tire, cracked windshield", text: $draft.title)
+                    .accessibilityIdentifier("log.repairTitle")
+                ScanFieldButton(kind: .text) { draft.title = $0 }
+            }
         } header: {
             Text("What was fixed")
         } footer: {
@@ -199,7 +206,10 @@ struct LogServiceView: View {
                 }
                 .padding(.vertical, 2)
             }
-            TextField("Title", text: $draft.title)
+            HStack {
+                TextField("Title", text: $draft.title)
+                ScanFieldButton(kind: .text) { draft.title = $0 }
+            }
         } header: {
             Text("Safety recall")
         } footer: {
@@ -259,7 +269,10 @@ struct LogServiceView: View {
             } label: {
                 Label("Something else", systemImage: "plus")
             }
-            TextField("Title (optional)", text: $draft.title)
+            HStack {
+                TextField("Title (optional)", text: $draft.title)
+                ScanFieldButton(kind: .text) { draft.title = $0 }
+            }
         } header: {
             Text("What was done")
         } footer: {
@@ -274,14 +287,20 @@ struct LogServiceView: View {
             DatePicker("Date", selection: $draft.date, in: ...Date.now.addingTimeInterval(86_400), displayedComponents: .date)
             if vehicle.meter.hasReading {
                 LabeledContent(vehicle.meter.meterName) {
-                    NumberField(title: "Optional", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
-                        .multilineTextAlignment(.trailing)
+                    HStack(spacing: Theme.xs) {
+                        NumberField(title: "Optional", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                            .multilineTextAlignment(.trailing)
+                        ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { reading = Double($0) }
+                    }
                 }
             }
             if vehicle.hasAuxMeter {
                 LabeledContent("\(vehicle.auxMeterName ?? "Second meter") hours") {
-                    NumberField(title: "Optional", value: $auxReading, suffix: "hrs", allowsDecimal: true)
-                        .multilineTextAlignment(.trailing)
+                    HStack(spacing: Theme.xs) {
+                        NumberField(title: "Optional", value: $auxReading, suffix: "hrs", allowsDecimal: true)
+                            .multilineTextAlignment(.trailing)
+                        ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: .hours)) { auxReading = Double($0) }
+                    }
                 }
             }
         } header: {
@@ -307,8 +326,11 @@ struct LogServiceView: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
             if !draft.isDIY {
-                TextField(draft.kind == .recall ? "Dealer" : "Shop name", text: $draft.shop)
-                    .textContentType(.organizationName)
+                HStack {
+                    TextField(draft.kind == .recall ? "Dealer" : "Shop name", text: $draft.shop)
+                        .textContentType(.organizationName)
+                    ScanFieldButton(kind: .text) { draft.shop = $0 }
+                }
                 if draft.shop.isEmpty, !recentShops.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
@@ -325,8 +347,11 @@ struct LogServiceView: View {
                 }
             }
             LabeledContent("Cost") {
-                NumberField(title: "0", value: $cost, isCurrency: true)
-                    .multilineTextAlignment(.trailing)
+                HStack(spacing: Theme.xs) {
+                    NumberField(title: "0", value: $cost, isCurrency: true)
+                        .multilineTextAlignment(.trailing)
+                    ScanFieldButton(kind: .amount) { cost = Double($0) }
+                }
             }
         } header: {
             Text("Who and how much")
@@ -375,9 +400,9 @@ struct LogServiceView: View {
             Text("Receipt and photos")
         } footer: {
             if store.isPro {
-                Text("Keyring reads the total, date, shop and mileage from a receipt on this iPhone. Check what it fills in.")
+                Text("The app reads the total, date, shop and mileage from a receipt on this iPhone. Check what it fills in.")
             } else {
-                Text("Receipts and photos are always saved. With Keyring Pro, the total, date, shop and mileage fill in by themselves.")
+                Text("Receipts and photos are always saved. With Pro, the total, date, shop and mileage fill in by themselves.")
             }
         }
     }
@@ -404,7 +429,7 @@ struct LogServiceView: View {
     }
 
     private var recentShops: [String] {
-        let shops = garage.allEntries().compactMap(\.shop).filter { !$0.isEmpty }
+        let shops = garage.allEntries().filter { $0.kind != .fuel }.compactMap(\.shop).filter { !$0.isEmpty }
         var seen = Set<String>()
         return shops.filter { seen.insert($0.lowercased()).inserted }.prefix(5).map { $0 }
     }
@@ -462,7 +487,7 @@ struct LogServiceView: View {
             return
         }
         readingReceipt = true
-        let fields = await ReceiptReader.read(images[0])
+        let (fields, text) = await ReceiptReader.readWithText(images[0])
         readingReceipt = false
         var filled: [String] = []
         if (cost ?? 0) == 0, let total = fields.total { cost = total; filled.append("total") }
@@ -475,6 +500,12 @@ struct LogServiceView: View {
         receiptNote = filled.isEmpty
             ? "Couldn't read this one clearly. The receipt is attached; fill in the details above."
             : "Filled in the \(ListFormatter.localizedString(byJoining: filled)) from the receipt. Check they're right."
+        // Dealer paperwork names the recall it closed.
+        if draft.recallCampaign == nil,
+           let recall = (RecallWatcher.cached(for: vehicle) ?? []).first(where: { RecallMatcher.mentions($0, in: text) }) {
+            draft.recallCampaign = recall.campaign
+            receiptNote = (receiptNote ?? "") + " It also shows the \(recall.componentTitle.lowercased()) recall was done, so that recall is marked fixed."
+        }
         Haptics.success()
     }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Pure copy helpers for Keyring Pro conversion CTAs. StoreKit always purchases
+/// Pure copy helpers for Pro conversion CTAs. StoreKit always purchases
 /// the same package. Trial vs paid is eligibility, not a different product.
 /// These helpers keep every pitch surface honest when the user has already used
 /// their free trial.
@@ -15,13 +15,13 @@ enum ConversionCopy {
     /// so re-introducing price wording stays a one-line change that is obviously
     /// coupled to the block's sizing.
     static func ctaLabel(trialLabel: String?, priceLabel: String, eligibleForTrial: Bool) -> String {
-        "Continue with Keyring Pro"
+        "Continue with Pro"
     }
 
     /// Short capsule CTA on locked rows. These sit far from any price and only
     /// route to a purchase surface, so they stay neutral for the same reason.
     static func shortCTALabel(eligibleForTrial: Bool) -> String {
-        "Continue with Keyring Pro"
+        "Continue with Pro"
     }
 
     /// Apple 3.1.2(c): the amount the user will actually be billed, phrased as a
@@ -76,7 +76,7 @@ enum ConversionCopy {
 
     /// StoreKit `.pending`: Ask to Buy, or a bank confirmation. Nothing has
     /// failed and nothing has completed, so the copy must not imply either. It
-    /// says the wait is expected and that Keyring Pro turns itself on.
+    /// says the wait is expected and that Pro turns itself on.
     static let purchasePendingMessage =
-        "Waiting on Apple to confirm this purchase. Keyring Pro turns on by itself as soon as it goes through, so there is nothing to tap again."
+        "Waiting on Apple to confirm this purchase. Pro turns on by itself as soon as it goes through, so there is nothing to tap again."
 }

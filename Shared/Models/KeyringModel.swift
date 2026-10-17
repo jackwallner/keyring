@@ -90,6 +90,10 @@ enum KeyringModel {
             attr("kindRaw", .stringAttributeType, default: EntryKind.service.rawValue),
             attr("recallCampaign", .stringAttributeType),
             attr("auxReading", .doubleAttributeType, default: -1.0),
+            attr("fuelVolume", .doubleAttributeType, default: 0.0),
+            attr("fuelUnitPrice", .doubleAttributeType, default: 0.0),
+            attr("fuelGrade", .stringAttributeType),
+            attr("fuelPartial", .booleanAttributeType, default: false),
         ] : [])
         attachment.properties = [
             attr("id", .UUIDAttributeType),
@@ -381,6 +385,13 @@ final class ServiceEntry: NSManagedObject, Identifiable {
     @NSManaged var recallCampaign: String?
     /// The second hour meter that day; negative when not given.
     @NSManaged var auxReading: Double
+    /// A fill-up's fuel in liters, whatever unit the pump showed; 0 when not given.
+    @NSManaged var fuelVolume: Double
+    /// Price per liter; 0 when not given.
+    @NSManaged var fuelUnitPrice: Double
+    @NSManaged var fuelGrade: String?
+    /// A top-up that didn't fill the tank, so economy waits for the next full one.
+    @NSManaged var fuelPartial: Bool
     @NSManaged var vehicle: Vehicle?
     @NSManaged var attachments: Set<Attachment>?
 

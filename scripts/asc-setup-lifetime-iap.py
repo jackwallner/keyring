@@ -21,10 +21,10 @@ import asc_lib
 BUNDLE = "com.jackwallner.keyring"
 PRODUCT_ID = "com.jackwallner.keyring.lifetime"
 # App Store Connect's internal reference name is immutable after creation.
-# The localized customer-facing name is Keyring Pro Lifetime.
+# The localized customer-facing name is Pro Lifetime.
 PRODUCT_REFERENCE_NAME = "Keyring Pro Lifetime"
-PRODUCT_DISPLAY_NAME = "Keyring Pro Lifetime"
-PRODUCT_DESCRIPTION = "Keyring Pro forever. One payment."
+PRODUCT_DISPLAY_NAME = "Pro Lifetime"
+PRODUCT_DESCRIPTION = "Pro forever. One payment."
 PRICE = "29.99"
 
 V1 = "https://api.appstoreconnect.apple.com/v1"
@@ -52,7 +52,7 @@ def main() -> None:
                             "name": PRODUCT_REFERENCE_NAME,
                             "productId": PRODUCT_ID,
                             "inAppPurchaseType": "NON_CONSUMABLE",
-                            "reviewNote": "One-time purchase that unlocks Keyring Pro forever: unlimited vehicles, Service Record PDF and CSV export, unlimited photos, cost insights. Logging is free.",
+                            "reviewNote": "One-time purchase that unlocks Vehicle Maintenance Log Pro forever: unlimited vehicles, Service Record PDF and CSV export, unlimited photos, cost insights. Logging is free.",
                         },
                         "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
                     }

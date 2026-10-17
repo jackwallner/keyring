@@ -27,9 +27,9 @@ struct GarageView: View {
             LazyVStack(alignment: .leading, spacing: Theme.md) {
                 if garage.vehicles.isEmpty {
                     EmptyStateView(
-                        symbol: "key.horizontal",
+                        symbol: "car.2",
                         title: "Your garage is empty",
-                        message: "Add a car, truck, boat, bike, RV or plane. Keyring builds its maintenance schedule for you.",
+                        message: "Add a car, truck, boat, bike, RV or plane. Its maintenance schedule is built for you.",
                         actionTitle: "Add a vehicle",
                         action: addVehicle
                     )
@@ -268,7 +268,7 @@ struct GarageView: View {
         routedScreenshot = true
         let first = garage.vehicles.first
         switch route {
-        case "vehicle", "explore", "record":
+        case "vehicle", "explore", "record", "fuel", "fuelcard":
             if let first { path.append(first.objectID) }
         case "log":
             logging = first.map { LogRequest(vehicle: $0) }

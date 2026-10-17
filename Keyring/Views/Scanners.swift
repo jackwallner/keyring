@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import Vision
 import VisionKit
@@ -40,7 +41,7 @@ struct ReceiptScanner: UIViewControllerRepresentable {
 /// Live text scanning: point at the odometer or the VIN plate and tap the
 /// number when it's highlighted.
 struct LiveTextScanner: UIViewControllerRepresentable {
-    enum Mode { case meter, vin, invite }
+    enum Mode: Equatable { case meter, vin, invite, field(FieldScan) }
 
     let mode: Mode
     let completion: (String) -> Void
@@ -58,6 +59,8 @@ struct LiveTextScanner: UIViewControllerRepresentable {
             types.insert(.barcode(symbologies: [.code39, .dataMatrix, .qr, .code128]))
         case .invite:
             types.insert(.barcode(symbologies: [.qr]))
+        case .field:
+            types.insert(.text(textContentType: nil))
         }
         let controller = DataScannerViewController(
             recognizedDataTypes: types,
@@ -91,7 +94,7 @@ struct LiveTextScanner: UIViewControllerRepresentable {
 
         func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             // A VIN or an invite code is unambiguous, so take it on sight.
-            guard mode != .meter else { return }
+            guard mode == .vin || mode == .invite || mode == .field(.vin) else { return }
             for item in addedItems { accept(item, requireMatch: true) }
         }
 
@@ -113,6 +116,10 @@ struct LiveTextScanner: UIViewControllerRepresentable {
                 guard let vin = candidates.compactMap(NHTSAClient.normalizedVIN).first else { return }
                 finished = true
                 completion(vin)
+            case let .field(kind):
+                guard let value = FieldReader.tapped(raw, for: kind) else { return }
+                finished = true
+                completion(value)
             case .meter:
                 let digits = raw.filter(\.isNumber)
                 guard digits.count >= 2 || !requireMatch else { return }
@@ -124,42 +131,123 @@ struct LiveTextScanner: UIViewControllerRepresentable {
     }
 }
 
-/// Reads the odometer or hour meter off the dash.
-struct MeterScanner: View {
-    let completion: (Double) -> Void
-    @Environment(\.dismiss) private var dismiss
+/// One photo from the camera, for the pump display or the dash.
+struct CameraPicker: UIViewControllerRepresentable {
+    let completion: (UIImage?) -> Void
 
-    static var isAvailable: Bool { LiveTextScanner.isAvailable }
+    static var isAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
-    var body: some View {
-        NavigationStack {
-            LiveTextScanner(mode: .meter) { text in
-                if let value = Double(text) { completion(value) } else { dismiss() }
-            }
-            .ignoresSafeArea()
-            .overlay(alignment: .bottom) {
-                Text("Tap the number on the dash")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, Theme.md).padding(.vertical, Theme.sm)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, Theme.xl)
-            }
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let controller = UIImagePickerController()
+        controller.sourceType = .camera
+        controller.delegate = context.coordinator
+        return controller
+    }
+
+    func updateUIViewController(_ controller: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(completion: completion) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let completion: (UIImage?) -> Void
+        init(completion: @escaping (UIImage?) -> Void) { self.completion = completion }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            completion(info[.originalImage] as? UIImage)
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            completion(nil)
         }
     }
 }
 
-/// Reads the VIN off the windshield plate, the door sticker or its barcode.
-struct VINScanner: View {
+/// A camera button for a typed field. Point and tap where Live Text runs;
+/// elsewhere, choose a photo and Vision reads it.
+struct ScanFieldButton: View {
+    let kind: FieldScan
+    let onScan: (String) -> Void
+
+    @State private var scanning = false
+    @State private var item: PhotosPickerItem?
+    @State private var lines: [String] = []
+    @State private var choosing = false
+    @State private var failed = false
+
+    var body: some View {
+        Group {
+            if LiveTextScanner.isAvailable {
+                Button { scanning = true } label: { ScanIcon() }
+            } else {
+                PhotosPicker(selection: $item, matching: .images) { ScanIcon() }
+            }
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Fill in from a photo")
+        .sheet(isPresented: $scanning) {
+            FieldScanner(kind: kind) { value in
+                scanning = false
+                Haptics.success()
+                onScan(value)
+            }
+        }
+        .sheet(isPresented: $choosing) {
+            LineChooser(lines: lines) { value in
+                choosing = false
+                onScan(value)
+            }
+        }
+        .alert("Nothing to fill in", isPresented: $failed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Couldn't read that photo. Try one closer up, or type it in.")
+        }
+        .onChange(of: item) { _, newItem in
+            guard let newItem else { return }
+            item = nil
+            Task { await read(newItem) }
+        }
+    }
+
+    private func read(_ item: PhotosPickerItem) async {
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data)?.cgImage else { failed = true; return }
+        let found = await PumpReader.recognize(in: image)
+        if let value = FieldReader.best(in: found, for: kind) {
+            Haptics.success()
+            onScan(value)
+            return
+        }
+        let texts = found.map(\.text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        // Only free text has nothing to guess; for the rest an empty read is a miss.
+        guard kind == .text, !texts.isEmpty else { failed = true; return }
+        lines = texts
+        choosing = true
+    }
+}
+
+private struct ScanIcon: View {
+    var body: some View {
+        Image(systemName: "camera.viewfinder")
+            .font(.body.weight(.medium))
+            .foregroundStyle(Theme.brass)
+            .frame(minWidth: 32, minHeight: 32)
+            .contentShape(Rectangle())
+    }
+}
+
+/// The live camera for one field.
+private struct FieldScanner: View {
+    let kind: FieldScan
     let completion: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            LiveTextScanner(mode: .vin, completion: completion)
+            LiveTextScanner(mode: .field(kind), completion: completion)
                 .ignoresSafeArea()
                 .overlay(alignment: .bottom) {
-                    Text("Point at the VIN on the windshield or door jamb")
+                    Text(kind.hint)
                         .font(.subheadline.weight(.semibold))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Theme.md).padding(.vertical, Theme.sm)
@@ -169,5 +257,45 @@ struct VINScanner: View {
                 }
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
+    }
+}
+
+/// Every line Vision found in the photo; tap the ones to use.
+private struct LineChooser: View {
+    let lines: [String]
+    let completion: (String) -> Void
+    @State private var picked: Set<Int> = []
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                        Button {
+                            if picked.contains(index) { picked.remove(index) } else { picked.insert(index) }
+                        } label: {
+                            HStack {
+                                Text(line).foregroundStyle(Theme.ink)
+                                Spacer()
+                                if picked.contains(index) { Image(systemName: "checkmark").foregroundStyle(Theme.brass) }
+                            }
+                        }
+                    }
+                } footer: {
+                    Text("Pick one line or several, in order.")
+                }
+            }
+            .navigationTitle("Text in the photo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Use") { completion(picked.sorted().map { lines[$0] }.joined(separator: " ")) }
+                        .disabled(picked.isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }

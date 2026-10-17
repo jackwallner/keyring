@@ -278,7 +278,7 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
         defer { isLoading = false }
         do {
             update(customerInfo: try await Purchases.shared.restorePurchases())
-            errorMessage = isPro ? nil : "No active Keyring Pro purchase was found for this Apple ID."
+            errorMessage = isPro ? nil : "No active Pro purchase was found for this Apple ID."
         } catch {
             errorMessage = "Restore failed. Please try again."
         }
@@ -468,21 +468,21 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
         }
         return [
             TestStoreProduct(
-                localizedTitle: "Keyring Pro Monthly", price: 1.99, currencyCode: "USD",
+                localizedTitle: "Pro Monthly", price: 1.99, currencyCode: "USD",
                 localizedPriceString: "$1.99", productIdentifier: KeyringProduct.monthly,
-                productType: .autoRenewableSubscription, localizedDescription: "Keyring Pro, billed monthly.",
+                productType: .autoRenewableSubscription, localizedDescription: "Pro, billed monthly.",
                 subscriptionPeriod: .init(value: 1, unit: .month), introductoryDiscount: weekTrial(), locale: locale
             ).toStoreProduct(),
             TestStoreProduct(
-                localizedTitle: "Keyring Pro Yearly", price: 14.99, currencyCode: "USD",
+                localizedTitle: "Pro Yearly", price: 14.99, currencyCode: "USD",
                 localizedPriceString: "$14.99", productIdentifier: KeyringProduct.yearly,
-                productType: .autoRenewableSubscription, localizedDescription: "Keyring Pro, billed yearly.",
+                productType: .autoRenewableSubscription, localizedDescription: "Pro, billed yearly.",
                 subscriptionPeriod: .init(value: 1, unit: .year), introductoryDiscount: weekTrial(), locale: locale
             ).toStoreProduct(),
             TestStoreProduct(
-                localizedTitle: "Keyring Pro Lifetime", price: 29.99, currencyCode: "USD",
+                localizedTitle: "Pro Lifetime", price: 29.99, currencyCode: "USD",
                 localizedPriceString: "$29.99", productIdentifier: KeyringProduct.lifetime,
-                productType: .nonConsumable, localizedDescription: "Keyring Pro, one-time purchase.",
+                productType: .nonConsumable, localizedDescription: "Pro, one-time purchase.",
                 subscriptionPeriod: nil, introductoryDiscount: nil, locale: locale
             ).toStoreProduct(),
         ]

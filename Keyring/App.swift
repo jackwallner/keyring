@@ -187,7 +187,7 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $tab) {
             GarageView()
-                .tabItem { Label("Garage", systemImage: "key.horizontal.fill") }
+                .tabItem { Label("Garage", systemImage: "car.fill") }
                 .tag(Tab.garage)
             NavigationStack { HistoryView() }
                 .tabItem { Label("History", systemImage: "book.closed.fill") }

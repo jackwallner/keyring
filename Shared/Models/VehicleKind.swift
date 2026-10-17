@@ -307,7 +307,7 @@ extension VehicleTint {
 /// countdowns; a repair is the unplanned kind; a recall visit closes an NHTSA
 /// campaign. Kept apart so the real cost of owning something shows.
 enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
-    case service, repair, recall
+    case service, repair, recall, fuel
 
     var id: String { rawValue }
 
@@ -316,6 +316,7 @@ enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
         case .service: "Maintenance"
         case .repair: "Repair"
         case .recall: "Recall"
+        case .fuel: "Fill-up"
         }
     }
 
@@ -324,6 +325,7 @@ enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
         case .service: "wrench.and.screwdriver.fill"
         case .repair: "hammer.fill"
         case .recall: "exclamationmark.shield.fill"
+        case .fuel: "fuelpump.fill"
         }
     }
 }

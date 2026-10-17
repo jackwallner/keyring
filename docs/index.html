@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Car Maintenance Log for the Whole Family | Keyring</title>
-<meta name="description" content="Keyring is a shared maintenance log for every vehicle you own: cars, trucks, motorcycles, boats, planes, RVs and mowers. Schedules, reminders, recalls and a printable service record." />
+<title>Vehicle Maintenance Log: Car Service and MPG Tracker</title>
+<meta name="description" content="A shared service and fuel log for every family vehicle, from cars and trucks to boats and RVs. Schedules, reminders, mpg, recalls and a printable record." />
 <link rel="icon" type="image/png" href="icon_256.png" />
 <link rel="apple-touch-icon" href="icon_256.png" />
 <link rel="stylesheet" href="styles.css" />
-<link rel="canonical" href="https://jackwallner.com/ios/keyring/" />
+<link rel="canonical" href="https://jackwallner.com/ios/vehicle-maintenance-log/" />
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Keyring: Car Maintenance Log">
-<meta property="og:description" content="One shared service log for every vehicle your family owns.">
-<meta property="og:url" content="https://jackwallner.com/ios/keyring/">
+<meta property="og:title" content="Vehicle Maintenance Log">
+<meta property="og:description" content="One shared service and fuel log for every vehicle your family owns.">
+<meta property="og:url" content="https://jackwallner.com/ios/vehicle-maintenance-log/">
 <meta property="og:image" content="https://jackwallner.github.io/keyring/icon_256.png">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">
@@ -22,13 +22,12 @@
   "@graph": [
     {
       "@type": "MobileApplication",
-      "@id": "https://jackwallner.com/ios/keyring/#app",
-      "name": "Keyring: Car Maintenance Log",
-      "alternateName": "Keyring",
-      "description": "Keyring is a shared maintenance log for every vehicle a family owns: cars, trucks, motorcycles, boats, aircraft, RVs and mowers. Recommended schedules, reminders, recalls, receipts and a printable service record.",
+      "@id": "https://jackwallner.com/ios/vehicle-maintenance-log/#app",
+      "name": "Vehicle Maintenance Log",
+      "description": "Vehicle Maintenance Log is a shared service log for every vehicle a family owns: cars, trucks, motorcycles, boats, aircraft, RVs and mowers. Recommended schedules, reminders, fill-ups and mpg, recalls, receipts and a printable service record.",
       "applicationCategory": "UtilitiesApplication",
       "operatingSystem": "iOS 17.0 or later",
-      "url": "https://jackwallner.com/ios/keyring/",
+      "url": "https://jackwallner.com/ios/vehicle-maintenance-log/",
       "dateModified": "2026-10-17",
       "featureList": [
         "Shared family garage with iCloud",
@@ -37,6 +36,9 @@
         "NHTSA recall checks",
         "Printable Service Record PDF",
         "Receipt scanning",
+        "Fill-up log with mpg or L/100 km",
+        "Pump and odometer photo reading",
+        "Fill any field from a photo",
         "Parts, upgrades and owners clubs",
         "Import history from other apps",
         "Storage mode that pauses reminders",
@@ -62,7 +64,7 @@
           "name": "What is the best app to track car maintenance for the whole family?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Keyring keeps one shared garage for every vehicle you own. Everyone you invite logs from their own iPhone, sees the same history, and gets their own reminders, with no account to create."
+            "text": "Vehicle Maintenance Log keeps one shared garage for every vehicle you own. Everyone you invite logs from their own iPhone, sees the same history, and gets their own reminders, with no account to create."
           }
         },
         {
@@ -70,15 +72,15 @@
           "name": "Can I track a boat, motorcycle or airplane, not just cars?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Keyring has schedules for cars, trucks, SUVs, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers. Boats, aircraft and small engines run on hours instead of miles."
+            "text": "Yes. There are schedules for cars, trucks, SUVs, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers. Boats, aircraft and small engines run on hours instead of miles."
           }
         },
         {
           "@type": "Question",
-          "name": "How does Keyring know what maintenance is due?",
+          "name": "How does the app know what maintenance is due?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Each vehicle starts with a recommended schedule for its kind and powertrain. Tell it when each job was last done and Keyring counts down by date and by mileage or hours, using how much you actually drive to estimate the date."
+            "text": "Each vehicle starts with a recommended schedule for its kind and powertrain. Tell it when each job was last done and the app counts down by date and by mileage or hours, using how much you actually drive to estimate the date."
           }
         },
         {
@@ -86,15 +88,15 @@
           "name": "Can I print a service record when I sell my car?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. The Service Record is a clean PDF with every job, the schedule and your receipts, ready to print or send to a buyer or shop. It is part of Keyring Pro."
+            "text": "Yes. The Service Record is a clean PDF with every job, the schedule and your receipts, ready to print or send to a buyer or shop. It is part of Pro."
           }
         },
         {
           "@type": "Question",
-          "name": "Does Keyring show what my car is worth?",
+          "name": "Does the app show what my car is worth?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Keyring links straight to the price guides for your country, such as Kelley Blue Book, Edmunds and J.D. Power in the US (or Aircraft Bluebook for planes), with your vehicle filled in, and lets you note the value you found. It does not show third-party values as its own."
+            "text": "The app links straight to the price guides for your country, such as Kelley Blue Book, Edmunds and J.D. Power in the US (or Aircraft Bluebook for planes), with your vehicle filled in, and lets you note the value you found. It does not show third-party values as its own."
           }
         },
         {
@@ -102,7 +104,15 @@
           "name": "Does it check for recalls?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. For cars, trucks and motorcycles Keyring checks NHTSA's public recall database for your year, make and model and notifies you when a new one is issued. Log the dealer fix and it is marked done for everyone in the garage, and it shows on the Service Record."
+            "text": "Yes. For cars, trucks and motorcycles the app checks NHTSA's public recall database for your year, make and model and notifies you when a new one is issued. Log the dealer fix and it is marked done for everyone in the garage, and it shows on the Service Record."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it track gas mileage?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Log each fill-up and the app works out your mpg, or L/100 km, from full tank to full tank. Snap the odometer and the reading fills in, and with Pro a photo of the pump fills in the gallons, price per gallon, total and grade, read on your iPhone. Fill-ups import from Fuelly-style CSVs."
           }
         },
         {
@@ -110,12 +120,12 @@
           "name": "Can I bring my history from another app?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Import a CSV export from Fuelly, Drivvo, Simply Auto, aCar or your own spreadsheet and Keyring matches the jobs to its schedule, so the countdowns start from your real history. Old paper receipts can be logged one after another without leaving the form."
+            "text": "Yes. Import a CSV export from Fuelly, Drivvo, Simply Auto, aCar or your own spreadsheet and the app matches the jobs to its schedule, so the countdowns start from your real history. Fill-ups come in as fill-ups, with your mpg. Old paper receipts can be logged one after another without leaving the form."
           }
         },
         {
           "@type": "Question",
-          "name": "Does Keyring work outside the US?",
+          "name": "Does it work outside the US?",
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Yes. Distances can be in kilometers, the make list and value guides follow your region (for example Canadian Black Book and AutoTrader.ca in Canada, Auto Trader and Parkers in the UK), schedules add winter tires where they matter, and the inspection is named for your country, such as the MOT. US recalls come from NHTSA, with a link to your country's own recall lookup."
@@ -123,10 +133,10 @@
         },
         {
           "@type": "Question",
-          "name": "Is Keyring free?",
+          "name": "Is Vehicle Maintenance Log free?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Two vehicles are free for good, with unlimited logging, reminders, recalls, family sharing and CSV export. Keyring Pro adds unlimited vehicles, the Service Record PDF, receipt auto-fill and spending insights. Prices are shown in the app before you buy and vary by region."
+            "text": "Two vehicles are free for good, with unlimited logging, fill-ups and mpg, reminders, recalls, family sharing and CSV export. Pro adds unlimited vehicles, the Service Record PDF, receipt and pump auto-fill and spending insights. Prices are shown in the app before you buy and vary by region."
           }
         },
         {
@@ -144,11 +154,11 @@
 </script>
 </head>
 <body><div class="wrap">
-<nav><a class="brand" href="index.html"><img src="icon_256.png" alt="" />Keyring</a><div class="links"><a href="support.html">Support</a><a href="privacy-policy.html">Privacy</a><a href="terms.html">Terms</a></div></nav>
+<nav><a class="brand" href="index.html"><img src="icon_256.png" alt="" />Vehicle Maintenance Log</a><div class="links"><a href="support.html">Support</a><a href="privacy-policy.html">Privacy</a><a href="terms.html">Terms</a></div></nav>
 <main>
-<div class="eyebrow">Maintenance log for every vehicle</div>
-<h1>Every key on the ring,<br />looked after.</h1>
-<p class="lead">The truck, your partner's SUV, the teen's first car, the boat and the mower. Keyring keeps one shared service log for all of them and tells you what is due next.</p>
+<div class="eyebrow">Service, fuel and recalls for every vehicle</div>
+<h1>Every vehicle in the family,<br />looked after.</h1>
+<p class="lead">The truck, your partner's SUV, the teen's first car, the boat and the mower. Vehicle Maintenance Log keeps one shared service log for all of them and tells you what is due next.</p>
 <a class="cta" href="https://apps.apple.com/app/id6823808045">Download on the App Store</a>
 <div class="tag"><small>2019 Toyota Tacoma</small><strong>The Tacoma</strong>48,210 mi<br /><span class="chip">Oil and filter · due in 3 weeks, by your pace</span></div>
 <div class="shots">
@@ -162,13 +172,13 @@
 <p>Schedules for every kind of vehicle, in miles, kilometers or engine hours.</p>
 <div class="kinds"><span>Car</span><span>SUV</span><span>Truck</span><span>Van</span><span>Motorcycle</span><span>Scooter</span><span>Motorhome</span><span>Camper</span><span>Trailer</span><span>Boat</span><span>Sailboat</span><span>Jet&nbsp;Ski</span><span>Aircraft</span><span>ATV/UTV</span><span>Snowmobile</span><span>Tractor&nbsp;/&nbsp;Mower</span></div>
 <div class="cards">
-<div class="card"><h3>One garage, the whole family</h3><p>Invite anyone with a link or a QR code. Everyone logs from their own iPhone and every phone shows the same history. Reminders stay personal.</p></div><div class="card"><h3>Knows what is due</h3><p>Recommended schedules for each kind of vehicle and powertrain, from hybrids to classics, counted down by date and by miles, kilometers or engine hours at the pace you actually drive.</p></div><div class="card"><h3>Log in seconds, or bring your history</h3><p>Tick what was done, add the mileage and cost, snap the receipt. Import a CSV from another app, or catch up on a stack of old receipts in a row.</p></div><div class="card"><h3>A record worth handing over</h3><p>Print or send a clean Service Record PDF with every job and receipt. When you sell, mark it sold and the history stays with you. Export to CSV any time.</p></div><div class="card"><h3>Recalls, value and parts</h3><p>Safety recalls from NHTSA, one tap to your country's price guide with the vehicle filled in, parts for the job due next, plus upgrades and owners clubs.</p></div><div class="card"><h3>Seasons and second meters</h3><p>Put the boat or the convertible in storage and its reminders pause until it comes out. Track a generator's hours beside the RV's miles.</p></div>
+<div class="card"><h3>One garage, the whole family</h3><p>Invite anyone with a link or a QR code. Everyone logs from their own iPhone and every phone shows the same history. Reminders stay personal.</p></div><div class="card"><h3>Knows what is due</h3><p>Recommended schedules for each kind of vehicle and powertrain, from hybrids to classics, counted down by date and by miles, kilometers or engine hours at the pace you actually drive. Storage pauses the boat's reminders, and a second meter tracks a generator beside the RV's miles.</p></div><div class="card"><h3>Log in seconds, or bring your history</h3><p>Tick what was done, add the mileage and cost, snap the receipt. Any field, from the plate and VIN to the odometer and notes, can be filled from a photo. Import a CSV from another app, or catch up on old receipts in a row.</p></div><div class="card"><h3>Fill-ups and real mpg</h3><p>Snap the odometer and the reading fills in. With Pro, snap the pump and the gallons, price, total and grade fill in. Fuel economy is worked out from full tank to full tank, in mpg or L/100 km.</p></div><div class="card"><h3>A record worth handing over</h3><p>Print or send a clean Service Record PDF with every job and receipt. When you sell, mark it sold and the history stays with you. Export to CSV any time.</p></div><div class="card"><h3>Recalls, value and parts</h3><p>Safety recalls from NHTSA, one tap to your country's price guide with the vehicle filled in, parts for the job due next, plus upgrades and owners clubs.</p></div>
 </div>
 <h2>Free for your first two</h2>
-<p>Two vehicles are free for good, with unlimited logging, reminders, recalls, family sharing and CSV export. Keyring Pro, a monthly or yearly subscription with a one-week free trial or a one-time purchase, adds unlimited vehicles, the Service Record PDF, receipt auto-fill and spending insights. No account, no ads.</p>
+<p>Two vehicles are free for good, with unlimited logging, fill-ups and mpg, reminders, recalls, family sharing and CSV export. Pro, a monthly or yearly subscription with a one-week free trial or a one-time purchase, adds unlimited vehicles, the Service Record PDF, receipt and pump auto-fill and spending insights. No account, no ads.</p>
 <section class="faq" id="faq">
 <h2>Questions</h2>
-<details><summary>What is the best app to track car maintenance for the whole family?</summary><p>Keyring keeps one shared garage for every vehicle you own. Everyone you invite logs from their own iPhone, sees the same history, and gets their own reminders, with no account to create.</p></details><details><summary>Can I track a boat, motorcycle or airplane, not just cars?</summary><p>Yes. Keyring has schedules for cars, trucks, SUVs, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers. Boats, aircraft and small engines run on hours instead of miles.</p></details><details><summary>How does Keyring know what maintenance is due?</summary><p>Each vehicle starts with a recommended schedule for its kind and powertrain. Tell it when each job was last done and Keyring counts down by date and by mileage or hours, using how much you actually drive to estimate the date.</p></details><details><summary>Can I print a service record when I sell my car?</summary><p>Yes. The Service Record is a clean PDF with every job, the schedule and your receipts, ready to print or send to a buyer or shop. It is part of Keyring Pro.</p></details><details><summary>Does Keyring show what my car is worth?</summary><p>Keyring links straight to the price guides for your country, such as Kelley Blue Book, Edmunds and J.D. Power in the US (or Aircraft Bluebook for planes), with your vehicle filled in, and lets you note the value you found. It does not show third-party values as its own.</p></details><details><summary>Does it check for recalls?</summary><p>Yes. For cars, trucks and motorcycles Keyring checks NHTSA's public recall database for your year, make and model and notifies you when a new one is issued. Log the dealer fix and it is marked done for everyone in the garage, and it shows on the Service Record.</p></details><details><summary>Can I bring my history from another app?</summary><p>Yes. Import a CSV export from Fuelly, Drivvo, Simply Auto, aCar or your own spreadsheet and Keyring matches the jobs to its schedule, so the countdowns start from your real history. Old paper receipts can be logged one after another without leaving the form.</p></details><details><summary>Does Keyring work outside the US?</summary><p>Yes. Distances can be in kilometers, the make list and value guides follow your region (for example Canadian Black Book and AutoTrader.ca in Canada, Auto Trader and Parkers in the UK), schedules add winter tires where they matter, and the inspection is named for your country, such as the MOT. US recalls come from NHTSA, with a link to your country's own recall lookup.</p></details><details><summary>Is Keyring free?</summary><p>Two vehicles are free for good, with unlimited logging, reminders, recalls, family sharing and CSV export. Keyring Pro adds unlimited vehicles, the Service Record PDF, receipt auto-fill and spending insights. Prices are shown in the app before you buy and vary by region.</p></details><details><summary>Do I need an account?</summary><p>No. Your garage is stored on your iPhone and in your own iCloud, and sharing uses Apple's iCloud sharing.</p></details>
+<details><summary>What is the best app to track car maintenance for the whole family?</summary><p>Vehicle Maintenance Log keeps one shared garage for every vehicle you own. Everyone you invite logs from their own iPhone, sees the same history, and gets their own reminders, with no account to create.</p></details><details><summary>Can I track a boat, motorcycle or airplane, not just cars?</summary><p>Yes. There are schedules for cars, trucks, SUVs, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers. Boats, aircraft and small engines run on hours instead of miles.</p></details><details><summary>How does the app know what maintenance is due?</summary><p>Each vehicle starts with a recommended schedule for its kind and powertrain. Tell it when each job was last done and the app counts down by date and by mileage or hours, using how much you actually drive to estimate the date.</p></details><details><summary>Can I print a service record when I sell my car?</summary><p>Yes. The Service Record is a clean PDF with every job, the schedule and your receipts, ready to print or send to a buyer or shop. It is part of Pro.</p></details><details><summary>Does the app show what my car is worth?</summary><p>The app links straight to the price guides for your country, such as Kelley Blue Book, Edmunds and J.D. Power in the US (or Aircraft Bluebook for planes), with your vehicle filled in, and lets you note the value you found. It does not show third-party values as its own.</p></details><details><summary>Does it check for recalls?</summary><p>Yes. For cars, trucks and motorcycles the app checks NHTSA's public recall database for your year, make and model and notifies you when a new one is issued. Log the dealer fix and it is marked done for everyone in the garage, and it shows on the Service Record.</p></details><details><summary>Does it track gas mileage?</summary><p>Yes. Log each fill-up and the app works out your mpg, or L/100 km, from full tank to full tank. Snap the odometer and the reading fills in, and with Pro a photo of the pump fills in the gallons, price per gallon, total and grade, read on your iPhone. Fill-ups import from Fuelly-style CSVs.</p></details><details><summary>Can I bring my history from another app?</summary><p>Yes. Import a CSV export from Fuelly, Drivvo, Simply Auto, aCar or your own spreadsheet and the app matches the jobs to its schedule, so the countdowns start from your real history. Fill-ups come in as fill-ups, with your mpg. Old paper receipts can be logged one after another without leaving the form.</p></details><details><summary>Does it work outside the US?</summary><p>Yes. Distances can be in kilometers, the make list and value guides follow your region (for example Canadian Black Book and AutoTrader.ca in Canada, Auto Trader and Parkers in the UK), schedules add winter tires where they matter, and the inspection is named for your country, such as the MOT. US recalls come from NHTSA, with a link to your country's own recall lookup.</p></details><details><summary>Is Vehicle Maintenance Log free?</summary><p>Two vehicles are free for good, with unlimited logging, fill-ups and mpg, reminders, recalls, family sharing and CSV export. Pro adds unlimited vehicles, the Service Record PDF, receipt and pump auto-fill and spending insights. Prices are shown in the app before you buy and vary by region.</p></details><details><summary>Do I need an account?</summary><p>No. Your garage is stored on your iPhone and in your own iCloud, and sharing uses Apple's iCloud sharing.</p></details>
 </section>
 </main>
 <footer>&copy; 2026 Jack Wallner · Last updated <time datetime="2026-10-17">October 17, 2026</time>. <a href="support.html">Support</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a><a href="community.html">Community guidelines</a><a href="https://jackwallner.com/ios/">More apps by Jack Wallner</a></footer>

@@ -34,6 +34,7 @@ struct ImportView: View {
         var added = 0
         var duplicates = 0
         var readings = 0
+        var fillUps = 0
         var jobsUpdated = 0
         var vehicles: [String] = []
     }
@@ -80,17 +81,17 @@ struct ImportView: View {
                     .foregroundStyle(Theme.brass)
                     .padding(.top, Theme.lg)
                 Text("Bring your history").font(Theme.title(28)).foregroundStyle(Theme.ink)
-                Text("Export a spreadsheet (CSV) from Fuelly, Drivvo, Simply Auto, aCar, a Keyring backup or your own sheet, then choose it here.")
+                Text("Export a spreadsheet (CSV) from Fuelly, Drivvo, Simply Auto, aCar, a backup from this app or your own sheet, then choose it here.")
                     .foregroundStyle(Theme.secondaryInk)
                 VStack(alignment: .leading, spacing: Theme.sm) {
                     bullet("calendar", "Dates, odometer, work, cost, shop and notes come across.")
                     bullet("checklist", "Jobs like oil changes and tire rotations restart their countdowns.")
-                    bullet("fuelpump", "Fill-ups aren't logged as services. Their odometer readings teach Keyring how much you drive.")
-                    bullet("arrow.triangle.2.circlepath", "Anything already in Keyring is skipped, so importing twice is safe.")
+                    bullet("fuelpump", "Fill-ups come across with their gallons and price, so fuel economy starts from your old log.")
+                    bullet("arrow.triangle.2.circlepath", "Anything already logged is skipped, so importing twice is safe.")
                 }
                 .card()
                 if readError {
-                    Label("Keyring couldn't find a date column in \(fileName ?? "that file"). Check it's a CSV export with a header row, or try a different export.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Couldn't find a date column in \(fileName ?? "that file"). Check it's a CSV export with a header row, or try a different export.", systemImage: "exclamationmark.triangle.fill")
                         .font(.subheadline)
                         .foregroundStyle(Theme.overdue)
                 }
@@ -121,8 +122,8 @@ struct ImportView: View {
                 if !result.fillUps.isEmpty {
                     Toggle(isOn: $keepFillUps) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Keep \(Format.count(result.fillUps.count, "fill-up", "fill-ups")) as odometer readings")
-                            Text("Teaches Keyring how much you drive. Fuel itself isn't tracked.")
+                            Text("Bring \(Format.count(result.fillUps.count, "fill-up", "fill-ups"))")
+                            Text("Kept apart from services. Their readings teach the app how much you drive.")
                                 .font(.footnote).foregroundStyle(Theme.secondaryInk)
                         }
                     }
@@ -203,7 +204,7 @@ struct ImportView: View {
         VStack(spacing: Theme.lg) {
             Spacer()
             Image(systemName: "checkmark.circle.fill").font(.system(size: 52)).foregroundStyle(Theme.good)
-            Text(summary.added == 0 ? "Nothing new to add" : "Imported \(Format.count(summary.added, "service", "services"))")
+            Text(summary.added + summary.fillUps == 0 ? "Nothing new to add" : "Imported \(ListFormatter.localizedString(byJoining: [summary.added > 0 ? Format.count(summary.added, "service", "services") : nil, summary.fillUps > 0 ? Format.count(summary.fillUps, "fill-up", "fill-ups") : nil].compactMap { $0 }))")
                 .font(Theme.title(26))
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
@@ -218,7 +219,7 @@ struct ImportView: View {
                     Text("\(Format.count(summary.readings, "odometer reading", "odometer readings")) added.")
                 }
                 if summary.duplicates > 0 {
-                    Text("\(Format.count(summary.duplicates, "entry was", "entries were")) already in Keyring.")
+                    Text("\(Format.count(summary.duplicates, "entry was", "entries were")) already logged.")
                 }
             }
             .font(.subheadline)
@@ -244,14 +245,14 @@ struct ImportView: View {
         let services = result.services.filter { names.contains($0.vehicleName) }.count
         if services > 0 { return "Import \(Format.count(services, "service", "services"))" }
         let fills = result.fillUps.filter { names.contains($0.vehicleName) }.count
-        return keepFillUps && fills > 0 ? "Import \(Format.count(fills, "reading", "readings"))" : "Import"
+        return keepFillUps && fills > 0 ? "Import \(Format.count(fills, "fill-up", "fill-ups"))" : "Import"
     }
 
     private func canImport(_ result: ServiceImport.Result) -> Bool {
         guard !targets.values.contains(.unchosen) else { return false }
         let names = Set(targets.filter { $0.value != .skip }.map(\.key))
         return result.services.contains { names.contains($0.vehicleName) }
-            || (keepFillUps && result.fillUps.contains { names.contains($0.vehicleName) && $0.reading != nil })
+            || (keepFillUps && result.fillUps.contains { names.contains($0.vehicleName) && ($0.reading != nil || $0.volume != nil || $0.cost > 0) })
     }
 
     private func load(_ url: URL) {
@@ -314,8 +315,9 @@ struct ImportView: View {
             summary.added += outcome.added
             summary.duplicates += outcome.duplicates
             summary.readings += outcome.readings
+            summary.fillUps += outcome.fillUps
             summary.jobsUpdated += outcome.jobsUpdated
-            if outcome.added > 0 || outcome.readings > 0, !summary.vehicles.contains(vehicle.displayName) {
+            if outcome.added > 0 || outcome.readings > 0 || outcome.fillUps > 0, !summary.vehicles.contains(vehicle.displayName) {
                 summary.vehicles.append(vehicle.displayName)
             }
         }

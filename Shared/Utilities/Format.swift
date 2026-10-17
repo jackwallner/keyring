@@ -46,6 +46,11 @@ enum Format {
         return value.formatted(.currency(code: code).precision(.fractionLength(fraction)))
     }
 
+    /// A pump price, to the tenth of a cent pumps show: $3.659.
+    static func unitPrice(_ value: Double, code: String = Locale.current.currency?.identifier ?? "USD") -> String {
+        value.formatted(.currency(code: code).precision(.fractionLength(2...3)))
+    }
+
     static func count(_ n: Int, _ singular: String, _ plural: String) -> String {
         "\(n.formatted()) \(n == 1 ? singular : plural)"
     }

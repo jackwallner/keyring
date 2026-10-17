@@ -3,15 +3,32 @@ import SwiftUI
 
 /// Every job across the garage, newest first, with who logged it.
 struct HistoryView: View {
+    private enum Show: Hashable { case all, service, fuel }
+
     @EnvironmentObject private var garage: GarageStore
     @State private var filter: NSManagedObjectID?
+    @State private var show: Show = .all
     @State private var search = ""
     @State private var exportFile: SharedFile?
     @State private var importing = false
 
     var body: some View {
         let entries = filtered
+        let economy = FuelEconomy.labels(for: garage.vehicles + garage.retiredVehicles)
         List {
+            if hasFuel {
+                Section {
+                    Picker("Show", selection: $show) {
+                        Text("All").tag(Show.all)
+                        Text("Service").tag(Show.service)
+                        Text("Fuel").tag(Show.fuel)
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowInsets(EdgeInsets(top: 0, leading: Theme.margin, bottom: 0, trailing: Theme.margin))
+                    .listRowBackground(Color.clear)
+                    .accessibilityIdentifier("history.show")
+                }
+            }
             if garage.vehicles.count > 1 {
                 Section {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -38,7 +55,7 @@ struct HistoryView: View {
                 ForEach(groups(entries), id: \.title) { group in
                     Section {
                         ForEach(group.entries) { entry in
-                            NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: filter == nil) }
+                            NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: filter == nil, economy: entry.id.flatMap { economy[$0] }) }
                                 .listRowBackground(Theme.surface)
                         }
                     } header: {
@@ -75,14 +92,24 @@ struct HistoryView: View {
 
     private var hideCosts: Bool { AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) }
 
+    private var hasFuel: Bool {
+        _ = garage.revision
+        return garage.allEntries().contains { $0.kind == .fuel }
+    }
+
     private var filtered: [ServiceEntry] {
         _ = garage.revision
         var entries = garage.allEntries()
         if let filter { entries = entries.filter { $0.vehicle?.objectID == filter } }
+        switch show {
+        case .all: break
+        case .service: entries = entries.filter { $0.kind != .fuel }
+        case .fuel: entries = entries.filter { $0.kind == .fuel }
+        }
         let query = search.trimmed.lowercased()
         if !query.isEmpty {
             entries = entries.filter { entry in
-                [entry.title, entry.shop, entry.notes, entry.loggedBy, entry.vehicle?.displayName, entry.kind == .service ? nil : entry.kind.title]
+                [entry.title, entry.shop, entry.notes, entry.loggedBy, entry.vehicle?.displayName, entry.kind == .service ? nil : entry.kind.title, entry.kind == .fuel ? "fuel gas" : nil, entry.grade?.title]
                     .compactMap { $0?.lowercased() }
                     .contains { $0.contains(query) }
             }
@@ -133,13 +160,16 @@ struct HistoryView: View {
 struct VehicleHistoryView: View {
     @EnvironmentObject private var garage: GarageStore
     @ObservedObject var vehicle: Vehicle
+    /// Fill-ups only, rather than the service log.
+    var fuel = false
 
     var body: some View {
+        let economy = fuel ? FuelEconomy.labels(for: [vehicle]) : [:]
         List {
             ForEach(years, id: \.year) { group in
                 Section {
                     ForEach(group.entries) { entry in
-                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false) }
+                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false, economy: entry.id.flatMap { economy[$0] }) }
                             .listRowBackground(Theme.surface)
                     }
                 } header: {
@@ -151,13 +181,13 @@ struct VehicleHistoryView: View {
             }
         }
         .paperBackground()
-        .navigationTitle("History")
+        .navigationTitle(fuel ? "Fill-ups" : "History")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var years: [(year: Int, entries: [ServiceEntry], total: Double)] {
         var result: [(year: Int, entries: [ServiceEntry], total: Double)] = []
-        for entry in vehicle.sortedEntries {
+        for entry in fuel ? vehicle.fuelEntries : vehicle.serviceEntries {
             let year = entry.date.map { Calendar.current.component(.year, from: $0) } ?? 0
             if result.last?.year == year {
                 result[result.count - 1].entries.append(entry)
@@ -198,6 +228,8 @@ struct GroupHeader: View {
 struct EntryRow: View {
     @ObservedObject var entry: ServiceEntry
     let showsVehicle: Bool
+    /// A fill-up's fuel economy, worked out by the list against the fill-ups around it.
+    var economy: String? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var hideCosts: Bool { AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) }
@@ -276,6 +308,7 @@ struct EntryRow: View {
 
     private var subtitle: String {
         var parts: [String] = []
+        if entry.kind == .fuel { return fuelSubtitle }
         if entry.kind != .service { parts.append(entry.kind.title) }
         if showsVehicle, let vehicle = entry.vehicle { parts.append(vehicle.displayName) }
         if entry.hasReading, let meter = entry.vehicle?.meter, meter.hasReading { parts.append(Format.reading(entry.reading, meter)) }
@@ -283,6 +316,17 @@ struct EntryRow: View {
         if let by = entry.loggedBy { parts.append(by) }
         let attachments = entry.attachments?.count ?? 0
         if attachments > 0 { parts.append("\(attachments) \(attachments == 1 ? "photo" : "photos")") }
+        return parts.joined(separator: " · ")
+    }
+
+    private var fuelSubtitle: String {
+        var parts: [String] = []
+        if showsVehicle, let vehicle = entry.vehicle { parts.append(vehicle.displayName) }
+        if let volume = entry.fuelVolumeText { parts.append(volume) }
+        // The reading lives on the detail page; economy says more in a row.
+        if let economy { parts.append(economy) } else if entry.hasReading, let meter = entry.vehicle?.meter, meter.hasReading { parts.append(Format.reading(entry.reading, meter)) }
+        if let station = entry.shop { parts.append(station) }
+        if let by = entry.loggedBy { parts.append(by) }
         return parts.joined(separator: " · ")
     }
 }
@@ -302,7 +346,7 @@ struct EntryDetailView: View {
             if let vehicle = entry.vehicle, !entry.isDeleted {
                 VStack(alignment: .leading, spacing: Theme.lg) {
                     VStack(alignment: .leading, spacing: Theme.xs) {
-                        Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: entry.kind == .service ? Theme.brass : Theme.overdue)
+                        Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: [.service, .fuel].contains(entry.kind) ? Theme.brass : Theme.overdue)
                         Text(entry.title ?? "Service")
                             .font(Theme.title(28))
                             .foregroundStyle(Theme.ink)
@@ -312,7 +356,7 @@ struct EntryDetailView: View {
                     }
                     .padding(.top, Theme.sm)
 
-                    facts(vehicle)
+                    if entry.kind == .fuel { fuelFacts(vehicle) } else { facts(vehicle) }
 
                     let covered = (vehicle.tasks ?? []).filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
                     if !covered.isEmpty {
@@ -367,7 +411,7 @@ struct EntryDetailView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                         .overlay(alignment: .bottomLeading) {
                                             if attachment.isReceipt {
-                                                Text("Receipt")
+                                                Text(entry.kind == .fuel ? "Pump" : "Receipt")
                                                     .font(.caption2.weight(.semibold))
                                                     .padding(.horizontal, 6).padding(.vertical, 3)
                                                     .background(.ultraThinMaterial, in: Capsule())
@@ -396,7 +440,9 @@ struct EntryDetailView: View {
             ToolbarItem(placement: .topBarTrailing) { Button("Edit") { editing = true } }
         }
         .sheet(isPresented: $editing) {
-            if let vehicle = entry.vehicle { LogServiceView(vehicle: vehicle, editing: entry) }
+            if let vehicle = entry.vehicle {
+                if entry.kind == .fuel { FuelLogView(vehicle: vehicle, editing: entry) } else { LogServiceView(vehicle: vehicle, editing: entry) }
+            }
         }
         .fullScreenCover(item: $viewing) { attachment in
             AttachmentViewer(attachment: attachment) { viewing = nil }
@@ -409,6 +455,30 @@ struct EntryDetailView: View {
         } message: {
             Text("It's removed for everyone the garage is shared with, along with its receipts and photos.")
         }
+    }
+
+    private func fuelFacts(_ vehicle: Vehicle) -> some View {
+        let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
+        let unit = FuelVolumeUnit.current
+        var items: [(String, String)] = []
+        if let volume = entry.fuelVolumeText { items.append((unit.plural, volume)) }
+        if entry.fuelUnitPrice > 0, !hideCosts { items.append(("Price per \(unit.name)", Format.unitPrice(unit.fromPerLiter(entry.fuelUnitPrice)))) }
+        if entry.cost > 0, !hideCosts { items.append(("Total", Format.money(entry.cost))) }
+        if let grade = entry.grade { items.append(("Grade", grade.title)) }
+        if entry.hasReading, vehicle.meter.hasReading { items.append((vehicle.meter.meterName, Format.reading(entry.reading, vehicle.meter))) }
+        if let id = entry.id, let economy = FuelEconomy.labels(for: [vehicle])[id] { items.append(("Since last fill-up", economy)) }
+        if entry.fuelPartial { items.append(("Tank", "Topped up")) }
+        if let station = entry.shop { items.append(("Station", station)) }
+        if let by = entry.loggedBy { items.append(("Logged by", by)) }
+        return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: Theme.md) {
+            ForEach(items, id: \.0) { label, value in
+                VStack(alignment: .leading, spacing: 2) {
+                    Eyebrow(text: label)
+                    Text(value).font(Theme.figure(17)).foregroundStyle(Theme.ink).lineLimit(2)
+                }
+            }
+        }
+        .card()
     }
 
     private func facts(_ vehicle: Vehicle) -> some View {

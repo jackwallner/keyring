@@ -25,14 +25,14 @@ enum ProFeature: String, CaseIterable, Identifiable {
         switch self {
         case .unlimitedVehicles: "Your first two are free forever. Pro adds the boat, the bikes, the RV and the mower."
         case .serviceRecord: "Every job, receipt and reading on clean pages. Print it for the glovebox or send it to a buyer."
-        case .receiptScan: "Snap a receipt and the total, date, shop and mileage are read on your iPhone."
+        case .receiptScan: "Snap a receipt or the pump and the total, date, shop and gallons are read on your iPhone."
         case .insights: "Spending by month, by vehicle and by job, and your real cost per mile."
         }
     }
 
     var symbol: String {
         switch self {
-        case .unlimitedVehicles: "key.horizontal.fill"
+        case .unlimitedVehicles: "car.2.fill"
         case .serviceRecord: "doc.richtext.fill"
         case .receiptScan: "doc.viewfinder.fill"
         case .insights: "chart.bar.fill"
@@ -120,7 +120,7 @@ struct PaywallView: View {
         ScrollView {
             VStack(spacing: Theme.lg) {
                 VStack(spacing: Theme.xs) {
-                    Eyebrow(text: "Keyring Pro", color: Theme.brass)
+                    Eyebrow(text: "Vehicle Maintenance Log Pro", color: Theme.brass)
                     Text(focus?.headline ?? "Keep every vehicle\nin one place")
                         .font(Theme.title(30))
                         .foregroundStyle(Theme.ink)
@@ -269,7 +269,7 @@ struct PaywallView: View {
             VStack(spacing: Theme.lg) {
                 Image(systemName: "checkmark.seal.fill").font(.system(size: 44)).foregroundStyle(Theme.brass)
                     .padding(.top, 60)
-                Text("Keyring Pro is on").font(Theme.title(30))
+                Text("Pro is on").font(Theme.title(30))
                 Text("Unlimited vehicles, the Service Record, receipt reading and insights, on every device signed in to this Apple Account.")
                     .font(.subheadline).foregroundStyle(Theme.secondaryInk).multilineTextAlignment(.center)
                 Link(destination: AppLinks.manageSubscriptions) {

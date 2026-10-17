@@ -51,7 +51,7 @@ struct StorageSheet: View {
                 DatePicker("On", selection: $until, in: Date.now..., displayedComponents: .date)
             }
         } footer: {
-            Text("Reminders for \(vehicle.displayName) pause and Keyring stops assuming the \(vehicle.meter.meterName.lowercased()) is moving. Jobs that go by the calendar still count the months.")
+            Text("Reminders for \(vehicle.displayName) pause and the app stops assuming the \(vehicle.meter.meterName.lowercased()) is moving. Jobs that go by the calendar still count the months.")
         }
         let prep = (vehicle.enabledTasks).filter { Self.storageKeys.contains($0.catalogKey ?? "") }
         if !prep.isEmpty {
@@ -69,10 +69,13 @@ struct StorageSheet: View {
     @ViewBuilder private var returnSections: some View {
         if vehicle.meter.hasReading {
             Section {
-                NumberField(
-                    title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours),
-                    value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours
-                )
+                HStack {
+                    NumberField(
+                        title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours),
+                        value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours
+                    )
+                    ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { value = Double($0) }
+                }
             } header: {
                 Text(vehicle.meter.meterName)
             } footer: {
@@ -81,7 +84,10 @@ struct StorageSheet: View {
         }
         if vehicle.hasAuxMeter {
             Section(vehicle.auxMeterName ?? "Second meter") {
-                NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
+                HStack {
+                    NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
+                    ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: .hours)) { auxValue = Double($0) }
+                }
             }
         }
         Section("Before its first trip") {

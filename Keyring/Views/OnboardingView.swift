@@ -1,7 +1,7 @@
 import RevenueCat
 import SwiftUI
 
-/// Four pages: what Keyring is, how it knows what's due, logging together,
+/// Four pages: what the app is, how it knows what's due, logging together,
 /// and the Pro trial. The bottom bar keeps one geometry on every page, so
 /// the main button never moves under a thumb.
 struct OnboardingView: View {
@@ -80,7 +80,7 @@ struct OnboardingView: View {
                 .scaleEffect(compact ? 0.72 : 1)
                 .frame(height: compact ? 166 : 230)
                 .frame(maxWidth: .infinity)
-            Text("Every vehicle,\none keyring")
+            Text("Every vehicle,\none logbook")
                 .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
             Text("Cars, trucks, boats, bikes, RVs, planes and the mower. What's due, what was done, and every receipt, for the whole family.")
@@ -107,7 +107,7 @@ struct OnboardingView: View {
             Text("It knows\nwhat's due")
                 .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
-            Text("Pick the kind of vehicle and Keyring builds its schedule: miles for the truck, engine hours for the boat. It learns how much you drive and reminds you a week ahead.")
+            Text("Pick the kind of vehicle and its schedule is built for you: miles for the truck, engine hours for the boat. It learns how much you drive and reminds you a week ahead.")
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
         }
@@ -151,13 +151,13 @@ struct OnboardingView: View {
 
     private var trial: some View {
         pageLayout {
-            Image(systemName: "key.horizontal.fill")
+            Image(systemName: "book.closed.fill")
                 .font(.system(size: compact ? 28 : 36, weight: .semibold))
                 .foregroundStyle(Theme.brass)
                 .frame(width: compact ? 64 : 84, height: compact ? 64 : 84)
                 .background(Theme.brassSoft, in: Circle())
                 .frame(maxWidth: .infinity)
-            Text(store.isPro ? "Keyring Pro is on your account" : trialTitle)
+            Text(store.isPro ? "Pro is on your account" : trialTitle)
                 .font(Theme.title(compact ? 28 : 32))
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity)
@@ -189,12 +189,12 @@ struct OnboardingView: View {
     private var trialCTA: String {
         if store.isPro { return "Continue" }
         if let package = onboardingPackage, store.isEligibleForIntroOffer(package) { return "Start free trial" }
-        return "Continue with Keyring Pro"
+        return "Continue with Pro"
     }
 
     private var trialTitle: String {
-        if let package = onboardingPackage, store.isEligibleForIntroOffer(package) { return "Try Keyring Pro free for a week" }
-        return "Keyring Pro"
+        if let package = onboardingPackage, store.isEligibleForIntroOffer(package) { return "Try Pro free for a week" }
+        return "Vehicle Maintenance Log Pro"
     }
 
     private func benefit(_ text: String) -> some View {

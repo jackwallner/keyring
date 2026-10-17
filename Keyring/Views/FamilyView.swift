@@ -159,8 +159,8 @@ struct FamilyView: View {
 
     private var steps: some View {
         VStack(alignment: .leading, spacing: Theme.md) {
-            step(1, "They install Keyring", "Free on the App Store.")
-            step(2, "They scan your code", "With the Camera app, or in Keyring: Family at the top of Garage, then Join with a code or link. A texted link works too.")
+            step(1, "They install the app", "Free on the App Store.")
+            step(2, "They scan your code", "With the Camera app, or in the app: Family at the top of Garage, then Join with a code or link. A texted link works too.")
             step(3, "You log together", "Every vehicle, job and receipt, signed with who logged it.")
         }
         .card()
@@ -193,13 +193,13 @@ struct FamilyView: View {
                     .background(.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .accessibilityIdentifier("family.code")
             }
-            Text("Have them scan this in Keyring or with their Camera")
+            Text("Have them scan this in the app or with their Camera")
                 .font(.subheadline.weight(.semibold))
                 .multilineTextAlignment(.center)
             ShareLink(
                 item: url,
-                subject: Text("Join our garage in Keyring"),
-                message: Text("Join our garage in Keyring so we can both log maintenance on our vehicles.")
+                subject: Text("Join our garage in Vehicle Maintenance Log"),
+                message: Text("Join our garage in Vehicle Maintenance Log so we can both log maintenance on our vehicles.")
             ) {
                 Label("Send invite link", systemImage: "square.and.arrow.up")
             }

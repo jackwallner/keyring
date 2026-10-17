@@ -18,9 +18,14 @@ struct ReceiptFields: Equatable, Sendable {
 
 enum ReceiptReader {
     static func read(_ data: Data) async -> ReceiptFields {
-        guard let image = UIImage(data: data)?.cgImage else { return ReceiptFields() }
+        await readWithText(data).fields
+    }
+
+    /// The fields plus every line read, for spotting a recall's number.
+    static func readWithText(_ data: Data) async -> (fields: ReceiptFields, text: String) {
+        guard let image = UIImage(data: data)?.cgImage else { return (ReceiptFields(), "") }
         let lines = await recognizeLines(in: image)
-        return parse(lines: lines)
+        return (parse(lines: lines), lines.joined(separator: "\n"))
     }
 
     /// Recognized text, top to bottom.

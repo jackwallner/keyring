@@ -11,6 +11,7 @@ struct VehicleDetailView: View {
     @ObservedObject var vehicle: Vehicle
 
     @State private var logging = false
+    @State private var fueling = false
     @State private var logPreset: [UUID] = []
     @State private var updatingReading = false
     @State private var editing = false
@@ -37,6 +38,7 @@ struct VehicleDetailView: View {
                 recallBanner
                 dueSection
                 exploreSection.id("explore")
+                fuelSection.id("fuel")
                 historySection
                 factsSection
                 recordSection
@@ -55,6 +57,7 @@ struct VehicleDetailView: View {
         }
         .sheet(isPresented: $logging) { LogServiceView(vehicle: vehicle, preselected: logPreset) }
         .sheet(isPresented: $updatingReading) { UpdateReadingSheet(vehicle: vehicle) }
+        .sheet(isPresented: $fueling) { FuelLogView(vehicle: vehicle) }
         .sheet(isPresented: $editing) { EditVehicleView(vehicle: vehicle) }
         .sheet(isPresented: $editingFacts) { FactsEditor(vehicle: vehicle) }
         .sheet(isPresented: $showingRecord) { ServiceRecordView(vehicle: vehicle) }
@@ -66,6 +69,11 @@ struct VehicleDetailView: View {
             if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
                 routed = true
                 if route == "record" { showingRecord = true }
+                if route == "fuel" { fueling = true }
+                if route == "fuelcard" {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    proxy.scrollTo("fuel", anchor: .top)
+                }
                 if route == "explore" {
                     try? await Task.sleep(for: .milliseconds(300))
                     proxy.scrollTo("explore", anchor: .top)
@@ -109,35 +117,70 @@ struct VehicleDetailView: View {
     }
 
     private var actions: some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: Theme.sm))
-            : AnyLayout(HStackLayout(spacing: Theme.sm))
-        return layout {
-            Button {
-                Haptics.tap()
-                logPreset = []
-                logging = true
-            } label: {
-                Label("Log service", systemImage: "plus")
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .accessibilityIdentifier("vehicle.log")
-            if vehicle.meter.hasReading {
-                Button {
-                    updatingReading = true
-                } label: {
-                    VStack(spacing: 0) {
-                        Text(vehicle.reading > 0 ? Format.reading(vehicle.reading, vehicle.meter) : "\(vehicle.meter.meterName) not set")
-                            .font(Theme.figure(16))
-                            .multilineTextAlignment(.center)
-                        Text(vehicle.reading > 0 ? "Update" : "Add")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Theme.secondaryInk)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: Theme.sm) { logButton; fuelButton; meterButton }
+            } else if vehicle.takesFuel {
+                // Three across fits most phones; a small one puts Log service on its own row.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.sm) { logButton; fuelButton; meterButton }
+                    VStack(spacing: Theme.sm) {
+                        logButton
+                        HStack(spacing: Theme.sm) { fuelButton; meterButton }
                     }
                 }
-                .buttonStyle(SecondaryButtonStyle())
-                .accessibilityLabel(vehicle.reading > 0 ? "\(vehicle.meter.meterName) \(Format.reading(vehicle.reading, vehicle.meter)). Update" : "\(vehicle.meter.meterName) not set. Add")
+            } else {
+                HStack(spacing: Theme.sm) { logButton; meterButton }
             }
+        }
+    }
+
+    private var logButton: some View {
+        Button {
+            Haptics.tap()
+            logPreset = []
+            logging = true
+        } label: {
+            Label("Log service", systemImage: "plus").lineLimit(1).fixedSize()
+                .padding(.horizontal, Theme.sm)
+        }
+        .buttonStyle(PrimaryButtonStyle())
+        .accessibilityIdentifier("vehicle.log")
+    }
+
+    @ViewBuilder private var fuelButton: some View {
+        if vehicle.takesFuel {
+            Button {
+                Haptics.tap()
+                fueling = true
+            } label: {
+                Label("Fill-up", systemImage: "fuelpump").lineLimit(1).fixedSize()
+                .padding(.horizontal, Theme.sm)
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .accessibilityIdentifier("vehicle.fuel")
+        }
+    }
+
+    @ViewBuilder private var meterButton: some View {
+        if vehicle.meter.hasReading {
+            Button {
+                updatingReading = true
+            } label: {
+                VStack(spacing: 0) {
+                    Text(vehicle.reading > 0 ? Format.reading(vehicle.reading, vehicle.meter) : "\(vehicle.meter.meterName) not set")
+                        .font(Theme.figure(16))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                        .fixedSize(horizontal: !dynamicTypeSize.isAccessibilitySize, vertical: false)
+                    Text(vehicle.reading > 0 ? "Update" : "Add")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                .padding(.horizontal, Theme.sm)
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .accessibilityLabel(vehicle.reading > 0 ? "\(vehicle.meter.meterName) \(Format.reading(vehicle.reading, vehicle.meter)). Update" : "\(vehicle.meter.meterName) not set. Add")
         }
     }
 
@@ -198,7 +241,7 @@ struct VehicleDetailView: View {
                         Text(open.count == 1 ? "1 safety recall may apply" : "\(open.count) safety recalls may apply")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
-                        Text(open.contains { $0.parkIt } ? "NHTSA says not to drive it until it's fixed. Check your VIN to see if yours is affected." : "NHTSA lists these for the \(vehicle.descriptor). Check your VIN, then log the fix.")
+                        Text(open.contains { $0.parkIt } ? "NHTSA says not to drive it until it's fixed. Check your VIN to see if yours is affected." : "NHTSA lists these for the \(vehicle.descriptor). Check your VIN to see which a dealer already fixed.")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.leading)
@@ -374,8 +417,69 @@ struct VehicleDetailView: View {
 
     // MARK: - History
 
+    // MARK: - Fuel
+
+    @ViewBuilder private var fuelSection: some View {
+        let fills = vehicle.fuelEntries
+        if !fills.isEmpty {
+            let economy = FuelEconomy(meter: vehicle.meter, unit: .current)
+            let average = economy.average(FuelEconomy.fills(for: vehicle))
+            let last = fills[0]
+            let monthAgo = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
+            let month = fills.filter { ($0.date ?? .distantPast) >= monthAgo }.reduce(0) { $0 + $1.cost }
+            let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
+            VStack(alignment: .leading, spacing: Theme.sm) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Fuel").font(Theme.title(20)).foregroundStyle(Theme.ink).lineLimit(1)
+                        Spacer()
+                        fuelLink(fills.count).lineLimit(1)
+                    }
+                    VStack(alignment: .leading, spacing: Theme.xs) {
+                        Text("Fuel").font(Theme.title(20)).foregroundStyle(Theme.ink)
+                        fuelLink(fills.count)
+                    }
+                }
+                NavigationLink { VehicleHistoryView(vehicle: vehicle, fuel: true) } label: {
+                    let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.sm)) : AnyLayout(HStackLayout(alignment: .top, spacing: Theme.sm))
+                    layout {
+                        fuelStat(average.map(economy.format) ?? "Fill up again", detail: average == nil ? "to see \(economy.label)" : "Average")
+                        if last.fuelUnitPrice > 0, !hideCosts {
+                            fuelStat("\(Format.unitPrice(FuelVolumeUnit.current.fromPerLiter(last.fuelUnitPrice)))/\(FuelVolumeUnit.current.short)", detail: last.date.map { "Paid \(Format.shortDate($0))" } ?? "Last price")
+                        }
+                        if month > 0, !hideCosts {
+                            fuelStat(Format.money(month), detail: "Last 30 days")
+                        }
+                    }
+                    .card()
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityIdentifier("vehicle.fuelCard")
+            }
+        }
+    }
+
+    private func fuelStat(_ value: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value)
+                .font(Theme.figure(19))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(0.85)
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(Theme.secondaryInk)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private func fuelLink(_ count: Int) -> some View {
+        NavigationLink(count == 1 ? "1 fill-up" : "All \(count)") { VehicleHistoryView(vehicle: vehicle, fuel: true) }
+            .font(.subheadline.weight(.semibold))
+    }
+
     private var historySection: some View {
-        let entries = vehicle.sortedEntries
+        let entries = vehicle.serviceEntries
         return VStack(alignment: .leading, spacing: Theme.sm) {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline) {
@@ -667,7 +771,6 @@ struct UpdateReadingSheet: View {
 
     @State private var value: Double?
     @State private var auxValue: Double?
-    @State private var showingScanner = false
     @State private var confirmingJump = false
 
     private var readings: [MeterReading] {
@@ -680,14 +783,10 @@ struct UpdateReadingSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
-                        .font(Theme.figure(28))
-                    if MeterScanner.isAvailable {
-                        Button {
-                            showingScanner = true
-                        } label: {
-                            Label("Read it from the dash", systemImage: "camera.viewfinder")
-                        }
+                    HStack {
+                        NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                            .font(Theme.figure(28))
+                        ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { value = Double($0) }
                     }
                 } header: {
                     Text(vehicle.meter.meterName)
@@ -695,13 +794,16 @@ struct UpdateReadingSheet: View {
                     if let value, value < vehicle.reading {
                         Text("That's lower than the last reading of \(Format.reading(vehicle.reading, vehicle.meter)). It will be saved as a past reading. To fix a typo, delete the wrong reading below.")
                     } else {
-                        Text("Last updated \(vehicle.readingDate.map { Format.relative($0) } ?? "never"). Keyring learns your pace from these and estimates when things come due.")
+                        Text("Last updated \(vehicle.readingDate.map { Format.relative($0) } ?? "never"). The app learns your pace from these and estimates when things come due.")
                     }
                 }
                 if vehicle.hasAuxMeter {
                     Section {
-                        NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
-                            .font(Theme.figure(28))
+                        HStack {
+                            NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
+                                .font(Theme.figure(28))
+                            ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: .hours)) { auxValue = Double($0) }
+                        }
                     } header: {
                         Text("\(auxName) hours")
                     } footer: {
@@ -760,13 +862,6 @@ struct UpdateReadingSheet: View {
             } message: {
                 Text("That's \(Format.reading((value ?? 0) - vehicle.reading, vehicle.meter)) more than last time, which is a lot. Check for an extra digit.")
             }
-            .sheet(isPresented: $showingScanner) {
-                MeterScanner { scanned in
-                    value = scanned
-                    showingScanner = false
-                }
-                .ignoresSafeArea()
-            }
         }
     }
 
@@ -798,7 +893,10 @@ struct FactsEditor: View {
                             TextField("Label", text: $fact.label)
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Theme.secondaryInk)
-                            TextField("Value", text: $fact.value)
+                            HStack {
+                                TextField("Value", text: $fact.value)
+                                ScanFieldButton(kind: .text) { fact.value = $0 }
+                            }
                         }
                     }
                     .onDelete { facts.remove(atOffsets: $0) }
@@ -891,8 +989,11 @@ struct RetireVehicleSheet: View {
                 Section {
                     DatePicker("Sold on", selection: $date, in: ...Date.now, displayedComponents: .date)
                     LabeledContent("Price (optional)") {
-                        NumberField(title: "0", value: $price, isCurrency: true)
-                            .multilineTextAlignment(.trailing)
+                        HStack(spacing: Theme.xs) {
+                            NumberField(title: "0", value: $price, isCurrency: true)
+                                .multilineTextAlignment(.trailing)
+                            ScanFieldButton(kind: .amount) { price = Double($0) }
+                        }
                     }
                 } footer: {
                     Text("Kept with its history, so you know what it cost to own.")

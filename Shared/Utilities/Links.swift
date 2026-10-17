@@ -5,7 +5,7 @@ import StoreKit
 /// destination's own app, never an in-app web view (Amazon requires it, and
 /// it keeps people signed in where they already are).
 enum AppLinks {
-    /// App Store Connect record `Keyring: Car Maintenance Log`.
+    /// App Store Connect record `Vehicle Maintenance Log`.
     static let appStoreID = "6823808045"
 
     static let privacyPolicy = URL(string: "https://jackwallner.github.io/keyring/privacy-policy.html")!
@@ -17,11 +17,11 @@ enum AppLinks {
     static let supportEmail = "jackwallner@gmail.com"
 
     static var feedback: URL {
-        URL(string: "mailto:\(supportEmail)?subject=Keyring%20feedback")!
+        URL(string: "mailto:\(supportEmail)?subject=Vehicle%20Maintenance%20Log%20feedback")!
     }
 
     static func reportPhoto(id: String) -> URL {
-        URL(string: "mailto:\(supportEmail)?subject=Keyring%20photo%20report&body=Photo%20\(id)")!
+        URL(string: "mailto:\(supportEmail)?subject=Vehicle%20Maintenance%20Log%20photo%20report&body=Photo%20\(id)")!
     }
 
     static var writeReview: URL {
@@ -45,7 +45,7 @@ enum AmazonLinks {
 
     static var isAffiliate: Bool { !associateTag.isEmpty }
 
-    static let disclosure = "As an Amazon Associate, Keyring earns from qualifying purchases."
+    static let disclosure = "As an Amazon Associate, Vehicle Maintenance Log earns from qualifying purchases."
 
     /// The reader's own Amazon store, so prices and shipping are local.
     static func host(region: String? = Locale.current.region?.identifier) -> String {

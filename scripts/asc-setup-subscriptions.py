@@ -16,10 +16,10 @@ BUNDLE = "com.jackwallner.keyring"
 # for the 49 locales that have none: falling back to the reference name is what
 # put the reference name in front of every non-English storefront.
 GROUP_REFERENCE_NAME = "Keyring Pro"
-GROUP_DISPLAY_NAME = "Keyring Pro"
+GROUP_DISPLAY_NAME = "Vehicle Maintenance Log Pro"
 SUBS = [
-    ("com.jackwallner.keyring.monthly", "Keyring Pro Monthly", "Keyring Pro Monthly", "ONE_MONTH", "1.99", "Unlimited vehicles, reports and photos."),
-    ("com.jackwallner.keyring.yearly", "Keyring Pro Yearly", "Keyring Pro Yearly", "ONE_YEAR", "14.99", "Unlimited vehicles, reports and photos."),
+    ("com.jackwallner.keyring.monthly", "Keyring Pro Monthly", "Pro Monthly", "ONE_MONTH", "1.99", "Unlimited vehicles, reports and photos."),
+    ("com.jackwallner.keyring.yearly", "Keyring Pro Yearly", "Pro Yearly", "ONE_YEAR", "14.99", "Unlimited vehicles, reports and photos."),
 ]
 # Vitals PPP tiers: (yearly, monthly) USD targets.
 TIERS: dict[str, tuple[str, str]] = {
@@ -83,7 +83,7 @@ def main() -> None:
     for index, (pid, name, display_name, period, price, description) in enumerate(SUBS):
         sub = existing.get(pid)
         if not sub:
-            sub = c.post("/subscriptions", {"data": {"type": "subscriptions", "attributes": {"name": name, "productId": pid, "subscriptionPeriod": period, "familySharable": False, "groupLevel": 1, "reviewNote": "Unlocks Keyring Pro: unlimited vehicles, the printable Service Record PDF and CSV export, unlimited receipt photos, and cost insights. Logging service for two vehicles, reminders, recalls, family sharing and recommendations are free."}, "relationships": {"group": {"data": {"type": "subscriptionGroups", "id": group_id}}}}})["data"]
+            sub = c.post("/subscriptions", {"data": {"type": "subscriptions", "attributes": {"name": name, "productId": pid, "subscriptionPeriod": period, "familySharable": False, "groupLevel": 1, "reviewNote": "Unlocks Vehicle Maintenance Log Pro: unlimited vehicles, the printable Service Record PDF and CSV export, unlimited receipt photos, and cost insights. Logging service for two vehicles, reminders, recalls, family sharing and recommendations are free."}, "relationships": {"group": {"data": {"type": "subscriptionGroups", "id": group_id}}}}})["data"]
         sid = sub["id"]
         locs = {x["attributes"]["locale"]: x for x in asc_lib.list_all(c, f"/subscriptions/{sid}/subscriptionLocalizations")}
         product_prefix = "monthly" if period == "ONE_MONTH" else "yearly"

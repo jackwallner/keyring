@@ -31,7 +31,7 @@ struct CommunityPhoto: Identifiable, Hashable, Sendable {
 
     var credit: String {
         switch source {
-        case .owner: "Shared by a Keyring owner"
+        case .owner: "Shared by an owner"
         case let .commons(_, artist, license): [artist.isEmpty ? nil : "Photo: \(artist)", license].compactMap { $0 }.joined(separator: " · ")
         }
     }
@@ -198,7 +198,7 @@ final class CommunityPhotos: ObservableObject {
             URLQueryItem(name: "format", value: "json"),
         ]
         var request = URLRequest(url: components.url!)
-        request.setValue("Keyring/1.0 (https://jackwallner.github.io/keyring/)", forHTTPHeaderField: "User-Agent")
+        request.setValue("VehicleMaintenanceLog/1.0 (https://jackwallner.github.io/keyring/)", forHTTPHeaderField: "User-Agent")
         guard let (data, _) = try? await NHTSAClient.session.data(for: request) else { return [] }
         return parseCommons(data, mustMention: words)
     }

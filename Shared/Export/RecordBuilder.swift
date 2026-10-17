@@ -9,7 +9,8 @@ enum RecordBuilder {
         includeSchedule: Bool = true, includeNotes: Bool = true
     ) -> ServiceRecord {
         let tasks = (vehicle.tasks ?? [])
-        let rows = vehicle.sortedEntries.map { entry -> ServiceRecord.Row in
+        // Fill-ups stay out: a buyer or a shop reads the maintenance.
+        let rows = vehicle.serviceEntries.map { entry -> ServiceRecord.Row in
             let covered = tasks.filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }
                 .map(\.displayName)
             let title = entry.title ?? "Service"
@@ -75,7 +76,7 @@ enum RecordBuilder {
 /// Every entry as a spreadsheet. Free, always: a log you can't take with you
 /// isn't yours.
 enum CSVExport {
-    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Type", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by"]
+    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Type", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by", "Fuel", "Fuel unit", "Price per unit", "Grade", "Partial fill"]
 
     @MainActor
     static func csv(for vehicles: [Vehicle]) -> String {
@@ -102,11 +103,23 @@ enum CSVExport {
                     entry.isDIY ? "Yes" : "",
                     entry.notes ?? "",
                     entry.loggedBy ?? "",
-                ]
+                ] + fuelFields(entry)
                 lines.append(fields.map(escape).joined(separator: ","))
             }
         }
         return lines.joined(separator: "\n") + "\n"
+    }
+
+    private static func fuelFields(_ entry: ServiceEntry) -> [String] {
+        guard entry.kind == .fuel else { return ["", "", "", "", ""] }
+        let unit = FuelVolumeUnit.current
+        return [
+            entry.fuelVolume > 0 ? String(format: "%.3f", unit.fromLiters(entry.fuelVolume)) : "",
+            unit.short,
+            entry.fuelUnitPrice > 0 ? String(format: "%.3f", unit.fromPerLiter(entry.fuelUnitPrice)) : "",
+            entry.grade?.title ?? "",
+            entry.fuelPartial ? "Yes" : "",
+        ]
     }
 
     static func escape(_ field: String) -> String {
@@ -120,7 +133,7 @@ enum CSVExport {
     }
 
     @MainActor
-    static func url(for vehicles: [Vehicle], name: String = "Keyring-Service-Log") throws -> URL {
+    static func url(for vehicles: [Vehicle], name: String = "Vehicle-Service-Log") throws -> URL {
         let safe = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(safe).csv")
         try csv(for: vehicles).write(to: url, atomically: true, encoding: .utf8)
@@ -173,9 +186,11 @@ struct CostInsights: Equatable {
         var vehicleTotals: [String: Double] = [:]
         for (vehicle, entry) in recent { vehicleTotals[vehicle.displayName, default: 0] += entry.cost }
         var jobTotals: [String: Double] = [:]
-        for (_, entry) in recent where entry.cost > 0 { jobTotals[entry.title ?? "Service", default: 0] += entry.cost }
+        for (_, entry) in recent where entry.cost > 0 { jobTotals[entry.kind == .fuel ? "Fuel" : entry.title ?? "Service", default: 0] += entry.cost }
 
+        // The DIY share is of maintenance spending, so fuel stays out of it.
         let diy = recent.filter { $0.1.isDIY }.reduce(0) { $0 + $1.1.cost }
+        let maintenance = recent.filter { $0.1.kind != .fuel }.reduce(0) { $0 + $1.1.cost }
         let repairs = recent.filter { $0.1.kind == .repair }.reduce(0) { $0 + $1.1.cost }
 
         // Cost per mile (or km) from distance-metered vehicles with enough
@@ -200,7 +215,7 @@ struct CostInsights: Equatable {
             months: months,
             byVehicle: vehicleTotals.map { Slice(name: $0.key, total: $0.value) }.sorted { $0.total > $1.total },
             byJob: jobTotals.map { Slice(name: $0.key, total: $0.value) }.sorted { $0.total > $1.total }.prefix(6).map { $0 },
-            diyShare: lastYear > 0 ? diy / lastYear : 0,
+            diyShare: maintenance > 0 ? diy / maintenance : 0,
             repairs: repairs,
             costPerDistance: distance > 0 ? spend / distance : nil,
             distanceUnit: unit

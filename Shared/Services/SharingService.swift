@@ -74,7 +74,7 @@ final class SharingService: ObservableObject {
 
         var message: String {
             switch self {
-            case .notAnInvite: "That isn't a Keyring invite link. Copy the whole link that was sent to you and try again."
+            case .notAnInvite: "That isn't a garage invite link. Copy the whole link that was sent to you and try again."
             case .iCloudUnavailable: "Sign in to iCloud on this iPhone (Settings > your name), then try again."
             case .ownInvite: "This is your own invite. Show the code or send the link to the person joining."
             case .unavailable: "That invite couldn't be opened. Check your connection, or ask for a new link if sharing was stopped."

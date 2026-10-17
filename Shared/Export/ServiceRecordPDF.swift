@@ -75,7 +75,7 @@ enum ServiceRecordPDF {
         let format = UIGraphicsPDFRendererFormat()
         format.documentInfo = [
             kCGPDFContextTitle as String: "\(record.vehicleName) service record",
-            kCGPDFContextCreator as String: "Keyring",
+            kCGPDFContextCreator as String: "Vehicle Maintenance Log",
         ]
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize), format: format)
         return renderer.pdfData { context in
@@ -295,7 +295,7 @@ enum ServiceRecordPDF {
     private static func drawFooter(_ record: ServiceRecord, page: Int) {
         var left = "Prepared \(record.generated.formatted(date: .long, time: .omitted))"
         if let by = record.preparedBy { left += " by \(by)" }
-        left += " with Keyring. Entries are kept by the owner."
+        left += " with Vehicle Maintenance Log. Entries are kept by the owner."
         let y = pageSize.height - margin + 14
         _ = drawText(left, font: Font.note, color: Ink.secondary, at: CGPoint(x: margin, y: y), width: contentWidth - 60)
         _ = drawText("Page \(page)", font: Font.note, color: Ink.secondary, at: CGPoint(x: margin, y: y), width: contentWidth, alignRight: true)
