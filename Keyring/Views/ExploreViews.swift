@@ -70,6 +70,7 @@ struct ValueView: View {
                     TextField("Source, such as KBB trade-in", text: $source)
                 }
                 .paperBackground()
+                .fittedSheet()
                 .navigationTitle("Note a value")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -85,7 +86,6 @@ struct ValueView: View {
                     }
                 }
             }
-            .presentationDetents([.medium])
         }
     }
 }

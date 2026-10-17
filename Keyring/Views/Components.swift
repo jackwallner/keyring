@@ -400,3 +400,52 @@ struct NumberField: View {
         return Int(value.rounded()).formatted(.number.grouping(grouping ? .automatic : .never))
     }
 }
+
+// MARK: - Sheets sized to their form
+
+/// A short form in a medium sheet leaves half the sheet blank, so the sheet
+/// opens at the form's own height instead. Apply it to the Form inside the
+/// sheet. iOS 17 can't read the form's height and falls back to medium.
+struct FittedSheet: ViewModifier {
+    var expandable: Bool
+    @State private var fitted: CGFloat = 0
+    @State private var selection: PresentationDetent = .medium
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    func body(content: Content) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            content.presentationDetents([.large])
+        } else if #available(iOS 18, *) {
+            content
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentSize.height + geometry.contentInsets.top + geometry.contentInsets.bottom
+                } action: { _, height in
+                    fit(height)
+                }
+                .presentationDetents(detents, selection: $selection)
+        } else {
+            content.presentationDetents(expandable ? [.medium, .large] : [.medium])
+        }
+    }
+
+    private var detents: Set<PresentationDetent> {
+        var set: Set<PresentationDetent> = [fitted > 0 ? .height(fitted) : .medium]
+        if expandable { set.insert(.large) }
+        return set
+    }
+
+    private func fit(_ height: CGFloat) {
+        let rounded = height.rounded(.up)
+        guard rounded > 0, abs(rounded - fitted) > 1 else { return }
+        let wasFitted = selection != .large
+        fitted = rounded
+        if wasFitted { selection = .height(rounded) }
+    }
+}
+
+extension View {
+    /// Opens the sheet at the height of its form. `expandable` adds a full-height detent.
+    func fittedSheet(expandable: Bool = false) -> some View {
+        modifier(FittedSheet(expandable: expandable))
+    }
+}

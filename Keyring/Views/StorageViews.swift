@@ -29,6 +29,7 @@ struct StorageSheet: View {
                 if returning { returnSections } else { storeSections }
             }
             .paperBackground()
+            .fittedSheet(expandable: true)
             .navigationTitle(returning ? "Back on the road" : "Put in storage")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

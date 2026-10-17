@@ -186,6 +186,7 @@ struct PaywallView: View {
                      : ConversionCopy.billedNote(trialLabel: selected.introOfferLabel, eligibleForTrial: store.isEligibleForIntroOffer(selected)))
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
+                    .multilineTextAlignment(.center)
             }
             Button {
                 guard let selected else { return }

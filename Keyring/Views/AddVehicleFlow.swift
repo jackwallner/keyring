@@ -133,7 +133,7 @@ struct KindPicker: View {
                                         Image(systemName: kind.symbol)
                                             .font(.system(size: 26))
                                             .foregroundStyle(VehicleTint.defaultTint(for: kind).isLight ? Theme.brass : VehicleTint.defaultTint(for: kind).color)
-                                            .frame(height: 32)
+                                            .frame(width: dynamicTypeSize.isAccessibilitySize ? 44 : nil, height: 32)
                                         Text(kind.title)
                                             .font(.footnote.weight(.semibold))
                                             .foregroundStyle(Theme.ink)
@@ -220,6 +220,7 @@ struct VehicleDetailsForm: View {
                         }
                     }
                     .frame(width: 72, height: 72)
+                    .dynamicTypeSize(.large)
                     VStack(alignment: .leading, spacing: 4) {
                         // The nav bar already names the kind; at large sizes
                         // the second copy only crowds the photo button.
@@ -271,7 +272,7 @@ struct VehicleDetailsForm: View {
                     NumberField(title: "Year", value: $yearValue, grouping: false)
                         .multilineTextAlignment(.trailing)
                 }
-                textRow("Make", prompt: Makes.common(for: draft.kind).first ?? "Make", text: $draft.make, field: .make)
+                textRow("Make", prompt: "Make", text: $draft.make, field: .make)
                 if draft.make.isEmpty, !Makes.common(for: draft.kind).isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {

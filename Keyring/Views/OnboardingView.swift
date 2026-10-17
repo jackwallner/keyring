@@ -381,6 +381,8 @@ struct KeyringStack: View {
                     .offset(y: 10)
             }
         }
+        // Artwork, sized like a picture rather than text.
+        .dynamicTypeSize(.large)
         .accessibilityHidden(true)
     }
 

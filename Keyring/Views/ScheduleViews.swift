@@ -379,6 +379,7 @@ struct LastDoneSheet: View {
                 }
             }
             .paperBackground()
+            .fittedSheet()
             .navigationTitle("Last \(task.displayName.lowercasedFirst)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -396,6 +397,5 @@ struct LastDoneSheet: View {
                 if task.baselineReading >= 0 { reading = task.baselineReading }
             }
         }
-        .presentationDetents([.medium])
     }
 }

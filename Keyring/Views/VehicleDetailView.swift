@@ -285,9 +285,19 @@ struct VehicleDetailView: View {
                 if vehicle.kind.hasNHTSARecords {
                     tile(RecallRegion.isUS ? "Recalls" : "US recalls", detail: recallDetail, symbol: "exclamationmark.shield.fill") { RecallsView(vehicle: vehicle, recalls: recalls) }
                 }
-                tile("Insights", detail: "Where the money goes", symbol: "chart.bar.fill") { InsightsView(vehicles: [vehicle]) }
+                if !insightsSpansRow {
+                    tile("Insights", detail: "Where the money goes", symbol: "chart.bar.fill") { InsightsView(vehicles: [vehicle]) }
+                }
+            }
+            if insightsSpansRow {
+                wideTile("Insights", detail: "Where the money goes", symbol: "chart.bar.fill") { InsightsView(vehicles: [vehicle]) }
             }
         }
+    }
+
+    /// Seven tiles leave Insights alone in the last row of two, so it takes the full width instead.
+    private var insightsSpansRow: Bool {
+        vehicle.kind.hasNHTSARecords && !dynamicTypeSize.isAccessibilitySize
     }
 
     private var valueDetail: String {
@@ -322,6 +332,32 @@ struct VehicleDetailView: View {
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
             }
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
+            .card(padding: Theme.sm)
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private func wideTile<Destination: View>(_ title: String, detail: String, symbol: String, @ViewBuilder destination: @escaping () -> Destination) -> some View {
+        NavigationLink(destination: destination) {
+            HStack(spacing: Theme.sm) {
+                Image(systemName: symbol)
+                    .font(.title3)
+                    .foregroundStyle(Theme.brass)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.faintInk)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .card(padding: Theme.sm)
         }
         .buttonStyle(PressableStyle())
@@ -675,6 +711,7 @@ struct UpdateReadingSheet: View {
                 }
             }
             .paperBackground()
+            .fittedSheet(expandable: true)
             .navigationTitle("Update \(vehicle.meter.meterName.lowercased())")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -710,7 +747,6 @@ struct UpdateReadingSheet: View {
                 .ignoresSafeArea()
             }
         }
-        .presentationDetents([.medium, .large])
     }
 
     private func commit(_ value: Double) {
