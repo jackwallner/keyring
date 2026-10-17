@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jackwallner.github.io/keyring/sitemap.xml
