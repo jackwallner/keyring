@@ -36,5 +36,6 @@ enum AppGroup {
         static let funnelSteps = "funnelSteps"
         static let hideCosts = "hideCosts"
         static let lastOpenedVehicle = "lastOpenedVehicle"
+        static let pendingFirstVehicle = "pendingFirstVehicle"
     }
 }

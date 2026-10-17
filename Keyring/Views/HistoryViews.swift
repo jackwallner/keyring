@@ -317,7 +317,7 @@ struct EntryDetailView: View {
         var items: [(String, String)] = []
         if entry.hasReading, vehicle.meter.hasReading { items.append((vehicle.meter.meterName, Format.reading(entry.reading, vehicle.meter))) }
         if entry.cost > 0, !hideCosts { items.append(("Cost", Format.money(entry.cost))) }
-        items.append(("Done by", entry.isDIY ? "Owner" : (entry.shop ?? "A shop")))
+        items.append(("Done by", entry.isDIY ? (entry.loggedBy.map { "\($0), DIY" } ?? "DIY") : (entry.shop ?? "A shop")))
         if let by = entry.loggedBy { items.append(("Logged by", by)) }
         return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: Theme.md) {
             ForEach(items, id: \.0) { label, value in
@@ -337,6 +337,7 @@ struct AttachmentViewer: View {
     let attachment: Attachment
     let close: () -> Void
     @State private var sharing = false
+    @State private var confirmingDelete = false
 
     var body: some View {
         NavigationStack {
@@ -353,11 +354,18 @@ struct AttachmentViewer: View {
                         .accessibilityLabel("Share")
                     Spacer()
                     Button(role: .destructive) {
-                        garage.delete(attachment)
-                        close()
+                        confirmingDelete = true
                     } label: { Image(systemName: "trash") }
                         .accessibilityLabel("Delete")
                 }
+            }
+            .confirmationDialog(attachment.isReceipt ? "Delete this receipt?" : "Delete this photo?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    garage.delete(attachment)
+                    close()
+                }
+            } message: {
+                Text("It's removed for everyone who shares this garage.")
             }
             .toolbarBackground(.black, for: .navigationBar, .bottomBar)
             .toolbarColorScheme(.dark, for: .navigationBar, .bottomBar)

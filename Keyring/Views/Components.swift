@@ -24,7 +24,7 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.semibold))
-            .foregroundStyle(Theme.ink)
+            .foregroundStyle(configuration.role == .destructive ? Theme.overdue : Theme.ink)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .opacity(configuration.isPressed ? 0.75 : 1)
@@ -57,6 +57,7 @@ extension View {
     func paperBackground() -> some View {
         self
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(Theme.paper.ignoresSafeArea())
     }
 }
@@ -214,7 +215,9 @@ struct EmptyStateView: View {
                 .font(.system(size: 34, weight: .regular))
                 .foregroundStyle(Theme.brass)
                 .padding(.bottom, Theme.xxs)
+                .accessibilityHidden(true)
             Text(title)
+                .accessibilityAddTraits(.isHeader)
                 .font(Theme.title(20))
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
@@ -322,20 +325,25 @@ enum Haptics {
 // MARK: - Number fields
 
 /// A text field bound to a number, which keeps what the person typed until
-/// they leave it, so "12," mid-typing isn't snapped back.
+/// they leave it, so "12," mid-typing isn't snapped back. The number pad has
+/// no return key, so a focused field adds Done above the keyboard.
 struct NumberField: View {
     let title: String
     @Binding var value: Double?
     var suffix: String = ""
     var allowsDecimal = false
+    /// Money: the currency symbol leads and cents show as two digits.
+    var isCurrency = false
+    /// Off for years, which never take a thousands separator.
+    var grouping = true
 
     @State private var text = ""
     @FocusState private var focused: Bool
 
     var body: some View {
-        HStack {
-            TextField(title, text: $text)
-                .keyboardType(allowsDecimal ? .decimalPad : .numberPad)
+        HStack(spacing: 4) {
+            TextField(isCurrency ? Self.symbol + title : title, text: $text)
+                .keyboardType(allowsDecimal || isCurrency ? .decimalPad : .numberPad)
                 .focused($focused)
                 .font(Theme.figure(17, weight: .regular))
                 .onChange(of: text) { _, newValue in
@@ -345,10 +353,23 @@ struct NumberField: View {
                 Text(suffix).foregroundStyle(Theme.secondaryInk)
             }
         }
-        .onAppear { text = Self.display(value, allowsDecimal: allowsDecimal) }
+        .onAppear { text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping) }
         .onChange(of: value) { _, newValue in
             guard !focused else { return }
-            text = Self.display(newValue, allowsDecimal: allowsDecimal)
+            text = Self.display(newValue, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping)
+        }
+        .onChange(of: focused) { _, isFocused in
+            guard !isFocused else { return }
+            text = Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping)
+        }
+        .toolbar {
+            if focused {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { focused = false }
+                        .fontWeight(.semibold)
+                }
+            }
         }
     }
 
@@ -359,11 +380,20 @@ struct NumberField: View {
         return Double(cleaned)
     }
 
-    static func display(_ value: Double?, allowsDecimal: Bool) -> String {
+    private static var symbol: String { Locale.current.currencySymbol ?? "$" }
+
+    /// Grouped and, for money, led by the symbol; `parse` strips both back out.
+    static func display(_ value: Double?, allowsDecimal: Bool, isCurrency: Bool = false, grouping: Bool = true) -> String {
         guard let value else { return "" }
-        if allowsDecimal, value != value.rounded() {
-            return value.formatted(.number.precision(.fractionLength(0...2)).grouping(.never))
+        if isCurrency {
+            let digits = value == value.rounded()
+                ? Int(value).formatted()
+                : value.formatted(.number.precision(.fractionLength(2)))
+            return symbol + digits
         }
-        return Int(value.rounded()).formatted(.number.grouping(.never))
+        if allowsDecimal, value != value.rounded() {
+            return value.formatted(.number.precision(.fractionLength(0...2)).grouping(grouping ? .automatic : .never))
+        }
+        return Int(value.rounded()).formatted(.number.grouping(grouping ? .automatic : .never))
     }
 }

@@ -17,6 +17,7 @@ struct OnboardingView: View {
     @State private var errorText: String?
     @State private var joining = false
     @State private var showingPaywall = false
+    @FocusState private var nameFocused: Bool
 
     private let lastPage = 3
 
@@ -30,7 +31,9 @@ struct OnboardingView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.snappy, value: page)
-            footer
+            .animation(.snappy, value: nameFocused)
+            // The tall footer would squeeze the name field under the keyboard.
+            if !nameFocused { footer }
         }
         .background(Theme.paper.ignoresSafeArea())
         .sheet(isPresented: $joining) { JoinGarageView() }
@@ -96,6 +99,7 @@ struct OnboardingView: View {
 
     private var family: some View {
         pageLayout {
+            if !nameFocused {
             HStack(spacing: -12) {
                 ForEach(Array(["J", "S", "M"].enumerated()), id: \.offset) { index, initial in
                     Text(initial)
@@ -108,6 +112,7 @@ struct OnboardingView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.lg)
+            }
             Text("Log it together")
                 .font(Theme.title(36))
                 .foregroundStyle(Theme.ink)
@@ -117,6 +122,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: Theme.xs) {
                 Eyebrow(text: "Your name on entries")
                 TextField("First name", text: $name)
+                    .focused($nameFocused)
                     .textContentType(.givenName)
                     .submitLabel(.done)
                     .padding(Theme.sm)
@@ -335,6 +341,8 @@ struct OnboardingView: View {
     private func finish() {
         if !name.trimmed.isEmpty { garage.setOwnerName(name) }
         garage.ensureOwnGarage()
+        // The garage opens straight into adding the first vehicle.
+        AppGroup.defaults.set(true, forKey: AppGroup.Key.pendingFirstVehicle)
         hasCompletedSetup = true
     }
 }

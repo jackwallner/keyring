@@ -232,7 +232,9 @@ struct FamilyView: View {
 struct JoinGarageView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var sharing: SharingService
+    @EnvironmentObject private var garage: GarageStore
 
+    @State private var name = ""
     @State private var link = ""
     @State private var scanning = false
     @State private var status: String?
@@ -241,6 +243,14 @@ struct JoinGarageView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    TextField("First name", text: $name)
+                        .textContentType(.givenName)
+                } header: {
+                    Text("Your name")
+                } footer: {
+                    Text("Signs the jobs you log, so the family knows who did what.")
+                }
                 if LiveTextScanner.isAvailable {
                     Section {
                         Button { scanning = true } label: { Label("Scan their code", systemImage: "qrcode.viewfinder") }
@@ -273,6 +283,7 @@ struct JoinGarageView: View {
                         .disabled(link.trimmed.isEmpty || joining)
                 }
             }
+            .onAppear { if name.isEmpty { name = garage.ownerName ?? "" } }
             .fullScreenCover(isPresented: $scanning) {
                 NavigationStack {
                     LiveTextScanner(mode: .invite) { payload in
@@ -288,6 +299,7 @@ struct JoinGarageView: View {
     }
 
     private func join() async {
+        if !name.trimmed.isEmpty { garage.setOwnerName(name) }
         joining = true
         status = "Joining…"
         defer { joining = false }

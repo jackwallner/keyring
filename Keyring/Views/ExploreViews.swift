@@ -64,7 +64,7 @@ struct ValueView: View {
             NavigationStack {
                 Form {
                     LabeledContent("Value") {
-                        NumberField(title: "0", value: $amount, suffix: Locale.current.currencySymbol ?? "$", allowsDecimal: false)
+                        NumberField(title: "0", value: $amount, isCurrency: true)
                             .multilineTextAlignment(.trailing)
                     }
                     TextField("Source, such as KBB trade-in", text: $source)
@@ -232,19 +232,25 @@ struct RecallsView: View {
                     .listRowBackground(Color.clear)
             } else {
                 Section {
+                    if let vin = vehicle.vin {
+                        LinkRow(title: "Check which apply to this VIN", detail: vin, symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls?vin=\(vin)")!)
+                    } else {
+                        LinkRow(title: "Check which apply to yours", detail: "Enter your VIN at nhtsa.gov", symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls")!)
+                    }
+                } footer: {
+                    Text("These recalls cover every \(vehicle.descriptor). Many apply only to certain build dates, and a dealer may already have fixed yours. Your VIN shows which are open.")
+                }
+                Section {
                     ForEach(recalls) { recall in
                         RecallRow(recall: recall, reviewed: reviewed.contains(recall.campaign)) { done in
                             RecallLedger.setReviewed(recall.campaign, done, for: vehicle.id)
                             reviewed = RecallLedger.reviewed(for: vehicle.id)
                         }
                     }
+                } header: {
+                    Text(Format.count(recalls.count, "recall", "recalls") + " for this model")
                 } footer: {
-                    Text("From NHTSA for every \(vehicle.descriptor). A recall may not apply to your exact vehicle; enter your VIN at nhtsa.gov/recalls or call a dealer. Recall repairs are free.")
-                }
-                if let vin = vehicle.vin {
-                    Section {
-                        LinkRow(title: "Check this exact VIN", detail: vin, symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls?vin=\(vin)")!)
-                    }
+                    Text("From NHTSA. Recall repairs are free at a dealer.")
                 }
             }
         }
@@ -470,16 +476,22 @@ private struct PhotoTile: View {
     let photo: CommunityPhoto
 
     var body: some View {
-        AsyncImage(url: photo.imageURL) { phase in
-            switch phase {
-            case let .success(image): image.resizable().scaledToFill()
-            case .failure: Theme.raised.overlay(Image(systemName: "photo").foregroundStyle(Theme.faintInk))
-            default: Theme.raised
+        // The image fills a fixed box; on its own, scaledToFill widens the
+        // grid cell past the screen.
+        Color.clear
+            .frame(maxWidth: .infinity)
+            .frame(height: 130)
+            .overlay {
+                AsyncImage(url: photo.imageURL) { phase in
+                    switch phase {
+                    case let .success(image): image.resizable().scaledToFill()
+                    case .failure: Theme.raised.overlay(Image(systemName: "photo").foregroundStyle(Theme.faintInk))
+                    default: Theme.raised
+                    }
+                }
             }
-        }
-        .frame(height: 130)
-        .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(alignment: .bottomLeading) {
             if photo.isOwnerPhoto {
                 Image(systemName: "person.crop.circle.fill")
@@ -579,9 +591,21 @@ struct InsightsView: View {
     @State private var showingPaywall = false
 
     var body: some View {
+        if AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) {
+            EmptyStateView(symbol: "eye.slash", title: "Costs are hidden", message: "Costs are hidden on this iPhone. Turn them back on in Settings to see where the money goes.")
+                .frame(maxHeight: .infinity)
+                .paperBackground()
+                .navigationTitle("Insights")
+                .navigationBarTitleDisplayMode(.inline)
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         let list = vehicles ?? garage.vehicles
         let insights = CostInsights.compute(vehicles: list)
-        ScrollView {
+        return ScrollView {
             VStack(alignment: .leading, spacing: Theme.lg) {
                 VStack(alignment: .leading, spacing: 2) {
                     Eyebrow(text: "Last 12 months")
@@ -614,7 +638,7 @@ struct InsightsView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Eyebrow(text: "Done yourself")
-                            Text("\(Int((insights.diyShare * 100).rounded()))% of spending")
+                            Text("\(Int((insights.diyShare * 100).rounded()))% of the last 12 months' spending")
                                 .font(.subheadline.weight(.semibold))
                         }
                         Spacer()
@@ -689,7 +713,7 @@ struct InsightsTeaser: View {
                 HStack(spacing: Theme.sm) {
                     Image(systemName: "chart.bar.fill").font(.title3).foregroundStyle(Theme.brass)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Spent this year").font(.footnote).foregroundStyle(Theme.secondaryInk)
+                        Text("Spent in the last 12 months").font(.footnote).foregroundStyle(Theme.secondaryInk)
                         Text(store.isPro ? Format.money(insights.lastTwelveMonths) : "See where the money goes")
                             .font(store.isPro ? Theme.figure(20) : .subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)

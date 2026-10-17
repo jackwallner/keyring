@@ -133,7 +133,7 @@ struct UpcomingWidgetView: View {
 
     private func when(_ item: WidgetSnapshot.Item) -> String {
         if item.statusRaw == DueStatus.overdue.rawValue { return "Overdue" }
-        guard let date = item.dueDate else { return "" }
+        guard let date = item.dueDate else { return item.dueAt ?? "Up to date" }
         let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
         let prefix = item.estimated ? "~" : ""
         switch days {

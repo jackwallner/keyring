@@ -26,7 +26,11 @@ struct LogServiceView: View {
     @State private var receiptNote: String?
     @State private var addingCustom = false
     @State private var customName = ""
+    /// One-off jobs typed in for this visit. They live on the entry only, so
+    /// nothing is added to the schedule (and Cancel leaves no trace).
+    @State private var customJobs: [String] = []
     @State private var loaded = false
+    @State private var confirmingJump = false
 
     private var dues: [TaskDue] { garage.dues(for: vehicle) }
 
@@ -48,13 +52,25 @@ struct LogServiceView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
+                    Button("Save") {
+                        if let reading, editing == nil, garage.isSuspiciousJump(reading, for: vehicle) {
+                            confirmingJump = true
+                        } else {
+                            save()
+                        }
+                    }
                         .fontWeight(.semibold)
                         .disabled(!canSave)
                         .accessibilityIdentifier("log.save")
                 }
             }
             .onAppear(perform: load)
+            .confirmationDialog("Save at \(Format.reading(reading ?? 0, vehicle.meter))?", isPresented: $confirmingJump, titleVisibility: .visible) {
+                Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))", action: save)
+                Button("Fix it", role: .cancel) {}
+            } message: {
+                Text("That's \(Format.reading((reading ?? 0) - vehicle.reading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
+            }
             .sheet(isPresented: $showingScanner) {
                 ReceiptScanner { images in
                     showingScanner = false
@@ -80,20 +96,19 @@ struct LogServiceView: View {
                 TextField("Name", text: $customName)
                 Button("Add") {
                     let name = customName.trimmed
-                    guard !name.isEmpty else { return }
-                    let task = garage.addCustomTask(name: name, distance: 0, months: 0, to: vehicle)
-                    if let id = task.id { selected.insert(id) }
                     customName = ""
+                    guard !name.isEmpty, !customJobs.contains(name) else { return }
+                    customJobs.append(name)
                 }
                 Button("Cancel", role: .cancel) { customName = "" }
             } message: {
-                Text("A one-off or anything not on the schedule. You can set how often it repeats later.")
+                Text("A one-off for this visit. To have it repeat, add it to the schedule instead.")
             }
         }
     }
 
     private var canSave: Bool {
-        !selected.isEmpty || !draft.title.trimmed.isEmpty || !draft.notes.trimmed.isEmpty || (cost ?? 0) > 0
+        !selected.isEmpty || !customJobs.isEmpty || !draft.title.trimmed.isEmpty || !draft.notes.trimmed.isEmpty || (cost ?? 0) > 0
     }
 
     // MARK: - Sections
@@ -124,6 +139,22 @@ struct LogServiceView: View {
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected.contains(due.taskID) ? .isSelected : [])
             }
+            ForEach(customJobs, id: \.self) { name in
+                HStack(spacing: Theme.sm) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(Theme.brass)
+                    Text(name).foregroundStyle(Theme.ink)
+                    Spacer()
+                    Button {
+                        customJobs.removeAll { $0 == name }
+                    } label: {
+                        Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove \(name)")
+                }
+            }
             Button {
                 addingCustom = true
             } label: {
@@ -133,8 +164,8 @@ struct LogServiceView: View {
         } header: {
             Text("What was done")
         } footer: {
-            if !selected.isEmpty {
-                Text("Saved as \"\(draft.title.trimmed.isEmpty ? garage.title(for: Array(selected), on: vehicle) : draft.title.trimmed)\". Each checked job restarts its countdown.")
+            if !selected.isEmpty || !customJobs.isEmpty {
+                Text("Saved as \"\(draft.title.trimmed.isEmpty ? generatedTitle : draft.title.trimmed)\".\(selected.isEmpty ? "" : " Each checked job restarts its countdown.")")
             }
         }
     }
@@ -144,7 +175,7 @@ struct LogServiceView: View {
             DatePicker("Date", selection: $draft.date, in: ...Date.now.addingTimeInterval(86_400), displayedComponents: .date)
             if vehicle.meter.hasReading {
                 LabeledContent(vehicle.meter.meterName) {
-                    NumberField(title: Format.reading(vehicle.reading, vehicle.meter), value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                    NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -179,7 +210,7 @@ struct LogServiceView: View {
                 }
             }
             LabeledContent("Cost") {
-                NumberField(title: "0", value: $cost, suffix: Locale.current.currencySymbol ?? "$", allowsDecimal: true)
+                NumberField(title: "0", value: $cost, isCurrency: true)
                     .multilineTextAlignment(.trailing)
             }
         } header: {
@@ -248,6 +279,15 @@ struct LogServiceView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
+    /// "Oil change and new wipers", counting one-offs alongside scheduled jobs.
+    private var generatedTitle: String {
+        guard !customJobs.isEmpty else { return garage.title(for: Array(selected), on: vehicle) }
+        let scheduled = selected.isEmpty ? [] : [garage.title(for: Array(selected), on: vehicle)]
+        let names = scheduled + customJobs.map(\.lowercasedFirst)
+        let joined = ListFormatter.localizedString(byJoining: names)
+        return joined.prefix(1).uppercased() + joined.dropFirst()
+    }
+
     private var recentShops: [String] {
         let shops = garage.allEntries().compactMap(\.shop).filter { !$0.isEmpty }
         var seen = Set<String>()
@@ -273,7 +313,7 @@ struct LogServiceView: View {
         } else {
             selected = Set(preselected)
             #if DEBUG
-            if ScreenshotConfig.isEnabled {
+            if ScreenshotConfig.isEnabled, preselected.isEmpty {
                 selected = Set(dues.filter { $0.result.status <= .dueSoon }.prefix(2).map(\.taskID))
                 reading = vehicle.reading
                 cost = 94.50
@@ -317,6 +357,7 @@ struct LogServiceView: View {
     }
 
     private func save() {
+        if draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
         draft.reading = reading
         draft.cost = cost ?? 0
         draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }

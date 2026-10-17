@@ -27,7 +27,7 @@ enum VehicleKind: String, CaseIterable, Identifiable, Codable, Sendable {
         case .trailer: "Trailer"
         case .boat: "Boat"
         case .sailboat: "Sailboat"
-        case .personalWatercraft: "Jet Ski"
+        case .personalWatercraft: "Personal watercraft"
         case .aircraft: "Aircraft"
         case .atv: "ATV / UTV"
         case .snowmobile: "Snowmobile"
@@ -189,6 +189,27 @@ enum MeterUnit: String, CaseIterable, Identifiable, Codable, Sendable {
         case .miles, .kilometers: "Odometer"
         case .hours: "Hour meter"
         case .none: "Meter"
+        }
+    }
+
+    /// Room for an honest long trip before a new reading looks like a typo.
+    var typoSlack: Double {
+        switch self {
+        case .miles: 1_500
+        case .kilometers: 2_500
+        case .hours: 60
+        case .none: 0
+        }
+    }
+
+    /// The same figure in another unit, when one converts (miles and
+    /// kilometers do; hours never do).
+    func convert(_ value: Double, to other: MeterUnit) -> Double? {
+        switch (self, other) {
+        case _ where self == other: value
+        case (.miles, .kilometers): value * 1.609344
+        case (.kilometers, .miles): value / 1.609344
+        default: nil
         }
     }
 

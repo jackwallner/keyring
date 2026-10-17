@@ -61,6 +61,15 @@ struct AddVehicleFlow: View {
         let vehicle = garage.addVehicle(draft)
         AppGroup.defaults.set(true, forKey: AppGroup.Key.hasCompletedSetup)
         Haptics.success()
+        // Reminders are the point of a schedule, so ask right after the first
+        // vehicle, when the reason is obvious.
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
+            let scheduler = ReminderScheduler.shared
+            if await scheduler.authorizationStatus() == .notDetermined, await scheduler.requestAuthorization() {
+                scheduler.schedule(for: garage)
+            }
+        }
         onFinish?(vehicle)
         if garage.vehicles.count >= 2, ReviewPrompter.shouldAsk() {
             ReviewPrompter.markAsked()
@@ -195,7 +204,7 @@ struct VehicleDetailsForm: View {
 
             Section("Vehicle") {
                 LabeledContent("Year") {
-                    NumberField(title: "Year", value: $yearValue)
+                    NumberField(title: "Year", value: $yearValue, grouping: false)
                         .multilineTextAlignment(.trailing)
                 }
                 TextField("Make", text: $draft.make)
@@ -315,6 +324,14 @@ struct VehicleDetailsForm: View {
         }
         .onChange(of: yearValue) { _, _ in commitNumbers() }
         .onChange(of: reading) { _, _ in commitNumbers() }
+        .onChange(of: draft.meter) { old, new in
+            // Miles and kilometers convert; hours can't, so the field clears.
+            if let value = reading, let converted = old.convert(value, to: new) {
+                reading = converted.rounded()
+            } else {
+                reading = nil
+            }
+        }
         .task(id: "\(draft.make)|\(draft.year)") {
             guard draft.kind.hasNHTSARecords, draft.make.count >= 2 else { modelSuggestions = []; return }
             try? await Task.sleep(for: .milliseconds(400))
@@ -396,6 +413,28 @@ struct LastDoneStep: View {
 
     @State private var answers: [String: Answer] = [:]
 
+    private func answerChips(for item: CatalogItem, in options: [Answer] = Answer.allCases) -> some View {
+        ForEach(options) { answer in
+            let chosen = (answers[item.key] ?? .unsure) == answer
+            Button {
+                Haptics.selected()
+                answers[item.key] = answer
+            } label: {
+                Text(answer.title)
+                    .font(.footnote.weight(.semibold))
+                    .lineLimit(1)
+                    .fixedSize()
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .padding(.horizontal, Theme.xs)
+                    .foregroundStyle(chosen ? Theme.onAction : Theme.ink)
+                    .background(chosen ? Theme.action : Theme.raised, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(chosen ? .isSelected : [])
+            .accessibilityLabel("\(item.name), \(answer.title)")
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.lg) {
@@ -413,16 +452,17 @@ struct LastDoneStep: View {
                         Label(item.name, systemImage: item.symbol)
                             .font(.headline)
                             .foregroundStyle(Theme.ink)
-                        Text("Every \(Format.interval(distance: item.distanceInterval(for: draft.meter) ?? 0, months: item.months ?? 0, meter: draft.meter))")
+                        Text(Format.interval(distance: item.distanceInterval(for: draft.meter) ?? 0, months: item.months ?? 0, meter: draft.meter))
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
-                        Picker(item.name, selection: Binding(
-                            get: { answers[item.key] ?? .unsure },
-                            set: { answers[item.key] = $0 }
-                        )) {
-                            ForEach(Answer.allCases) { Text($0.title).tag($0) }
+                        // Chips wrap to two rows instead of truncating at large text.
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: Theme.xs) { answerChips(for: item) }
+                            Grid(horizontalSpacing: Theme.xs, verticalSpacing: Theme.xs) {
+                                GridRow { answerChips(for: item, in: [.recently, .months]) }
+                                GridRow { answerChips(for: item, in: [.year, .unsure]) }
+                            }
                         }
-                        .pickerStyle(.segmented)
                     }
                     .card()
                 }
@@ -478,8 +518,9 @@ struct EditVehicleView: View {
 
     private func save() {
         let powertrainChanged = vehicle.powertrain != draft.powertrain
+        let readingTyped = draft.reading != vehicle.reading
+        garage.changeMeter(vehicle, to: draft.meter)
         vehicle.powertrain = draft.powertrain
-        vehicle.meter = draft.meter
         vehicle.year = Int16(clamping: draft.year)
         vehicle.make = draft.make.trimmed.nilIfEmpty
         vehicle.model = draft.model.trimmed.nilIfEmpty
@@ -490,8 +531,9 @@ struct EditVehicleView: View {
         vehicle.photo = draft.photo
         vehicle.tint = draft.tint ?? vehicle.tint
         garage.saveVehicleEdits()
-        if draft.meter.hasReading, draft.reading != vehicle.reading, draft.reading > 0 {
-            garage.updateReading(vehicle, to: draft.reading)
+        // Edit sets the meter exactly, so a typo can be walked back.
+        if draft.meter.hasReading, readingTyped, draft.reading > 0 {
+            garage.correctReading(vehicle, to: draft.reading)
         }
         if powertrainChanged {
             // New powertrain, new core jobs; the old ones stay with their history.

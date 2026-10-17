@@ -12,7 +12,8 @@ struct GarageView: View {
     @State private var showingAdd = false
     @State private var showingPaywall = false
     @State private var showingFamily = false
-    @State private var logging: Vehicle?
+    @State private var logging: LogRequest?
+    @State private var showingAllAttention = false
     @State private var routedScreenshot = false
 
     var body: some View {
@@ -43,7 +44,7 @@ struct GarageView: View {
                             }
                             .buttonStyle(PressableStyle())
                             .contextMenu {
-                                Button { logging = vehicle } label: { Label("Log service", systemImage: "plus.circle") }
+                                Button { logging = LogRequest(vehicle: vehicle) } label: { Label("Log service", systemImage: "plus.circle") }
                             }
                         }
                     }
@@ -88,8 +89,14 @@ struct GarageView: View {
         .sheet(isPresented: $showingAdd) { AddVehicleFlow() }
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .sheet(isPresented: $showingFamily) { NavigationStack { FamilyView() } }
-        .sheet(item: $logging) { vehicle in LogServiceView(vehicle: vehicle) }
-        .task { routeScreenshot() }
+        .sheet(item: $logging) { request in LogServiceView(vehicle: request.vehicle, preselected: request.preselected) }
+        .task {
+            routeScreenshot()
+            if AppGroup.defaults.bool(forKey: AppGroup.Key.pendingFirstVehicle) {
+                AppGroup.defaults.set(false, forKey: AppGroup.Key.pendingFirstVehicle)
+                if garage.vehicles.isEmpty, !ScreenshotConfig.isEnabled { showingAdd = true }
+            }
+        }
     }
 
     private var sections: [(title: String, vehicles: [Vehicle])] {
@@ -124,8 +131,8 @@ struct GarageView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Theme.secondaryInk)
                 }
-                ForEach(items.prefix(3), id: \.1.id) { vehicle, due in
-                    Button { logging = vehicle } label: {
+                ForEach(items.prefix(showingAllAttention ? items.count : 3), id: \.1.id) { vehicle, due in
+                    Button { logging = LogRequest(vehicle: vehicle, preselected: [due.taskID]) } label: {
                         HStack(spacing: Theme.sm) {
                             Circle().fill(vehicle.tint.color).frame(width: 10, height: 10)
                             VStack(alignment: .leading, spacing: 1) {
@@ -149,6 +156,14 @@ struct GarageView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Log this job")
+                }
+                if items.count > 3 {
+                    Button(showingAllAttention ? "Show fewer" : "Show all \(items.count)") {
+                        withAnimation(.snappy) { showingAllAttention.toggle() }
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.brass)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .card()
@@ -189,7 +204,7 @@ struct GarageView: View {
         case "vehicle", "explore", "record":
             if let first { path.append(first.objectID) }
         case "log":
-            logging = first
+            logging = first.map { LogRequest(vehicle: $0) }
         case "family":
             showingFamily = true
         case "add":
@@ -198,6 +213,13 @@ struct GarageView: View {
             break
         }
     }
+}
+
+/// Opening the log sheet, with the jobs to tick already ticked.
+struct LogRequest: Identifiable {
+    let vehicle: Vehicle
+    var preselected: [UUID] = []
+    var id: NSManagedObjectID { vehicle.objectID }
 }
 
 /// One vehicle as a key tag: its color, its name, its meter and the next job.
@@ -255,7 +277,7 @@ struct VehicleCard: View {
             }
             .padding(Theme.md)
         }
-        .frame(height: 196)
+        .frame(minHeight: 196)
         .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText(headline))
@@ -279,14 +301,14 @@ struct VehicleCard: View {
     private func statusChip(_ headline: (status: DueStatus, urgentCount: Int, next: TaskDue?)) -> some View {
         HStack(spacing: 6) {
             Circle()
-                .fill(headline.status == .ok ? Color.white.opacity(0.85) : headline.status.color)
+                .fill(headline.status == .ok ? vehicle.tint.foreground.opacity(0.7) : headline.status.color)
                 .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: headline.status == .ok ? 0 : 1))
                 .frame(width: 8, height: 8)
             Text(statusText(headline))
                 .font(.footnote.weight(.semibold))
                 .lineLimit(1)
         }
-        .foregroundStyle(vehicle.tint.isLight ? Theme.ink : .white)
+        .foregroundStyle(vehicle.tint.foreground)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(.black.opacity(vehicle.tint.isLight ? 0.08 : 0.22), in: Capsule())

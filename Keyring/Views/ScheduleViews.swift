@@ -22,7 +22,7 @@ struct ScheduleView: View {
                                 StatusDot(status: due.result.status)
                                 Text(due.name).font(.body.weight(.medium))
                             }
-                            Text("Every \(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: vehicle.meter))")
+                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: vehicle.meter))
                                 .font(.footnote)
                                 .foregroundStyle(Theme.secondaryInk)
                         }
@@ -52,7 +52,7 @@ struct ScheduleView: View {
                                     .frame(width: 28)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.name).foregroundStyle(Theme.ink)
-                                    Text("Every \(Format.interval(distance: item.distanceInterval(for: vehicle.meter) ?? 0, months: item.months ?? 0, meter: vehicle.meter))")
+                                    Text(Format.interval(distance: item.distanceInterval(for: vehicle.meter) ?? 0, months: item.months ?? 0, meter: vehicle.meter))
                                         .font(.footnote)
                                         .foregroundStyle(Theme.secondaryInk)
                                 }
@@ -105,8 +105,8 @@ struct TaskDetailView: View {
                         Label("Log \(task.displayName.lowercasedFirst)", systemImage: "plus")
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    if due?.result.status == .noRecord || due?.lastDate == nil {
-                        Button("It was done before I had Keyring") { settingLast = true }
+                    if !hasLoggedEntry {
+                        Button(task.baselineDate == nil ? "Set when it was last done" : "Change when it was last done") { settingLast = true }
                             .buttonStyle(SecondaryButtonStyle())
                     }
                     if let gear = item?.gear, !gear.isEmpty { gearSection(gear) }
@@ -152,7 +152,7 @@ struct TaskDetailView: View {
                 Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
             }
             HStack(spacing: Theme.xs) {
-                Label("Every \(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: vehicle.meter))", systemImage: "arrow.clockwise")
+                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: vehicle.meter), systemImage: "arrow.clockwise")
                 if let difficulty = item?.difficulty {
                     Text("·")
                     Text(difficulty.title)
@@ -195,8 +195,15 @@ struct TaskDetailView: View {
         }
     }
 
+    private var hasLoggedEntry: Bool {
+        (vehicle.entries ?? []).contains { $0.coveredTaskIDs.contains(taskID) }
+    }
+
+    /// A date from setup was a rough answer ("about 6 months ago"), so it shows
+    /// as a month, not a made-up day.
     private func lastText(_ due: TaskDue) -> String {
-        let parts = [due.lastDate.map(Format.shortDate), due.lastReading.map { Format.reading($0, vehicle.meter) }].compactMap { $0 }
+        let date = due.lastDate.map { hasLoggedEntry ? Format.shortDate($0) : "About " + $0.formatted(.dateTime.month(.abbreviated).year()) }
+        let parts = [date, due.lastReading.map { Format.reading($0, vehicle.meter) }].compactMap { $0 }
         return parts.isEmpty ? "Not recorded" : parts.joined(separator: " · ")
     }
 
@@ -354,7 +361,12 @@ struct LastDoneSheet: View {
                         garage.setBaseline(task, date: date, reading: reading)
                         dismiss()
                     }
+                    .fontWeight(.semibold)
                 }
+            }
+            .onAppear {
+                if let baseline = task.baselineDate { date = baseline }
+                if task.baselineReading >= 0 { reading = task.baselineReading }
             }
         }
         .presentationDetents([.medium])

@@ -9,6 +9,8 @@ struct ServiceRecordView: View {
 
     @State private var showCosts = !AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
     @State private var includeReceipts = true
+    @State private var includeSchedule = true
+    @State private var includeNotes = true
     @State private var pdf: Data?
     @State private var file: SharedFile?
 
@@ -22,8 +24,6 @@ struct ServiceRecordView: View {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 VStack(spacing: Theme.sm) {
-                    Toggle("Show costs", isOn: $showCosts)
-                    Toggle("Attach receipts", isOn: $includeReceipts)
                     HStack(spacing: Theme.sm) {
                         Button {
                             print()
@@ -45,19 +45,32 @@ struct ServiceRecordView: View {
             }
             .navigationTitle("Service Record")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
-            .task(id: "\(showCosts)\(includeReceipts)") { render() }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Toggle("Costs", isOn: $showCosts)
+                        Toggle("Receipts", isOn: $includeReceipts)
+                        Toggle("Notes", isOn: $includeNotes)
+                        Toggle("What's due next", isOn: $includeSchedule)
+                    } label: {
+                        Label("Include", systemImage: "slider.horizontal.3")
+                    }
+                    .accessibilityIdentifier("record.include")
+                }
+            }
+            .task(id: "\(showCosts)\(includeReceipts)\(includeSchedule)\(includeNotes)") { render() }
             .sheet(item: $file) { file in ShareSheet(items: [file.url]) }
         }
     }
 
     private func render() {
-        let record = RecordBuilder.record(for: vehicle, store: garage, showCosts: showCosts, includeReceipts: includeReceipts)
+        let record = RecordBuilder.record(for: vehicle, store: garage, showCosts: showCosts, includeReceipts: includeReceipts, includeSchedule: includeSchedule, includeNotes: includeNotes)
         pdf = ServiceRecordPDF.render(record)
     }
 
     private func share() {
-        let record = RecordBuilder.record(for: vehicle, store: garage, showCosts: showCosts, includeReceipts: includeReceipts)
+        let record = RecordBuilder.record(for: vehicle, store: garage, showCosts: showCosts, includeReceipts: includeReceipts, includeSchedule: includeSchedule, includeNotes: includeNotes)
         if let url = try? ServiceRecordPDF.url(for: record) { file = SharedFile(url: url) }
     }
 

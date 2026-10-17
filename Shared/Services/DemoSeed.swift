@@ -83,6 +83,8 @@ enum DemoSeed {
         entries: [(Double, [String], String, Double, String, Bool, String)]
     ) {
         let current = vehicle.reading
+        // The reading saved when the vehicle was added is the one it had then.
+        for reading in vehicle.readings ?? [] { reading.value = start }
         let tasks = vehicle.tasks ?? []
         for (daysAgo, keys, title, cost, shop, isDIY, by) in entries {
             let date = now.addingTimeInterval(-daysAgo * 86_400)

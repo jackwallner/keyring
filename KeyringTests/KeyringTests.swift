@@ -183,6 +183,58 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(due.result.dueReading, 57_700)
     }
 
+    func testLoggingWithoutAReadingUsesTodaysMeter() {
+        let store = makeStore()
+        let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 50_000))
+        let oil = vehicle.enabledTasks.first { $0.catalogKey == "oil" }!
+        var old = GarageStore.ServiceDraft()
+        old.date = .now.addingTimeInterval(-400 * 86_400)
+        old.reading = 30_000
+        old.taskIDs = [oil.id!]
+        store.log(old, for: vehicle)
+        XCTAssertEqual(store.dues(for: vehicle).first { $0.catalogKey == "oil" }?.result.status, .overdue)
+        var today = GarageStore.ServiceDraft()
+        today.taskIDs = [oil.id!]
+        store.log(today, for: vehicle)
+        let due = store.dues(for: vehicle).first { $0.catalogKey == "oil" }!
+        XCTAssertEqual(due.lastReading, 50_000)
+        XCTAssertEqual(due.result.status, .ok)
+    }
+
+    func testCorrectingATypoLowersTheMeter() {
+        let store = makeStore()
+        let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 52_000))
+        XCTAssertTrue(store.isSuspiciousJump(520_000, for: vehicle))
+        XCTAssertFalse(store.isSuspiciousJump(52_300, for: vehicle))
+        store.updateReading(vehicle, to: 520_000)
+        XCTAssertEqual(vehicle.reading, 520_000)
+        store.correctReading(vehicle, to: 52_100)
+        XCTAssertEqual(vehicle.reading, 52_100)
+        XCTAssertFalse((vehicle.readings ?? []).contains { $0.value > 52_100 })
+    }
+
+    func testSwitchingToKilometersConvertsEverything() {
+        let store = makeStore()
+        let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 10_000))
+        let oil = vehicle.enabledTasks.first { $0.catalogKey == "oil" }!
+        let miles = oil.intervalDistance
+        store.changeMeter(vehicle, to: .kilometers)
+        XCTAssertEqual(vehicle.meter, .kilometers)
+        XCTAssertEqual(vehicle.reading, 16_093.44, accuracy: 0.01)
+        XCTAssertEqual(oil.intervalDistance, (miles * 1.609344 / 100).rounded() * 100, accuracy: 500)
+        store.changeMeter(vehicle, to: .hours)
+        XCTAssertEqual(vehicle.reading, 0)
+    }
+
+    func testIntervalWording() {
+        XCTAssertEqual(Format.interval(distance: 7_500, months: 12, meter: .miles), "Every 7,500 mi or 1 year")
+        XCTAssertEqual(Format.interval(distance: 0, months: 12, meter: .miles), "Every year")
+        XCTAssertEqual(Format.interval(distance: 0, months: 6, meter: .miles), "Every 6 months")
+        XCTAssertEqual(Format.interval(distance: 0, months: 0, meter: .miles), "As needed")
+        XCTAssertEqual(Format.reading(1_234.5, .hours), "1,234.5 hrs")
+        XCTAssertEqual(Format.reading(1_234, .hours), "1,234 hrs")
+    }
+
     func testCSVExportEscapesAndBlocksFormulas() {
         XCTAssertEqual(CSVExport.escape("a,b"), "\"a,b\"")
         XCTAssertEqual(CSVExport.escape("=SUM(A1)"), "'=SUM(A1)")

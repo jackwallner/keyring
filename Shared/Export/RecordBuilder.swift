@@ -4,7 +4,10 @@ import UIKit
 /// the same rows so the PDF and the CSV never disagree.
 @MainActor
 enum RecordBuilder {
-    static func record(for vehicle: Vehicle, store: GarageStore, showCosts: Bool, includeReceipts: Bool) -> ServiceRecord {
+    static func record(
+        for vehicle: Vehicle, store: GarageStore, showCosts: Bool, includeReceipts: Bool,
+        includeSchedule: Bool = true, includeNotes: Bool = true
+    ) -> ServiceRecord {
         let tasks = (vehicle.tasks ?? [])
         let rows = vehicle.sortedEntries.map { entry -> ServiceRecord.Row in
             let covered = tasks.filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }
@@ -14,18 +17,18 @@ enum RecordBuilder {
             if covered.count > 1 || (covered.count == 1 && covered[0] != title) {
                 details.append(covered.joined(separator: ", "))
             }
-            if let notes = entry.notes, !notes.isEmpty { details.append(notes) }
+            if includeNotes, let notes = entry.notes, !notes.isEmpty { details.append(notes) }
             return ServiceRecord.Row(
                 date: entry.date,
                 reading: entry.hasReading ? entry.reading : nil,
                 title: title,
                 detail: details.joined(separator: ". "),
-                shop: entry.isDIY ? "Owner" : (entry.shop ?? ""),
+                shop: entry.isDIY ? "Owner (DIY)" : (entry.shop ?? ""),
                 cost: entry.cost,
                 receipts: includeReceipts ? entry.sortedAttachments.filter(\.isReceipt).compactMap { ImageTools.thumbnail($0.data, maxDimension: 900) } : []
             )
         }
-        let schedule = store.dues(for: vehicle).map { due -> ServiceRecord.ScheduleRow in
+        let schedule = !includeSchedule ? [] : store.dues(for: vehicle).map { due -> ServiceRecord.ScheduleRow in
             let last = [due.lastDate.map { Format.shortDate($0) }, due.lastReading.map { Format.reading($0, vehicle.meter) }]
                 .compactMap { $0 }.joined(separator: " · ")
             var next = ""

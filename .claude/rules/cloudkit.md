@@ -28,7 +28,7 @@ CloudKit scheduler is unreachable from a shell process).
 ## Production
 `initializeCloudKitSchema` does not create `cloudkit.share`; run `--verify-share` in Development before deploying,
 or every real invite fails in Production with "Cannot create new type cloudkit.share". Public DB indexes needed:
-`OwnerPhoto.modelKey` queryable, `OwnerPhoto.creationDate` sortable, `recordName` queryable on both. Deploy
+`OwnerPhoto.modelKey` queryable, `OwnerPhoto.createdTimestamp` sortable (deployed to Production 2026-10-16), `recordName` queryable on both. Deploy
 Development to Production in CloudKit Console after any model change. Never reset Production.
 
 ## Sharing

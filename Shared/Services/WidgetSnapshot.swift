@@ -12,6 +12,8 @@ struct WidgetSnapshot: Codable, Sendable {
         var statusRaw: Int
         var dueDate: Date?
         var estimated: Bool
+        /// "At 54,000 mi" for a job due by the meter with no date to show.
+        var dueAt: String?
     }
 
     struct VehicleSummary: Codable, Hashable, Identifiable, Sendable {

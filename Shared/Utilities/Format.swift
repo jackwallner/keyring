@@ -5,9 +5,11 @@ enum Format {
     static func reading(_ value: Double, _ meter: MeterUnit) -> String {
         switch meter {
         case .hours:
-            let text = value < 100 && value != value.rounded()
-                ? value.formatted(.number.precision(.fractionLength(1)))
-                : Int(value.rounded()).formatted()
+            // Hobbs and tach meters read in tenths.
+            let tenths = (value * 10).rounded() / 10
+            let text = tenths == tenths.rounded()
+                ? Int(tenths).formatted()
+                : tenths.formatted(.number.precision(.fractionLength(1)))
             return "\(text) hrs"
         case .none:
             return ""
@@ -16,20 +18,24 @@ enum Format {
         }
     }
 
-    /// "7,500 mi or 12 months".
+    /// "Every 7,500 mi or 1 year", "Every year", "As needed".
     static func interval(distance: Double, months: Int, meter: MeterUnit) -> String {
-        var parts: [String] = []
-        if distance > 0, meter.hasReading { parts.append(reading(distance, meter)) }
-        if months > 0 { parts.append(monthsText(months)) }
-        return parts.isEmpty ? "As needed" : parts.joined(separator: " or ")
+        let usesDistance = distance > 0 && meter.hasReading
+        switch (usesDistance, months > 0) {
+        case (true, true): return "Every \(reading(distance, meter)) or \(monthsText(months))"
+        case (true, false): return "Every \(reading(distance, meter))"
+        case (false, true): return months == 12 ? "Every year" : months == 1 ? "Every month" : "Every \(monthsText(months))"
+        case (false, false): return "As needed"
+        }
     }
 
+    /// "1 year", "18 months".
     static func monthsText(_ months: Int) -> String {
         if months % 12 == 0 {
             let years = months / 12
-            return years == 1 ? "year" : "\(years) years"
+            return years == 1 ? "1 year" : "\(years) years"
         }
-        return months == 1 ? "month" : "\(months) months"
+        return months == 1 ? "1 month" : "\(months) months"
     }
 
     static func money(_ value: Double, code: String = Locale.current.currency?.identifier ?? "USD") -> String {

@@ -19,8 +19,19 @@ struct TaskDue: Identifiable, Hashable {
     let intervalDistance: Double
     let intervalMonths: Int
 
+    /// Overdue, due soon, then up to date by date, with jobs that have no
+    /// record yet last so they never push a real date down the list.
+    private static func rank(_ status: DueStatus) -> Int {
+        switch status {
+        case .overdue: 0
+        case .dueSoon: 1
+        case .ok: 2
+        case .noRecord: 3
+        }
+    }
+
     static func ordering(_ lhs: TaskDue, _ rhs: TaskDue) -> Bool {
-        if lhs.result.status != rhs.result.status { return lhs.result.status < rhs.result.status }
+        if lhs.result.status != rhs.result.status { return rank(lhs.result.status) < rank(rhs.result.status) }
         switch (lhs.result.dueDate, rhs.result.dueDate) {
         case let (l?, r?): return l < r
         case (_?, nil): return true
@@ -152,10 +163,26 @@ final class GarageStore: ObservableObject {
             .sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
         if let latest = covering.first, let latestDate = latest.date, latestDate >= (date ?? .distantPast) {
             date = latestDate
-            if latest.hasReading { reading = latest.reading }
-            else if let withReading = covering.first(where: \.hasReading) { reading = max(reading ?? 0, withReading.reading) }
+            // No reading on the entry: the meter as it stood that day, never an
+            // older visit's reading, which would leave the job overdue.
+            reading = latest.hasReading ? latest.reading : task.vehicle.flatMap { self.reading(of: $0, on: latestDate) }
         }
         return (date, reading)
+    }
+
+    /// The highest reading known by the end of `date`, from meter updates and
+    /// logged entries.
+    func reading(of vehicle: Vehicle, on date: Date) -> Double? {
+        let cutoff = Calendar.current.startOfDay(for: date).addingTimeInterval(86_400)
+        var values = (vehicle.readings ?? []).compactMap { reading in
+            reading.date.flatMap { $0 < cutoff ? reading.value : nil }
+        }
+        values += (vehicle.entries ?? []).compactMap { entry in
+            guard entry.hasReading, let entryDate = entry.date, entryDate < cutoff else { return nil }
+            return entry.reading
+        }
+        if let readingDate = vehicle.readingDate, readingDate < cutoff { values.append(vehicle.reading) }
+        return values.max()
     }
 
     func dues(for vehicle: Vehicle, now: Date = .now) -> [TaskDue] {
@@ -348,6 +375,79 @@ final class GarageStore: ObservableObject {
         save()
     }
 
+    /// Fixes a mistyped meter: the vehicle reads exactly `value` now, and any
+    /// saved reading above it (the typo) is removed so the pace recovers.
+    func correctReading(_ vehicle: Vehicle, to value: Double, at date: Date = .now) {
+        guard vehicle.meter.hasReading, value >= 0 else { return }
+        for reading in vehicle.readings ?? [] where reading.value > value {
+            context.delete(reading)
+        }
+        vehicle.reading = value
+        vehicle.readingDate = date
+        let reading = MeterReading(context: context)
+        persistence.place(reading, beside: vehicle, in: context)
+        reading.id = UUID()
+        reading.date = date
+        reading.value = value
+        reading.loggedBy = ownerName
+        reading.vehicle = vehicle
+        save()
+    }
+
+    /// Switches a vehicle's meter. Miles and kilometers convert every stored
+    /// figure; a switch to or from hours can't, so distance intervals reset to
+    /// the catalog's and old readings stop counting toward due dates.
+    func changeMeter(_ vehicle: Vehicle, to meter: MeterUnit) {
+        let old = vehicle.meter
+        guard old != meter else { return }
+        if let factor = old.convert(1, to: meter) {
+            vehicle.reading *= factor
+            for reading in vehicle.readings ?? [] { reading.value *= factor }
+            for entry in vehicle.entries ?? [] where entry.hasReading { entry.reading *= factor }
+            for task in vehicle.tasks ?? [] {
+                task.intervalDistance = Self.roundedInterval(task.intervalDistance * factor)
+                if task.baselineReading >= 0 { task.baselineReading *= factor }
+            }
+        } else {
+            vehicle.reading = 0
+            vehicle.readingDate = nil
+            for reading in vehicle.readings ?? [] { context.delete(reading) }
+            for entry in vehicle.entries ?? [] { entry.reading = -1 }
+            for task in vehicle.tasks ?? [] {
+                task.baselineReading = -1
+                let item = task.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain) }
+                task.intervalDistance = item?.distanceInterval(for: meter) ?? 0
+            }
+        }
+        vehicle.meter = meter
+        save()
+    }
+
+    private static func roundedInterval(_ value: Double) -> Double {
+        let step: Double = value >= 10_000 ? 500 : (value >= 1_000 ? 100 : 10)
+        return (value / step).rounded() * step
+    }
+
+    /// Removes one saved reading; the vehicle falls back to the latest one left.
+    func delete(_ reading: MeterReading) {
+        guard let vehicle = reading.vehicle else { return }
+        context.delete(reading)
+        let remaining = (vehicle.readings ?? []).filter { $0 != reading && !$0.isDeleted }
+        if let latest = remaining.max(by: { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }) {
+            vehicle.reading = latest.value
+            vehicle.readingDate = latest.date
+        }
+        save()
+    }
+
+    /// A reading far beyond the vehicle's pace is usually a typo: an extra digit.
+    func isSuspiciousJump(_ value: Double, for vehicle: Vehicle) -> Bool {
+        guard vehicle.meter.hasReading, vehicle.reading > 0, value > vehicle.reading else { return false }
+        let days = max(1, Date.now.timeIntervalSince(vehicle.readingDate ?? .now) / 86_400)
+        let plausible = max(dailyUse(for: vehicle), vehicle.kind.typicalDailyUse) * days * 4 + vehicle.meter.typoSlack
+        return value - vehicle.reading > plausible
+    }
+
     // MARK: - Service log
 
     struct ServiceDraft {
@@ -480,7 +580,8 @@ final class GarageStore: ObservableObject {
                         name: due.name,
                         statusRaw: due.result.status.rawValue,
                         dueDate: due.result.dueDate,
-                        estimated: due.result.dateIsEstimated
+                        estimated: due.result.dateIsEstimated,
+                        dueAt: due.result.dueReading.map { "At \(Format.reading($0, vehicle.meter))" }
                     )
                 }
             )

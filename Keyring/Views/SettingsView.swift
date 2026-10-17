@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var name = ""
     @State private var garageName = ""
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
-    @State private var reminderTime = Date.now
+    @State private var reminderHour = 9
     @State private var showingPaywall = false
     @State private var showingFamily = false
     @State private var exportFile: SharedFile?
@@ -70,10 +70,17 @@ struct SettingsView: View {
                         }
                     }
                 default:
-                    DatePicker("Remind me at", selection: $reminderTime, displayedComponents: .hourAndMinute)
-                        .onChange(of: reminderTime) { _, time in
-                            ReminderScheduler.shared.setReminderHour(Calendar.current.component(.hour, from: time), store: garage)
+                    Picker("Remind me at", selection: Binding(
+                        get: { reminderHour },
+                        set: { hour in
+                            reminderHour = hour
+                            ReminderScheduler.shared.setReminderHour(hour, store: garage)
                         }
+                    )) {
+                        ForEach(6...21, id: \.self) { hour in
+                            Text(Self.hourText(hour)).tag(hour)
+                        }
+                    }
                 }
             } header: {
                 Text("Reminders")
@@ -107,7 +114,9 @@ struct SettingsView: View {
             } header: {
                 Text("Your data")
             } footer: {
-                Text("Everything lives in your iCloud. The spreadsheet is always free, so your history is always yours.")
+                Text(sharing.iCloudAvailable
+                     ? "Everything syncs through your iCloud. The spreadsheet is always free, so your history is always yours."
+                     : "iCloud is off, so everything stays on this iPhone. Sign in to iCloud to back it up and share it. The spreadsheet is always free.")
             }
 
             Section("Keyring") {
@@ -143,7 +152,7 @@ struct SettingsView: View {
         .task {
             name = garage.ownerName ?? ""
             garageName = garage.ownGarage?.name ?? ""
-            reminderTime = Calendar.current.date(bySettingHour: ReminderScheduler.shared.reminderHour, minute: 0, second: 0, of: .now) ?? .now
+            reminderHour = ReminderScheduler.shared.reminderHour
             await refreshNotifications()
         }
         .onDisappear {
@@ -183,6 +192,11 @@ struct SettingsView: View {
                 .accessibilityIdentifier("settings.pro")
             }
         }
+    }
+
+    static func hourText(_ hour: Int) -> String {
+        let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: .now) ?? .now
+        return date.formatted(.dateTime.hour())
     }
 
     private func refreshNotifications() async {

@@ -17,8 +17,11 @@ struct VehicleDetailView: View {
     @State private var editingFacts = false
     @State private var showingRecord = false
     @State private var showingPaywall = false
+    @State private var showingLimitPaywall = false
     @State private var recalls: [Recall] = []
+    @State private var recallsFailed = false
     @State private var confirmingDelete = false
+    @State private var confirmingRetire = false
     @State private var routed = false
 
     var body: some View {
@@ -52,6 +55,7 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $editingFacts) { FactsEditor(vehicle: vehicle) }
         .sheet(isPresented: $showingRecord) { ServiceRecordView(vehicle: vehicle) }
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .serviceRecord) }
+        .sheet(isPresented: $showingLimitPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .task(id: vehicle.objectID) {
             await loadRecalls()
             if !routed, ScreenshotConfig.value(after: "-ScreenshotRoute") == "record" {
@@ -116,8 +120,10 @@ struct VehicleDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             Spacer()
-            Button("Restore") { garage.retire(vehicle, false) }
-                .font(.subheadline.weight(.semibold))
+            if !garage.isShared(vehicle) {
+                Button("Restore", action: restore)
+                    .font(.subheadline.weight(.semibold))
+            }
         }
         .card()
     }
@@ -136,10 +142,10 @@ struct VehicleDetailView: View {
                         .font(.title3)
                         .foregroundStyle(Theme.overdue)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(open.count == 1 ? "1 safety recall to check" : "\(open.count) safety recalls to check")
+                        Text(open.count == 1 ? "1 safety recall may apply" : "\(open.count) safety recalls may apply")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
-                        Text("From NHTSA for the \(vehicle.descriptor). Repairs are free at a dealer.")
+                        Text("NHTSA lists these for the \(vehicle.descriptor). Check your VIN to see which are open.")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.leading)
@@ -155,7 +161,12 @@ struct VehicleDetailView: View {
 
     private func loadRecalls() async {
         guard vehicle.kind.hasNHTSARecords, vehicle.year > 1980, let make = vehicle.make, let model = vehicle.model else { return }
-        recalls = (try? await NHTSAClient.recalls(year: Int(vehicle.year), make: make, model: model)) ?? []
+        do {
+            recalls = try await NHTSAClient.recalls(year: Int(vehicle.year), make: make, model: model)
+            recallsFailed = false
+        } catch {
+            recallsFailed = true
+        }
     }
 
     // MARK: - Due
@@ -214,7 +225,7 @@ struct VehicleDetailView: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: Theme.sm), GridItem(.flexible(), spacing: Theme.sm)], spacing: Theme.sm) {
                 tile("What it's worth", detail: valueDetail, symbol: "dollarsign.circle.fill") { ValueView(vehicle: vehicle) }
                 tile("Parts and tools", detail: "For what's due next", symbol: "wrench.and.screwdriver.fill") { GearView(vehicle: vehicle) }
-                tile("Upgrades", detail: "Owner favorites", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
+                tile("Upgrades", detail: "Popular add-ons", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
                 tile("Clubs", detail: "Owners like you", symbol: "person.3.fill") { ClubsView(vehicle: vehicle) }
                 tile("Photos", detail: "Others like it", symbol: "photo.on.rectangle.angled") { GalleryView(vehicle: vehicle) }
                 if vehicle.kind.hasNHTSARecords {
@@ -235,7 +246,8 @@ struct VehicleDetailView: View {
 
     private var recallDetail: String {
         guard vehicle.year > 0, vehicle.make != nil else { return "Add year, make and model" }
-        return recalls.isEmpty ? "None open" : Format.count(recalls.count, "recall", "recalls")
+        if recalls.isEmpty { return recallsFailed ? "Couldn't check" : "None listed" }
+        return Format.count(recalls.count, "may apply", "may apply")
     }
 
     private func tile<Destination: View>(_ title: String, detail: String, symbol: String, @ViewBuilder destination: @escaping () -> Destination) -> some View {
@@ -395,17 +407,30 @@ struct VehicleDetailView: View {
             }
             .card(padding: Theme.md)
 
-            HStack(spacing: Theme.sm) {
-                Button(vehicle.isRetired ? "Restore vehicle" : "Sold or retired") {
-                    garage.retire(vehicle, !vehicle.isRetired)
-                    if vehicle.isRetired { dismiss() }
-                }
-                .buttonStyle(SecondaryButtonStyle())
-                Button("Delete", role: .destructive) { confirmingDelete = true }
+            if garage.isShared(vehicle) {
+                Text("Shared with you. Only the owner can retire or delete it.")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+            } else {
+                HStack(spacing: Theme.sm) {
+                    Button(vehicle.isRetired ? "Restore vehicle" : "Sold or retired") {
+                        if vehicle.isRetired { restore() } else { confirmingRetire = true }
+                    }
                     .buttonStyle(SecondaryButtonStyle())
-                    .foregroundStyle(Theme.overdue)
+                    Button("Delete", role: .destructive) { confirmingDelete = true }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+                .font(.subheadline)
             }
-            .font(.subheadline)
+        }
+        .confirmationDialog("Mark \(vehicle.displayName) sold or retired?", isPresented: $confirmingRetire, titleVisibility: .visible) {
+                Button("Sold or retired") {
+                    garage.retire(vehicle, true)
+                    dismiss()
+                }
+            } message: {
+                Text("Its history is kept and its reminders stop. You can restore it from Sold and retired at the bottom of the garage.")
+            }
             .confirmationDialog("Delete \(vehicle.displayName)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                 Button("Delete vehicle and history", role: .destructive) {
                     garage.delete(vehicle)
@@ -414,18 +439,28 @@ struct VehicleDetailView: View {
             } message: {
                 Text("Its whole history, photos and receipts are deleted for everyone it's shared with. To keep the history, mark it sold or retired instead.")
             }
+    }
+
+    private func restore() {
+        if !store.isPro, garage.ownedVehicleCount >= ProFeature.freeVehicleLimit {
+            showingLimitPaywall = true
+        } else {
+            garage.retire(vehicle, false)
         }
     }
 
     private func detailRow(_ label: String, _ value: String, copyable: Bool = false) -> some View {
         HStack {
             Text(label).font(.subheadline).foregroundStyle(Theme.secondaryInk)
-            Spacer(minLength: Theme.md)
+                .fixedSize()
+            Spacer(minLength: Theme.sm)
             Text(value)
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundStyle(Theme.ink)
                 .textSelection(.enabled)
                 .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
             if copyable {
                 Button {
                     UIPasteboard.general.string = value
@@ -479,20 +514,26 @@ struct TaskRow: View {
     }
 }
 
-/// "What does the odometer say?" with the last reading as a starting point.
+/// "What does the odometer say?" with the last reading as a starting point,
+/// and the saved readings below so a typo can be removed.
 struct UpdateReadingSheet: View {
     @EnvironmentObject private var garage: GarageStore
     @Environment(\.dismiss) private var dismiss
-    let vehicle: Vehicle
+    @ObservedObject var vehicle: Vehicle
 
     @State private var value: Double?
     @State private var showingScanner = false
+    @State private var confirmingJump = false
+
+    private var readings: [MeterReading] {
+        (vehicle.readings ?? []).sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    NumberField(title: Format.reading(vehicle.reading, vehicle.meter), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                    NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
                         .font(Theme.figure(28))
                     if MeterScanner.isAvailable {
                         Button {
@@ -505,9 +546,31 @@ struct UpdateReadingSheet: View {
                     Text(vehicle.meter.meterName)
                 } footer: {
                     if let value, value < vehicle.reading {
-                        Text("That's lower than the last reading of \(Format.reading(vehicle.reading, vehicle.meter)). It will be saved as a past reading.")
+                        Text("That's lower than the last reading of \(Format.reading(vehicle.reading, vehicle.meter)). It will be saved as a past reading. To fix a typo, delete the wrong reading below.")
                     } else {
                         Text("Last updated \(vehicle.readingDate.map { Format.relative($0) } ?? "never"). Keyring learns your pace from these and estimates when things come due.")
+                    }
+                }
+                if !readings.isEmpty {
+                    Section {
+                        ForEach(readings.prefix(12)) { reading in
+                            HStack {
+                                Text(Format.reading(reading.value, vehicle.meter))
+                                    .font(Theme.figure(15, weight: .medium))
+                                    .foregroundStyle(Theme.ink)
+                                Spacer()
+                                Text(reading.date.map(Format.shortDate) ?? "")
+                                    .font(.footnote)
+                                    .foregroundStyle(Theme.secondaryInk)
+                            }
+                            .swipeActions {
+                                Button("Delete", role: .destructive) { garage.delete(reading) }
+                            }
+                        }
+                    } header: {
+                        Text("Saved readings")
+                    } footer: {
+                        Text("Swipe left on a wrong reading to delete it.")
                     }
                 }
             }
@@ -518,14 +581,26 @@ struct UpdateReadingSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if let value {
-                            garage.updateReading(vehicle, to: value)
-                            Haptics.success()
+                        guard let value else { return }
+                        if garage.isSuspiciousJump(value, for: vehicle) {
+                            confirmingJump = true
+                        } else {
+                            commit(value)
                         }
-                        dismiss()
                     }
+                    .fontWeight(.semibold)
                     .disabled(value == nil)
                 }
+            }
+            .confirmationDialog(
+                "Save \(Format.reading(value ?? 0, vehicle.meter))?",
+                isPresented: $confirmingJump,
+                titleVisibility: .visible
+            ) {
+                Button("Save \(Format.reading(value ?? 0, vehicle.meter))") { commit(value ?? 0) }
+                Button("Fix it", role: .cancel) {}
+            } message: {
+                Text("That's \(Format.reading((value ?? 0) - vehicle.reading, vehicle.meter)) more than last time, which is a lot. Check for an extra digit.")
             }
             .sheet(isPresented: $showingScanner) {
                 MeterScanner { scanned in
@@ -536,6 +611,12 @@ struct UpdateReadingSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+
+    private func commit(_ value: Double) {
+        garage.updateReading(vehicle, to: value)
+        Haptics.success()
+        dismiss()
     }
 }
 
