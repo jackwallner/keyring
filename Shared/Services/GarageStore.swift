@@ -451,6 +451,8 @@ final class GarageStore: ObservableObject {
     // MARK: - Service log
 
     struct ServiceDraft {
+        var kind: EntryKind = .service
+        var recallCampaign: String?
         var date: Date = .now
         var reading: Double?
         var taskIDs: [UUID] = []
@@ -473,10 +475,13 @@ final class GarageStore: ObservableObject {
             entry.loggedBy = ownerName
             entry.vehicle = vehicle
         }
+        entry.kind = draft.kind
+        entry.recallCampaign = draft.kind == .recall ? draft.recallCampaign : nil
         entry.date = draft.date
         entry.reading = draft.reading ?? -1
         entry.coveredTaskIDs = draft.taskIDs
-        entry.title = draft.title.trimmed.nilIfEmpty ?? title(for: draft.taskIDs, on: vehicle)
+        entry.title = draft.title.trimmed.nilIfEmpty
+            ?? (draft.kind == .repair && draft.taskIDs.isEmpty ? "Repair" : title(for: draft.taskIDs, on: vehicle))
         entry.cost = max(0, draft.cost)
         entry.shop = draft.isDIY ? nil : draft.shop.trimmed.nilIfEmpty
         entry.isDIY = draft.isDIY
@@ -496,6 +501,17 @@ final class GarageStore: ObservableObject {
         }
         save()
         return entry
+    }
+
+    /// Recall campaigns someone in the garage has logged as fixed.
+    func fixedRecalls(for vehicle: Vehicle) -> Set<String> {
+        Set((vehicle.entries ?? []).compactMap(\.recallCampaign))
+    }
+
+    /// Recalls still worth a look: not fixed by anyone, not dismissed here.
+    func openRecalls(_ recalls: [Recall], for vehicle: Vehicle) -> [Recall] {
+        let closed = fixedRecalls(for: vehicle).union(RecallLedger.reviewed(for: vehicle.id))
+        return recalls.filter { !closed.contains($0.campaign) }
     }
 
     func title(for taskIDs: [UUID], on vehicle: Vehicle) -> String {

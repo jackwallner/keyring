@@ -9,11 +9,14 @@ Every vehicle starts with a recommended schedule for its kind and powertrain: oi
 LOG IN SECONDS
 Tick what was done, add the mileage, cost and shop, and snap the receipt. Every checked job restarts its own countdown. Scan the odometer or VIN with your camera.
 
+REPAIRS AND RECALLS TOO
+Log unplanned repairs alongside maintenance and see what each one really costs. Keyring watches NHTSA for new safety recalls on your cars and lets you know when one is issued. Log the dealer fix and it's marked done for the whole family.
+
 EVERY KIND OF VEHICLE
 Cars, SUVs, trucks, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers.
 
 RECALLS, VALUE AND PARTS
-- Open safety recalls from NHTSA for your year, make and model
+- Safety recalls from NHTSA for your year, make and model, with an alert when a new one is issued
 - One tap to Kelley Blue Book, Edmunds or J.D. Power with your vehicle filled in, and a place to note what it's worth
 - The tools and parts for the job that's due next
 - Quick facts you always look up: oil type, tire size, wiper lengths, paint code

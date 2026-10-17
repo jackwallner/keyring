@@ -66,6 +66,7 @@ struct VehicleDetailView: View {
                     proxy.scrollTo("explore", anchor: .top)
                 }
             }
+            if recalls.isEmpty, let cached = RecallWatcher.cached(for: vehicle) { recalls = cached }
             await loadRecalls()
             // The recall banner can land above Explore once it loads.
             if ScreenshotConfig.value(after: "-ScreenshotRoute") == "explore" {
@@ -143,7 +144,7 @@ struct VehicleDetailView: View {
 
     @ViewBuilder
     private var recallBanner: some View {
-        let open = recalls.filter { !RecallLedger.reviewed(for: vehicle.id).contains($0.campaign) }
+        let open = garage.openRecalls(recalls, for: vehicle)
         if !open.isEmpty {
             NavigationLink {
                 RecallsView(vehicle: vehicle, recalls: recalls)
@@ -156,7 +157,7 @@ struct VehicleDetailView: View {
                         Text(open.count == 1 ? "1 safety recall may apply" : "\(open.count) safety recalls may apply")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
-                        Text("NHTSA lists these for the \(vehicle.descriptor). Check your VIN to see which are open.")
+                        Text(open.contains { $0.parkIt } ? "NHTSA says not to drive it until it's fixed. Check your VIN to see if yours is affected." : "NHTSA lists these for the \(vehicle.descriptor). Check your VIN, then log the fix.")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.leading)
@@ -174,6 +175,7 @@ struct VehicleDetailView: View {
         guard vehicle.kind.hasNHTSARecords, vehicle.year > 1980, let make = vehicle.make, let model = vehicle.model else { return }
         do {
             recalls = try await NHTSAClient.recalls(year: Int(vehicle.year), make: make, model: model)
+            RecallWatcher.record(recalls, for: vehicle)
             recallsFailed = false
         } catch {
             recallsFailed = true
@@ -258,7 +260,8 @@ struct VehicleDetailView: View {
     private var recallDetail: String {
         guard vehicle.year > 0, vehicle.make != nil else { return "Add year, make and model" }
         if recalls.isEmpty { return recallsFailed ? "Couldn't check" : "None listed" }
-        return Format.count(recalls.count, "may apply", "may apply")
+        let open = garage.openRecalls(recalls, for: vehicle).count
+        return open == 0 ? "All handled" : Format.count(open, "may apply", "may apply")
     }
 
     private func tile<Destination: View>(_ title: String, detail: String, symbol: String, @ViewBuilder destination: @escaping () -> Destination) -> some View {

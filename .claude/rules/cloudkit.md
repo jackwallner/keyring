@@ -29,7 +29,9 @@ CloudKit scheduler is unreachable from a shell process).
 `initializeCloudKitSchema` does not create `cloudkit.share`; run `--verify-share` in Development before deploying,
 or every real invite fails in Production with "Cannot create new type cloudkit.share". Public DB indexes needed:
 `OwnerPhoto.modelKey` queryable, `OwnerPhoto.createdTimestamp` sortable (deployed to Production 2026-10-16), `recordName` queryable on both. Deploy
-Development to Production in CloudKit Console after any model change. Never reset Production.
+Development to Production in CloudKit Console after any model change, before uploading a build that
+writes the new fields (Production rejects unknown fields and the export stalls for everyone). Never
+reset Production. `ServiceEntry.kindRaw` and `recallCampaign` were added 2026-10-16 (build 4).
 
 ## Sharing
 One `CKShare` per garage, `publicPermission = .readWrite` so a link or QR joins anyone (contact-only invites fail when

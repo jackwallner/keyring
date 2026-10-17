@@ -37,5 +37,7 @@ enum AppGroup {
         static let hideCosts = "hideCosts"
         static let lastOpenedVehicle = "lastOpenedVehicle"
         static let pendingFirstVehicle = "pendingFirstVehicle"
+        static let recallCache = "recallCache"
+        static let lastRecallCheck = "lastRecallCheck"
     }
 }

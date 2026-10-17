@@ -8,7 +8,12 @@ import Foundation
 enum KeyringModel {
     nonisolated(unsafe) static let model: NSManagedObjectModel = build()
 
-    private static func build() -> NSManagedObjectModel {
+    /// The model 1.0 builds 1 to 3 shipped, before entries had a kind. SQLite
+    /// stores carry their own model, so Core Data migrates them by itself;
+    /// this is kept so a test proves those logs still open.
+    nonisolated(unsafe) static let firstRelease: NSManagedObjectModel = build(entryKinds: false)
+
+    private static func build(entryKinds: Bool = true) -> NSManagedObjectModel {
         let garage = entity("Garage", Garage.self)
         let vehicle = entity("Vehicle", Vehicle.self)
         let task = entity("MaintenanceTask", MaintenanceTask.self)
@@ -71,7 +76,10 @@ enum KeyringModel {
             attr("isDIY", .booleanAttributeType, default: false),
             attr("notes", .stringAttributeType),
             attr("loggedBy", .stringAttributeType),
-        ]
+        ] + (entryKinds ? [
+            attr("kindRaw", .stringAttributeType, default: EntryKind.service.rawValue),
+            attr("recallCampaign", .stringAttributeType),
+        ] : [])
         attachment.properties = [
             attr("id", .UUIDAttributeType),
             attr("createdAt", .dateAttributeType),
@@ -325,8 +333,16 @@ final class ServiceEntry: NSManagedObject, Identifiable {
     @NSManaged var isDIY: Bool
     @NSManaged var notes: String?
     @NSManaged var loggedBy: String?
+    @NSManaged var kindRaw: String?
+    /// The NHTSA campaign a recall visit closed, so the whole family sees it fixed.
+    @NSManaged var recallCampaign: String?
     @NSManaged var vehicle: Vehicle?
     @NSManaged var attachments: Set<Attachment>?
+
+    var kind: EntryKind {
+        get { kindRaw.flatMap(EntryKind.init(rawValue:)) ?? .service }
+        set { kindRaw = newValue.rawValue }
+    }
 
     var coveredTaskIDs: [UUID] {
         get { (taskIDs ?? "").split(separator: "\n").compactMap { UUID(uuidString: String($0)) } }

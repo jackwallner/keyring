@@ -3,7 +3,8 @@ import StoreKit
 import SwiftUI
 
 /// Logging a job in a few taps: what was done, when, at what reading, who
-/// did it and what it cost. A receipt photo can fill most of it in.
+/// did it and what it cost. A receipt photo can fill most of it in. The same
+/// sheet logs planned maintenance, an unplanned repair, or a recall fix.
 struct LogServiceView: View {
     @EnvironmentObject private var garage: GarageStore
     @EnvironmentObject private var store: StoreService
@@ -13,6 +14,8 @@ struct LogServiceView: View {
     let vehicle: Vehicle
     var preselected: [UUID] = []
     var editing: ServiceEntry?
+    /// Logging the dealer visit that closed this recall.
+    var recall: Recall?
 
     @State private var draft = GarageStore.ServiceDraft()
     @State private var reading: Double?
@@ -31,23 +34,34 @@ struct LogServiceView: View {
     @State private var customJobs: [String] = []
     @State private var loaded = false
     @State private var confirmingJump = false
+    @State private var showingScheduled = false
 
     private var dues: [TaskDue] { garage.dues(for: vehicle) }
 
     var body: some View {
         NavigationStack {
             Form {
-                jobsSection
+                if draft.kind == .recall {
+                    recallSection
+                } else {
+                    if editing == nil || editing?.kind != .recall { kindPicker }
+                    if draft.kind == .repair {
+                        repairSection
+                        scheduledSection
+                    } else {
+                        jobsSection
+                    }
+                }
                 whenSection
                 whoSection
                 receiptSection
                 Section("Notes") {
-                    TextField("Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
+                    TextField(draft.kind == .repair ? "What went wrong, what the shop found, warranty" : "Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
                         .lineLimit(2...6)
                 }
             }
             .paperBackground()
-            .navigationTitle(editing == nil ? "Log service" : "Edit entry")
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -107,15 +121,87 @@ struct LogServiceView: View {
         }
     }
 
+    private var navigationTitle: String {
+        if editing != nil { return "Edit entry" }
+        switch draft.kind {
+        case .service: return "Log service"
+        case .repair: return "Log a repair"
+        case .recall: return "Log the recall fix"
+        }
+    }
+
     private var canSave: Bool {
-        !selected.isEmpty || !customJobs.isEmpty || !draft.title.trimmed.isEmpty || !draft.notes.trimmed.isEmpty || (cost ?? 0) > 0
+        if draft.kind == .recall { return true }
+        if draft.kind == .repair { return !draft.title.trimmed.isEmpty }
+        return !selected.isEmpty || !customJobs.isEmpty || !draft.title.trimmed.isEmpty || !draft.notes.trimmed.isEmpty || (cost ?? 0) > 0
     }
 
     // MARK: - Sections
 
-    private var jobsSection: some View {
+    private var kindPicker: some View {
         Section {
-            ForEach(dues) { due in
+            Picker("Kind", selection: $draft.kind.animation(.snappy)) {
+                Text("Maintenance").tag(EntryKind.service)
+                Text("Repair").tag(EntryKind.repair)
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+            .accessibilityIdentifier("log.kind")
+        }
+    }
+
+    private var repairSection: some View {
+        Section {
+            TextField("Alternator, flat tire, cracked windshield", text: $draft.title)
+                .accessibilityIdentifier("log.repairTitle")
+        } header: {
+            Text("What was fixed")
+        } footer: {
+            Text("Repairs are kept apart from maintenance, so you can see what unplanned work really costs.")
+        }
+    }
+
+    private var scheduledSection: some View {
+        Section {
+            if showingScheduled || !selected.isEmpty {
+                dueRows
+            } else {
+                Button { withAnimation(.snappy) { showingScheduled = true } } label: {
+                    Label("Scheduled work done on the same visit", systemImage: "plus")
+                }
+            }
+        } header: {
+            if showingScheduled || !selected.isEmpty { Text("Scheduled work on the same visit") }
+        } footer: {
+            if !selected.isEmpty { Text("Each checked job restarts its countdown.") }
+        }
+    }
+
+    private var recallSection: some View {
+        Section {
+            if let recall {
+                VStack(alignment: .leading, spacing: 3) {
+                    Label { Text(recall.componentTitle) } icon: { Image(systemName: EntryKind.recall.symbol).foregroundStyle(Theme.overdue) }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                    Text("NHTSA campaign \(recall.campaign)")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                .padding(.vertical, 2)
+            }
+            TextField("Title", text: $draft.title)
+        } header: {
+            Text("Safety recall")
+        } footer: {
+            Text("Recall repairs are free at a dealer. Logging it marks the recall fixed for everyone in the garage.")
+        }
+    }
+
+    @ViewBuilder
+    private var dueRows: some View {
+        ForEach(dues) { due in
                 Button {
                     Haptics.selected()
                     if selected.contains(due.taskID) { selected.remove(due.taskID) } else { selected.insert(due.taskID) }
@@ -138,7 +224,12 @@ struct LogServiceView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected.contains(due.taskID) ? .isSelected : [])
-            }
+        }
+    }
+
+    private var jobsSection: some View {
+        Section {
+            dueRows
             ForEach(customJobs, id: \.self) { name in
                 HStack(spacing: Theme.sm) {
                     Image(systemName: "checkmark.circle.fill")
@@ -192,7 +283,7 @@ struct LogServiceView: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
             if !draft.isDIY {
-                TextField("Shop name", text: $draft.shop)
+                TextField(draft.kind == .recall ? "Dealer" : "Shop name", text: $draft.shop)
                     .textContentType(.organizationName)
                 if draft.shop.isEmpty, !recentShops.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -300,6 +391,8 @@ struct LogServiceView: View {
         guard !loaded else { return }
         loaded = true
         if let editing {
+            draft.kind = editing.kind
+            draft.recallCampaign = editing.recallCampaign
             draft.date = editing.date ?? .now
             draft.title = editing.title ?? ""
             draft.shop = editing.shop ?? ""
@@ -309,7 +402,11 @@ struct LogServiceView: View {
             cost = editing.cost > 0 ? editing.cost : nil
             selected = Set(editing.coveredTaskIDs)
             // A custom title that matches the generated one stays generated.
-            if draft.title == garage.title(for: editing.coveredTaskIDs, on: vehicle) { draft.title = "" }
+            if editing.kind == .service, draft.title == garage.title(for: editing.coveredTaskIDs, on: vehicle) { draft.title = "" }
+        } else if let recall {
+            draft.kind = .recall
+            draft.recallCampaign = recall.campaign
+            draft.title = "Recall: \(recall.componentTitle.lowercased())"
         } else {
             selected = Set(preselected)
             #if DEBUG
@@ -357,7 +454,7 @@ struct LogServiceView: View {
     }
 
     private func save() {
-        if draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
+        if draft.kind == .service, draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
         draft.reading = reading
         draft.cost = cost ?? 0
         draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }

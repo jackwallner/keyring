@@ -283,3 +283,28 @@ extension VehicleTint {
         }
     }
 }
+
+/// What a logged visit was. Maintenance is planned and restarts schedule
+/// countdowns; a repair is the unplanned kind; a recall visit closes an NHTSA
+/// campaign. Kept apart so the real cost of owning something shows.
+enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
+    case service, repair, recall
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .service: "Maintenance"
+        case .repair: "Repair"
+        case .recall: "Recall"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .service: "wrench.and.screwdriver.fill"
+        case .repair: "hammer.fill"
+        case .recall: "exclamationmark.shield.fill"
+        }
+    }
+}

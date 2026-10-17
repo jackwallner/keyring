@@ -50,6 +50,8 @@ final class ReminderScheduler {
         var title: String
         var body: String
         var fireDate: Date
+        /// The vehicle a tap opens. The weekend roll-up spans several, so it has none.
+        var vehicleID: String?
     }
 
     /// Pure planning, so the rules are testable without a notification center.
@@ -73,7 +75,8 @@ final class ReminderScheduler {
                     id: "week-\(vehicleID)-\(due.taskID.uuidString)",
                     title: "\(vehicle): \(due.name)",
                     body: "Coming due \(approximate)next week. Book it now and it's one less thing.",
-                    fireDate: weekBefore
+                    fireDate: weekBefore,
+                    vehicleID: vehicleID
                 ))
             }
             let onDay = atHour(dueDate)
@@ -84,7 +87,8 @@ final class ReminderScheduler {
                     body: due.result.dateIsEstimated
                         ? "Should be due about now, going by your usual pace. Tap to log it or update the meter."
                         : "Due today. Tap to log it when it's done.",
-                    fireDate: onDay
+                    fireDate: onDay,
+                    vehicleID: vehicleID
                 ))
             }
         }
@@ -127,6 +131,7 @@ final class ReminderScheduler {
                 content.title = item.title
                 content.body = item.body
                 content.sound = .default
+                if let vehicleID = item.vehicleID { content.userInfo = ["vehicleID": vehicleID] }
                 let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: item.fireDate)
                 let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
                 try? await center.add(UNNotificationRequest(identifier: item.id, content: content, trigger: trigger))

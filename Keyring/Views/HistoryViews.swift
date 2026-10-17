@@ -83,7 +83,7 @@ struct HistoryView: View {
         let query = search.trimmed.lowercased()
         if !query.isEmpty {
             entries = entries.filter { entry in
-                [entry.title, entry.shop, entry.notes, entry.loggedBy, entry.vehicle?.displayName]
+                [entry.title, entry.shop, entry.notes, entry.loggedBy, entry.vehicle?.displayName, entry.kind == .service ? nil : entry.kind.title]
                     .compactMap { $0?.lowercased() }
                     .contains { $0.contains(query) }
             }
@@ -191,6 +191,7 @@ struct EntryRow: View {
 
     private var subtitle: String {
         var parts: [String] = []
+        if entry.kind != .service { parts.append(entry.kind.title) }
         if showsVehicle, let vehicle = entry.vehicle { parts.append(vehicle.displayName) }
         if entry.hasReading, let meter = entry.vehicle?.meter, meter.hasReading { parts.append(Format.reading(entry.reading, meter)) }
         if entry.isDIY { parts.append("DIY") } else if let shop = entry.shop { parts.append(shop) }
@@ -216,7 +217,7 @@ struct EntryDetailView: View {
             if let vehicle = entry.vehicle, !entry.isDeleted {
                 VStack(alignment: .leading, spacing: Theme.lg) {
                     VStack(alignment: .leading, spacing: Theme.xs) {
-                        Eyebrow(text: vehicle.displayName, color: Theme.brass)
+                        Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: entry.kind == .service ? Theme.brass : Theme.overdue)
                         Text(entry.title ?? "Service")
                             .font(Theme.title(28))
                             .foregroundStyle(Theme.ink)
@@ -238,6 +239,19 @@ struct EntryDetailView: View {
                                         .font(.subheadline)
                                         .foregroundStyle(Theme.ink)
                                 }
+                            }
+                            .card()
+                        }
+                    }
+
+                    if let campaign = entry.recallCampaign, let url = URL(string: "https://www.nhtsa.gov/recalls?nhtsaId=\(campaign)") {
+                        Link(destination: url) {
+                            HStack {
+                                Label("NHTSA campaign \(campaign)", systemImage: EntryKind.recall.symbol)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.ink)
+                                Spacer()
+                                Image(systemName: "arrow.up.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
                             }
                             .card()
                         }

@@ -211,11 +211,13 @@ struct ClubsView: View {
 // MARK: - Recalls
 
 struct RecallsView: View {
+    @EnvironmentObject private var garage: GarageStore
     @ObservedObject var vehicle: Vehicle
     @State var recalls: [Recall]
     @State private var loading = false
     @State private var failed = false
-    @State private var reviewed: Set<String> = []
+    @State private var dismissed: Set<String> = []
+    @State private var fixing: Recall?
 
     var body: some View {
         List {
@@ -228,7 +230,7 @@ struct RecallsView: View {
                 EmptyStateView(symbol: "wifi.exclamationmark", title: "Couldn't reach NHTSA", message: "Check your connection and pull to try again.")
                     .listRowBackground(Color.clear)
             } else if recalls.isEmpty {
-                EmptyStateView(symbol: "checkmark.shield", title: "No recalls on file", message: "NHTSA lists no safety recalls for the \(vehicle.descriptor). Keyring checks again each time you open this vehicle.")
+                EmptyStateView(symbol: "checkmark.shield", title: "No recalls on file", message: "NHTSA lists no safety recalls for the \(vehicle.descriptor). Keyring keeps checking and lets you know if one is issued.")
                     .listRowBackground(Color.clear)
             } else {
                 Section {
@@ -242,15 +244,21 @@ struct RecallsView: View {
                 }
                 Section {
                     ForEach(recalls) { recall in
-                        RecallRow(recall: recall, reviewed: reviewed.contains(recall.campaign)) { done in
-                            RecallLedger.setReviewed(recall.campaign, done, for: vehicle.id)
-                            reviewed = RecallLedger.reviewed(for: vehicle.id)
-                        }
+                        RecallRow(
+                            recall: recall,
+                            fix: fixEntry(for: recall),
+                            dismissed: dismissed.contains(recall.campaign),
+                            logFix: { fixing = recall },
+                            setDismissed: { value in
+                                RecallLedger.setReviewed(recall.campaign, value, for: vehicle.id)
+                                dismissed = RecallLedger.reviewed(for: vehicle.id)
+                            }
+                        )
                     }
                 } header: {
                     Text(Format.count(recalls.count, "recall", "recalls") + " for this model")
                 } footer: {
-                    Text("From NHTSA. Recall repairs are free at a dealer.")
+                    Text("From NHTSA. Recall repairs are free at a dealer. Logging the fix adds it to the history, so everyone in the garage and any buyer sees it was done.")
                 }
             }
         }
@@ -259,9 +267,17 @@ struct RecallsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task {
-            reviewed = RecallLedger.reviewed(for: vehicle.id)
+            dismissed = RecallLedger.reviewed(for: vehicle.id)
             if recalls.isEmpty { await load() }
         }
+        .sheet(item: $fixing) { recall in
+            LogServiceView(vehicle: vehicle, recall: recall)
+        }
+    }
+
+    private func fixEntry(for recall: Recall) -> ServiceEntry? {
+        _ = garage.revision
+        return (vehicle.entries ?? []).first { $0.recallCampaign == recall.campaign && !$0.isDeleted }
     }
 
     private func load() async {
@@ -269,6 +285,7 @@ struct RecallsView: View {
         loading = true
         do {
             recalls = try await NHTSAClient.recalls(year: Int(vehicle.year), make: make, model: model)
+            RecallWatcher.record(recalls, for: vehicle)
             failed = false
         } catch {
             failed = true
@@ -279,9 +296,13 @@ struct RecallsView: View {
 
 private struct RecallRow: View {
     let recall: Recall
-    let reviewed: Bool
-    let setReviewed: (Bool) -> Void
+    let fix: ServiceEntry?
+    let dismissed: Bool
+    let logFix: () -> Void
+    let setDismissed: (Bool) -> Void
     @State private var expanded = false
+
+    private var closed: Bool { fix != nil || dismissed }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.xs) {
@@ -289,7 +310,7 @@ private struct RecallRow: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
-                            if recall.parkIt || recall.parkOutside {
+                            if !closed, recall.parkIt || recall.parkOutside {
                                 Text(recall.parkIt ? "DO NOT DRIVE" : "PARK OUTSIDE")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(.white)
@@ -298,12 +319,11 @@ private struct RecallRow: View {
                             }
                             Text(recall.componentTitle)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(reviewed ? Theme.secondaryInk : Theme.ink)
-                                .strikethrough(reviewed)
+                                .foregroundStyle(closed ? Theme.secondaryInk : Theme.ink)
                         }
-                        Text([recall.campaign, recall.reported.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · "))
+                        Text(statusLine)
                             .font(.caption)
-                            .foregroundStyle(Theme.secondaryInk)
+                            .foregroundStyle(fix != nil ? Theme.good : Theme.secondaryInk)
                     }
                     Spacer()
                     Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.footnote).foregroundStyle(Theme.faintInk)
@@ -319,16 +339,33 @@ private struct RecallRow: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(Theme.ink)
-                HStack {
-                    Button(reviewed ? "Mark as open" : "Done or doesn't apply") { setReviewed(!reviewed) }
-                        .font(.footnote.weight(.semibold))
-                        .buttonStyle(.borderless)
-                    Spacer()
-                    Link("NHTSA", destination: recall.nhtsaURL).font(.footnote.weight(.semibold))
+                Link("Read it at NHTSA", destination: recall.nhtsaURL).font(.footnote.weight(.semibold))
+            }
+            if fix == nil {
+                HStack(spacing: Theme.md) {
+                    if dismissed {
+                        Button("Undo") { setDismissed(false) }
+                    } else {
+                        Button("Log the fix", action: logFix)
+                        Button("Doesn't apply") { setDismissed(true) }
+                            .foregroundStyle(Theme.secondaryInk)
+                    }
                 }
+                .font(.footnote.weight(.semibold))
+                .buttonStyle(.borderless)
+                .padding(.top, 2)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private var statusLine: String {
+        if let fix {
+            let date = fix.date.map(Format.shortDate) ?? ""
+            return ["Fixed \(date)", fix.shop].compactMap { $0 }.joined(separator: " · ")
+        }
+        let base = [recall.campaign, recall.reported.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · ")
+        return dismissed ? "Doesn't apply · \(base)" : base
     }
 }
 
@@ -635,6 +672,16 @@ struct InsightsView: View {
                     breakdown("Biggest jobs", insights.byJob, total: insights.lastTwelveMonths)
                 }
                 if insights.lastTwelveMonths > 0 {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Eyebrow(text: "Maintenance vs. repairs")
+                            Text("\(Format.money(insights.lastTwelveMonths - insights.repairs)) planned · \(Format.money(insights.repairs)) unplanned")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        Spacer()
+                        Image(systemName: EntryKind.repair.symbol).foregroundStyle(Theme.brass)
+                    }
+                    .card()
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Eyebrow(text: "Done yourself")

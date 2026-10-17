@@ -14,6 +14,8 @@ enum RecordBuilder {
                 .map(\.displayName)
             let title = entry.title ?? "Service"
             var details: [String] = []
+            if entry.kind == .repair { details.append("Repair") }
+            if entry.kind == .recall, let campaign = entry.recallCampaign { details.append("Safety recall, NHTSA \(campaign)") }
             if covered.count > 1 || (covered.count == 1 && covered[0] != title) {
                 details.append(covered.joined(separator: ", "))
             }
@@ -73,7 +75,7 @@ enum RecordBuilder {
 /// Every entry as a spreadsheet. Free, always: a log you can't take with you
 /// isn't yours.
 enum CSVExport {
-    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by"]
+    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Type", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by"]
 
     @MainActor
     static func csv(for vehicles: [Vehicle]) -> String {
@@ -92,6 +94,7 @@ enum CSVExport {
                     entry.date.map(formatter.string(from:)) ?? "",
                     entry.hasReading ? String(Int(entry.reading.rounded())) : "",
                     vehicle.meter.short,
+                    entry.kind.title,
                     entry.title ?? "",
                     covered.joined(separator: "; "),
                     entry.cost > 0 ? String(format: "%.2f", entry.cost) : "",
@@ -144,6 +147,8 @@ struct CostInsights: Equatable {
     var byVehicle: [Slice]
     var byJob: [Slice]
     var diyShare: Double
+    /// Unplanned repairs, last 12 months: the number owners most want to see.
+    var repairs: Double
     var costPerDistance: Double?
     var distanceUnit: String
 
@@ -170,6 +175,7 @@ struct CostInsights: Equatable {
         for (_, entry) in recent where entry.cost > 0 { jobTotals[entry.title ?? "Service", default: 0] += entry.cost }
 
         let diy = recent.filter { $0.1.isDIY }.reduce(0) { $0 + $1.1.cost }
+        let repairs = recent.filter { $0.1.kind == .repair }.reduce(0) { $0 + $1.1.cost }
 
         // Cost per mile from distance-metered vehicles with enough history.
         var distance = 0.0
@@ -191,6 +197,7 @@ struct CostInsights: Equatable {
             byVehicle: vehicleTotals.map { Slice(name: $0.key, total: $0.value) }.sorted { $0.total > $1.total },
             byJob: jobTotals.map { Slice(name: $0.key, total: $0.value) }.sorted { $0.total > $1.total }.prefix(6).map { $0 },
             diyShare: lastYear > 0 ? diy / lastYear : 0,
+            repairs: repairs,
             costPerDistance: distance > 0 ? spend / distance : nil,
             distanceUnit: unit
         )

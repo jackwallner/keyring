@@ -1,7 +1,9 @@
+import BackgroundTasks
 import CloudKit
 import StoreKit
 import SwiftUI
 import UIKit
+import UserNotifications
 
 @main
 struct KeyringApp: App {
@@ -62,13 +64,34 @@ struct KeyringApp: App {
                     #endif
                     store.start()
                     await sharing.refresh()
+                    await RecallWatcher.checkIfDue(store: garage)
                 }
                 .onChange(of: scenePhase) { _, phase in
+                    if phase == .background { KeyringApp.scheduleRecallRefresh() }
                     guard phase == .active else { return }
                     garage.reload()
-                    Task { await sharing.refresh() }
+                    Task {
+                        await sharing.refresh()
+                        await RecallWatcher.checkIfDue(store: garage)
+                    }
                 }
         }
+        .backgroundTask(.appRefresh(RecallWatcher.refreshTaskID)) {
+            await KeyringApp.refreshRecallsInBackground()
+        }
+    }
+
+    /// iOS picks the moment; asking for twice a day keeps a new recall within a day or so.
+    static func scheduleRecallRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: RecallWatcher.refreshTaskID)
+        request.earliestBeginDate = .now.addingTimeInterval(RecallWatcher.minimumGap)
+        try? BGTaskScheduler.shared.submit(request)
+    }
+
+    @MainActor
+    static func refreshRecallsInBackground() async {
+        scheduleRecallRefresh()
+        await RecallWatcher.check(store: GarageStore.shared)
     }
 }
 
@@ -97,6 +120,11 @@ enum Appearance: String, CaseIterable, Identifiable {
 /// CloudKit delivers an accepted share to the scene delegate in a SwiftUI
 /// app, so both entry points are routed to `SharingService`.
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        return true
+    }
+
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
@@ -148,6 +176,7 @@ struct MainTabView: View {
     enum Tab: Hashable { case garage, history, settings }
 
     @State private var tab: Tab = MainTabView.initialTab
+    @ObservedObject private var router = NotificationRouter.shared
 
     var body: some View {
         TabView(selection: $tab) {
@@ -161,6 +190,7 @@ struct MainTabView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(Tab.settings)
         }
+        .onReceive(router.$destination.compactMap { $0 }) { _ in tab = .garage }
     }
 
     static var initialTab: Tab {

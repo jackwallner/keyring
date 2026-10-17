@@ -7,6 +7,7 @@ struct GarageView: View {
     @EnvironmentObject private var garage: GarageStore
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var sharing: SharingService
+    @ObservedObject private var router = NotificationRouter.shared
 
     @State private var path = NavigationPath()
     @State private var showingAdd = false
@@ -33,6 +34,7 @@ struct GarageView: View {
                     )
                     .padding(.top, Theme.xxl)
                 } else {
+                    recallsCard
                     attention
                     ForEach(sections, id: \.title) { section in
                         if sections.count > 1 {
@@ -72,6 +74,20 @@ struct GarageView: View {
             if let vehicle = garage.vehicles.first(where: { $0.objectID == id }) ?? garage.retiredVehicles.first(where: { $0.objectID == id }) {
                 VehicleDetailView(vehicle: vehicle)
             }
+        }
+        .navigationDestination(for: RecallRoute.self) { route in
+            if let vehicle = garage.vehicles.first(where: { $0.objectID == route.vehicle }) {
+                RecallsView(vehicle: vehicle, recalls: RecallWatcher.cached(for: vehicle) ?? [])
+            }
+        }
+        .onReceive(router.$destination.compactMap { $0 }) { destination in
+            Task { @MainActor in router.destination = nil }
+            guard let vehicle = garage.vehicles.first(where: { $0.id == destination.vehicleID }) else { return }
+            logging = nil
+            var route = NavigationPath()
+            route.append(vehicle.objectID)
+            if destination.showsRecalls { route.append(RecallRoute(vehicle: vehicle.objectID)) }
+            path = route
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -113,6 +129,43 @@ struct GarageView: View {
         let loose = garage.vehicles.filter { !placed.contains($0.objectID) }
         if !loose.isEmpty { result.append(("Vehicles", loose)) }
         return result
+    }
+
+    /// Open safety recalls, from the last NHTSA check, above everything else.
+    @ViewBuilder
+    private var recallsCard: some View {
+        let items = garage.vehicles.compactMap { vehicle -> (Vehicle, [Recall])? in
+            guard let cached = RecallWatcher.cached(for: vehicle) else { return nil }
+            let open = garage.openRecalls(cached, for: vehicle)
+            return open.isEmpty ? nil : (vehicle, open)
+        }
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.sm) {
+                Eyebrow(text: "Safety recalls", color: Theme.overdue)
+                ForEach(items, id: \.0.objectID) { vehicle, open in
+                    NavigationLink(value: RecallRoute(vehicle: vehicle.objectID)) {
+                        HStack(spacing: Theme.sm) {
+                            Image(systemName: open.contains { $0.parkIt } ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(Theme.overdue)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("\(vehicle.displayName): \(open.count == 1 ? open[0].componentTitle : "\(open.count) recalls")")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.ink)
+                                    .lineLimit(2)
+                                Text(open.contains { $0.parkIt } ? "NHTSA says don't drive it until it's fixed" : "May apply. Check your VIN, then log the fix")
+                                    .font(.footnote)
+                                    .foregroundStyle(Theme.secondaryInk)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .card()
+        }
     }
 
     /// Overdue and due-soon jobs across every vehicle, most urgent first.
@@ -213,6 +266,11 @@ struct GarageView: View {
             break
         }
     }
+}
+
+/// A vehicle's recall list, pushed from the garage or a notification.
+struct RecallRoute: Hashable {
+    let vehicle: NSManagedObjectID
 }
 
 /// Opening the log sheet, with the jobs to tick already ticked.

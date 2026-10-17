@@ -183,6 +183,74 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(due.result.dueReading, 57_700)
     }
 
+    /// The 1.0 builds on TestFlight wrote stores without entry kinds. Those
+    /// logs have to open with the current model, untouched.
+    func testAStoreFromTheFirstModelOpensWithTheCurrentOne() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let old = KeyringModel.firstRelease
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: old)
+        let url = directory.appendingPathComponent("private.sqlite")
+        try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: url, options: nil)
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        let vehicle = NSManagedObject(entity: old.entitiesByName["Vehicle"]!, insertInto: context)
+        vehicle.setValue(UUID(), forKey: "id")
+        vehicle.setValue("Civic", forKey: "model")
+        let entry = NSManagedObject(entity: old.entitiesByName["ServiceEntry"]!, insertInto: context)
+        entry.setValue(UUID(), forKey: "id")
+        entry.setValue("Oil and filter", forKey: "title")
+        entry.setValue(vehicle, forKey: "vehicle")
+        try context.save()
+        try coordinator.remove(coordinator.persistentStores[0])
+
+        let persistence = Persistence(cloudKit: false, directory: directory)
+        XCTAssertFalse(persistence.isStandingIn)
+        let entries = try persistence.container.viewContext.fetch(NSFetchRequest<ServiceEntry>(entityName: "ServiceEntry"))
+        XCTAssertEqual(entries.map(\.title), ["Oil and filter"])
+        XCTAssertEqual(entries.first?.kind, .service)
+        XCTAssertEqual(entries.first?.vehicle?.model, "Civic")
+    }
+
+    func testRepairsAndRecallFixesAreKeptApart() {
+        let store = makeStore()
+        let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Honda", model: "Civic", reading: 50_000))
+        var repair = GarageStore.ServiceDraft()
+        repair.kind = .repair
+        repair.cost = 640
+        let entry = store.log(repair, for: vehicle)
+        XCTAssertEqual(entry.kind, .repair)
+        XCTAssertEqual(entry.title, "Repair")
+        XCTAssertNil(entry.recallCampaign)
+
+        var oil = GarageStore.ServiceDraft()
+        oil.taskIDs = [vehicle.enabledTasks.first { $0.catalogKey == "oil" }!.id!]
+        oil.cost = 90
+        store.log(oil, for: vehicle)
+        let insights = CostInsights.compute(vehicles: [vehicle])
+        XCTAssertEqual(insights.repairs, 640)
+        XCTAssertEqual(insights.lastTwelveMonths, 730)
+
+        let airbag = Recall(campaign: "24V001000", component: "AIR BAGS", summary: "", consequence: "", remedy: "", reported: nil, parkIt: true, parkOutside: false)
+        let pump = Recall(campaign: "24V002000", component: "FUEL PUMP", summary: "", consequence: "", remedy: "", reported: nil, parkIt: false, parkOutside: false)
+        XCTAssertEqual(store.openRecalls([airbag, pump], for: vehicle).count, 2)
+        var fix = GarageStore.ServiceDraft()
+        fix.kind = .recall
+        fix.recallCampaign = airbag.campaign
+        fix.title = "Recall: air bags"
+        store.log(fix, for: vehicle)
+        XCTAssertEqual(store.openRecalls([airbag, pump], for: vehicle).map(\.campaign), [pump.campaign])
+        XCTAssertTrue(CSVExport.csv(for: [vehicle]).contains(",Recall,Recall: air bags,"))
+    }
+
+    func testOnlyRecallsMissingFromTheLastCheckAreNew() {
+        let a = Recall(campaign: "A", component: "X", summary: "", consequence: "", remedy: "", reported: nil, parkIt: false, parkOutside: false)
+        let b = Recall(campaign: "B", component: "Y", summary: "", consequence: "", remedy: "", reported: nil, parkIt: false, parkOutside: false)
+        XCTAssertTrue(RecallWatcher.newRecalls([a, b], since: nil).isEmpty, "the first look sets a baseline")
+        XCTAssertEqual(RecallWatcher.newRecalls([a, b], since: [a]).map(\.campaign), ["B"])
+        XCTAssertTrue(RecallWatcher.newRecalls([a], since: [a, b]).isEmpty)
+    }
+
     func testLoggingWithoutAReadingUsesTodaysMeter() {
         let store = makeStore()
         let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 50_000))
