@@ -266,7 +266,7 @@ struct VehicleDetailsForm: View {
                 }
             }
 
-            Section("Vehicle") {
+            Section {
                 LabeledContent("Year") {
                     NumberField(title: "Year", value: $yearValue, grouping: false)
                         .multilineTextAlignment(.trailing)
@@ -276,15 +276,10 @@ struct VehicleDetailsForm: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
                             ForEach(Makes.common(for: draft.kind), id: \.self) { make in
-                                Button(make) {
+                                SuggestionChip(make) {
                                     draft.make = make
                                     Haptics.selected()
                                 }
-                                .font(.footnote.weight(.semibold))
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(Theme.raised, in: Capsule())
-                                .foregroundStyle(Theme.ink)
-                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -295,6 +290,10 @@ struct VehicleDetailsForm: View {
                 }
                 textRow("Trim", prompt: "Optional", text: $draft.trim, field: .trim)
                 textRow("Nickname", prompt: "Optional", text: $draft.nickname, field: .nickname)
+            } header: {
+                Text("Vehicle")
+            } footer: {
+                if yearOutOfRange { Text("Enter a year between 1900 and \(Self.maxYear), or leave it empty.") }
             }
             .toolbar {
                 if focus == .model, !modelMatches.isEmpty {
@@ -409,7 +408,7 @@ struct VehicleDetailsForm: View {
                 .listRowInsets(EdgeInsets())
                 .accessibilityIdentifier("vehicle.continue")
             } footer: {
-                if !isValid { Text("Give it a make, a model or a nickname.") }
+                if yearOutOfRange { Text("Fix the year first.") } else if !isValid { Text("Give it a make, a model or a nickname.") }
             }
         }
         .paperBackground()
@@ -524,11 +523,20 @@ struct VehicleDetailsForm: View {
     }
 
     private var isValid: Bool {
-        !draft.make.trimmed.isEmpty || !draft.model.trimmed.isEmpty || !draft.nickname.trimmed.isEmpty
+        (!draft.make.trimmed.isEmpty || !draft.model.trimmed.isEmpty || !draft.nickname.trimmed.isEmpty) && !yearOutOfRange
+    }
+
+    /// Next year's models are on sale from late summer.
+    static let maxYear = Calendar.current.component(.year, from: .now) + 1
+
+    /// Typed but not a year the app can use, so it would otherwise be dropped quietly.
+    private var yearOutOfRange: Bool {
+        guard let yearValue else { return false }
+        return !(1900...Self.maxYear).contains(Int(yearValue))
     }
 
     private func commitNumbers() {
-        draft.year = yearValue.map { Int($0) }.flatMap { (1900...2100).contains($0) ? $0 : nil } ?? 0
+        draft.year = yearValue.map { Int($0) }.flatMap { (1900...Self.maxYear).contains($0) ? $0 : nil } ?? 0
         draft.reading = reading ?? 0
     }
 
@@ -674,19 +682,23 @@ struct EditVehicleView: View {
     /// Filled before the form first appears, so its year and meter fields
     /// start from the vehicle rather than blank.
     @State private var draft: NewVehicle
+    private let original: NewVehicle
 
     init(vehicle: Vehicle) {
         self.vehicle = vehicle
-        _draft = State(initialValue: NewVehicle(
+        let draft = NewVehicle(
             kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
             year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
             nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
             reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", yearlyUse: vehicle.yearlyUse,
             photo: vehicle.photo, tint: vehicle.tint
-        ))
+        )
+        _draft = State(initialValue: draft)
+        original = draft
     }
 
     @State private var confirmingMeter = false
+    @State private var confirmingDiscard = false
 
     var body: some View {
         NavigationStack {
@@ -694,7 +706,12 @@ struct EditVehicleView: View {
                 draft: $draft, buttonTitle: "Save", title: "Edit \(vehicle.displayName)",
                 meterLocked: garage.isShared(vehicle), infersPowertrain: false, next: attemptSave
             )
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { if draft != original { confirmingDiscard = true } else { dismiss() } }
+                }
+            }
+            .discardGuard(isDirty: draft != original, confirming: $confirmingDiscard) { dismiss() }
             .confirmationDialog(meterWarningTitle, isPresented: $confirmingMeter, titleVisibility: .visible) {
                 Button("Switch to \(draft.meter.title.lowercased())", role: .destructive, action: save)
                 Button("Keep \(vehicle.meter.title.lowercased())", role: .cancel) { draft.meter = vehicle.meter }
@@ -755,6 +772,7 @@ struct EditVehicleView: View {
             garage.addCatalogItems(core, to: vehicle)
             garage.switchOffInapplicableTasks(on: vehicle)
         }
+        Haptics.success()
         dismiss()
     }
 }

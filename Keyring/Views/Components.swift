@@ -333,6 +333,57 @@ struct SharedFile: Identifiable {
 // MARK: - Haptics
 
 @MainActor
+/// A recent shop, station or make, one tap to fill the field. The capsule is
+/// small; the tap area is a full row's height.
+struct SuggestionChip: View {
+    let title: String
+    let action: () -> Void
+
+    init(_ title: String, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Theme.raised, in: Capsule())
+                .foregroundStyle(Theme.ink)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// A sheet with typed-in work asks before a swipe or Cancel throws it away.
+/// `cancel` is what the Cancel button calls: it asks when dirty, else dismisses.
+struct DiscardGuard: ViewModifier {
+    let isDirty: Bool
+    @Binding var confirming: Bool
+    let discard: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .interactiveDismissDisabled(isDirty)
+            .confirmationDialog("Discard changes?", isPresented: $confirming, titleVisibility: .visible) {
+                Button("Discard changes", role: .destructive, action: discard)
+                Button("Keep editing", role: .cancel) {}
+            } message: {
+                Text("What you've entered here won't be saved.")
+            }
+    }
+}
+
+extension View {
+    func discardGuard(isDirty: Bool, confirming: Binding<Bool>, discard: @escaping () -> Void) -> some View {
+        modifier(DiscardGuard(isDirty: isDirty, confirming: confirming, discard: discard))
+    }
+}
+
 enum Haptics {
     static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
     static func selected() { UISelectionFeedbackGenerator().selectionChanged() }
@@ -367,7 +418,14 @@ struct NumberField: View {
                 .focused($focused)
                 .font(Theme.figure(17, weight: .regular))
                 .onChange(of: text) { _, newValue in
-                    value = Self.parse(newValue)
+                    // The display echoes back on appear; a value that reads the
+                    // same stays as it was, so a form it sits in isn't marked edited.
+                    let parsed = Self.parse(newValue)
+                    guard parsed != value,
+                          Self.display(parsed, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping, fractionDigits: fractionDigits)
+                            != Self.display(value, allowsDecimal: allowsDecimal, isCurrency: isCurrency, grouping: grouping, fractionDigits: fractionDigits)
+                    else { return }
+                    value = parsed
                 }
             if !suffix.isEmpty {
                 Text(suffix).foregroundStyle(Theme.secondaryInk)

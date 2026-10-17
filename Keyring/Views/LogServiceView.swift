@@ -38,6 +38,24 @@ struct LogServiceView: View {
     @State private var showingScheduled = false
     @State private var addingAnother = false
     @State private var savedInRow = 0
+    @State private var baseline: Snapshot?
+    @State private var confirmingDiscard = false
+
+    /// Everything the owner can type or pick, compared against the form as it opened.
+    private struct Snapshot: Equatable {
+        var draft: GarageStore.ServiceDraft
+        var reading: Double?
+        var auxReading: Double?
+        var cost: Double?
+        var selected: Set<UUID>
+        var customJobs: [String]
+    }
+
+    private var snapshot: Snapshot {
+        Snapshot(draft: draft, reading: reading, auxReading: auxReading, cost: cost, selected: selected, customJobs: customJobs)
+    }
+
+    private var isDirty: Bool { baseline.map { $0 != snapshot } ?? false }
 
     private var dues: [TaskDue] { garage.dues(for: vehicle) }
 
@@ -81,7 +99,9 @@ struct LogServiceView: View {
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { if isDirty { confirmingDiscard = true } else { dismiss() } }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { attemptSave(another: false) }
                         .fontWeight(.semibold)
@@ -90,6 +110,7 @@ struct LogServiceView: View {
                 }
             }
             .onAppear(perform: load)
+            .discardGuard(isDirty: isDirty, confirming: $confirmingDiscard) { dismiss() }
             .confirmationDialog("Save at \(Format.reading(reading ?? 0, vehicle.meter))?", isPresented: $confirmingJump, titleVisibility: .visible) {
                 Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))") { save() }
                 Button("Fix it", role: .cancel) {}
@@ -259,6 +280,8 @@ struct LogServiceView: View {
                         customJobs.removeAll { $0 == name }
                     } label: {
                         Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Remove \(name)")
@@ -335,12 +358,7 @@ struct LogServiceView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
                             ForEach(recentShops, id: \.self) { shop in
-                                Button(shop) { draft.shop = shop }
-                                    .font(.footnote.weight(.semibold))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Theme.raised, in: Capsule())
-                                    .foregroundStyle(Theme.ink)
+                                SuggestionChip(shop) { draft.shop = shop }
                             }
                         }
                     }
@@ -364,7 +382,12 @@ struct LogServiceView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Theme.xs) {
                         ForEach(Array((editing?.sortedAttachments.compactMap(\.data) ?? []).enumerated()), id: \.offset) { _, data in thumb(data) }
-                        ForEach(Array((draft.receipts + draft.photos).enumerated()), id: \.offset) { _, data in thumb(data) }
+                        ForEach(Array(draft.receipts.enumerated()), id: \.offset) { index, data in
+                            thumb(data, remove: { draft.receipts.remove(at: index) })
+                        }
+                        ForEach(Array(draft.photos.enumerated()), id: \.offset) { index, data in
+                            thumb(data, remove: { draft.photos.remove(at: index) })
+                        }
                     }
                     .padding(.vertical, 4)
                 }
@@ -407,7 +430,9 @@ struct LogServiceView: View {
         }
     }
 
-    private func thumb(_ data: Data) -> some View {
+    /// A picked photo can be taken off again before it's saved. Ones already
+    /// on the entry are deleted from the entry page, where they open full size.
+    private func thumb(_ data: Data, remove: (() -> Void)? = nil) -> some View {
         Group {
             if let image = UIImage(data: data) {
                 Image(uiImage: image).resizable().scaledToFill()
@@ -417,6 +442,20 @@ struct LogServiceView: View {
         }
         .frame(width: 64, height: 64)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(alignment: .topTrailing) {
+            if let remove {
+                Button(action: remove) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Color.black.opacity(0.6))
+                        .padding(3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Remove photo")
+            }
+        }
+        .padding(.top, 4)
     }
 
     /// "Oil change and new wipers", counting one-offs alongside scheduled jobs.
@@ -468,6 +507,7 @@ struct LogServiceView: View {
             }
             #endif
         }
+        baseline = snapshot
     }
 
     private func loadPhotos(_ items: [PhotosPickerItem]) async {
@@ -556,5 +596,6 @@ struct LogServiceView: View {
         receiptNote = nil
         addingAnother = false
         savedInRow += 1
+        baseline = snapshot
     }
 }

@@ -33,6 +33,19 @@ struct FuelLogView: View {
     @State private var showingPaywall = false
     @State private var confirmingJump = false
     @State private var loaded = false
+    @State private var baseline: Snapshot?
+    @State private var confirmingDiscard = false
+
+    private struct Snapshot: Equatable {
+        var draft: GarageStore.FuelDraft
+        var volume: Double?
+        var price: Double?
+        var total: Double?
+        var reading: Double?
+    }
+
+    private var snapshot: Snapshot { Snapshot(draft: draft, volume: volume, price: price, total: total, reading: reading) }
+    private var isDirty: Bool { baseline.map { $0 != snapshot } ?? false }
 
     private var unit: FuelVolumeUnit { draft.unit }
     private var symbol: String { Locale.current.currencySymbol ?? "$" }
@@ -49,7 +62,9 @@ struct FuelLogView: View {
             .navigationTitle(editing == nil ? "Fill-up" : "Edit fill-up")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { if isDirty { confirmingDiscard = true } else { dismiss() } }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: attemptSave)
                         .fontWeight(.semibold)
@@ -58,6 +73,7 @@ struct FuelLogView: View {
                 }
             }
             .onAppear(perform: load)
+            .discardGuard(isDirty: isDirty, confirming: $confirmingDiscard) { dismiss() }
             .onChange(of: pumpItem) { _, item in Task { await loadPicked(item, as: .pump) } }
             .onChange(of: dashItem) { _, item in Task { await loadPicked(item, as: .dash) } }
             .fullScreenCover(item: $camera) { shot in
@@ -87,7 +103,7 @@ struct FuelLogView: View {
     private var pumpSection: some View {
         Section {
             if !draft.pumpPhotos.isEmpty {
-                photoRow(draft.pumpPhotos, busy: readingPump, busyText: "Reading the pump", note: pumpNote)
+                photoRow(draft.pumpPhotos, busy: readingPump, busyText: "Reading the pump", note: pumpNote) { draft.pumpPhotos.remove(at: $0) }
             }
             if !store.isPro, !draft.pumpPhotos.isEmpty {
                 Button { showingPaywall = true } label: {
@@ -163,7 +179,7 @@ struct FuelLogView: View {
                     .accessibilityIdentifier("fuel.reading")
             }
             if !draft.meterPhotos.isEmpty {
-                photoRow(draft.meterPhotos, busy: readingDash, busyText: "Reading the dash", note: dashNote)
+                photoRow(draft.meterPhotos, busy: readingDash, busyText: "Reading the dash", note: dashNote) { draft.meterPhotos.remove(at: $0) }
             }
             if CameraPicker.isAvailable {
                 Button { camera = .dash } label: { Label("Take a photo of the \(meterWord)", systemImage: "camera") }
@@ -192,12 +208,7 @@ struct FuelLogView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         ForEach(recent, id: \.self) { station in
-                            Button(station) { draft.station = station }
-                                .font(.footnote.weight(.semibold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Theme.raised, in: Capsule())
-                                .foregroundStyle(Theme.ink)
+                            SuggestionChip(station) { draft.station = station }
                         }
                     }
                 }
@@ -205,14 +216,27 @@ struct FuelLogView: View {
         }
     }
 
-    private func photoRow(_ photos: [Data], busy: Bool, busyText: String, note: String?) -> some View {
-        HStack(spacing: Theme.sm) {
-            ForEach(Array(photos.suffix(3).enumerated()), id: \.offset) { _, data in
+    /// The last three photos, each with an x to take it off again before saving.
+    private func photoRow(_ photos: [Data], busy: Bool, busyText: String, note: String?, remove: @escaping (Int) -> Void) -> some View {
+        let shown = Array(photos.enumerated()).suffix(3)
+        return HStack(spacing: Theme.sm) {
+            ForEach(shown, id: \.offset) { index, data in
                 Group {
                     if let image = UIImage(data: data) { Image(uiImage: image).resizable().scaledToFill() } else { Theme.raised }
                 }
                 .frame(width: 52, height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(alignment: .topTrailing) {
+                    Button { remove(index) } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.body)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, Color.black.opacity(0.6))
+                            .padding(2)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove photo")
+                }
             }
             if busy {
                 ProgressView()
@@ -361,6 +385,7 @@ struct FuelLogView: View {
     private func load() {
         guard !loaded else { return }
         loaded = true
+        defer { baseline = snapshot }
         draft.grade = vehicle.fuelEntries.first?.grade.flatMap { vehicle.fuelGradeChoices.contains($0) ? $0 : nil } ?? vehicle.fuelGradeChoices.first
         guard let editing else {
             #if DEBUG

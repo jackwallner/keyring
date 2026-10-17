@@ -11,10 +11,15 @@ struct HistoryView: View {
     @State private var search = ""
     @State private var exportFile: SharedFile?
     @State private var importing = false
+    @State private var editingEntry: ServiceEntry?
+    @State private var deletingEntry: ServiceEntry?
+
+    /// Sold and retired vehicles' entries are in the list, so they get a chip too.
+    private var allVehicles: [Vehicle] { garage.vehicles + garage.retiredVehicles }
 
     var body: some View {
         let entries = filtered
-        let economy = FuelEconomy.labels(for: garage.vehicles + garage.retiredVehicles)
+        let economy = FuelEconomy.labels(for: allVehicles)
         List {
             if hasFuel {
                 Section {
@@ -29,13 +34,13 @@ struct HistoryView: View {
                     .accessibilityIdentifier("history.show")
                 }
             }
-            if garage.vehicles.count > 1 {
+            if allVehicles.count > 1 {
                 Section {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: Theme.xs) {
                             chip("All", selected: filter == nil) { filter = nil }
-                            ForEach(garage.vehicles) { vehicle in
-                                chip(vehicle.displayName, tint: vehicle.tint.color, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
+                            ForEach(allVehicles) { vehicle in
+                                chip(vehicle.displayName, tint: vehicle.tint.color, retired: vehicle.isRetired, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
                             }
                         }
                         .padding(.horizontal, Theme.margin)
@@ -57,6 +62,7 @@ struct HistoryView: View {
                         ForEach(group.entries) { entry in
                             NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: filter == nil, economy: entry.id.flatMap { economy[$0] }) }
                                 .listRowBackground(Theme.surface)
+                                .entrySwipeActions(entry, edit: $editingEntry, delete: $deletingEntry)
                         }
                     } header: {
                         GroupHeader(title: group.title, total: hideCosts ? 0 : group.total)
@@ -72,7 +78,7 @@ struct HistoryView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
-                        let vehicles = filter.flatMap { id in garage.vehicles.filter { $0.objectID == id } } ?? (garage.vehicles + garage.retiredVehicles)
+                        let vehicles = filter.flatMap { id in allVehicles.filter { $0.objectID == id } } ?? allVehicles
                         if let url = try? CSVExport.url(for: vehicles) { exportFile = SharedFile(url: url) }
                     } label: {
                         Label("Export spreadsheet (CSV)", systemImage: "tablecells")
@@ -88,6 +94,7 @@ struct HistoryView: View {
         }
         .sheet(item: $exportFile) { file in ShareSheet(items: [file.url]) }
         .sheet(isPresented: $importing) { ImportView() }
+        .entrySheets(edit: $editingEntry, delete: $deletingEntry)
     }
 
     private var hideCosts: Bool { AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) }
@@ -135,7 +142,7 @@ struct HistoryView: View {
         return result.map { ($0.0, $0.1, $0.2) }
     }
 
-    private func chip(_ title: String, tint: Color? = nil, selected: Bool, action: @escaping () -> Void) -> some View {
+    private func chip(_ title: String, tint: Color? = nil, retired: Bool = false, selected: Bool, action: @escaping () -> Void) -> some View {
         Button {
             Haptics.selected()
             action()
@@ -147,12 +154,55 @@ struct HistoryView: View {
             .font(.footnote.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .foregroundStyle(selected ? Theme.onAction : Theme.ink)
+            .foregroundStyle(selected ? Theme.onAction : (retired ? Theme.secondaryInk : Theme.ink))
             .background(selected ? Theme.action : Theme.surface, in: Capsule())
             .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: selected ? 0 : 0.5))
+            // The capsule stays small; the tap area doesn't.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityLabel(retired ? "\(title), sold or retired" : title)
+    }
+}
+
+/// Edit and Delete on a swipe, shared by every list of entries.
+private extension View {
+    func entrySwipeActions(_ entry: ServiceEntry, edit: Binding<ServiceEntry?>, delete: Binding<ServiceEntry?>) -> some View {
+        swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) { delete.wrappedValue = entry } label: { Label("Delete", systemImage: "trash") }
+                .tint(Theme.overdue)
+            Button { edit.wrappedValue = entry } label: { Label("Edit", systemImage: "pencil") }
+                .tint(Theme.brass)
+        }
+    }
+
+    func entrySheets(edit: Binding<ServiceEntry?>, delete: Binding<ServiceEntry?>) -> some View {
+        modifier(EntrySheets(editing: edit, deleting: delete))
+    }
+}
+
+private struct EntrySheets: ViewModifier {
+    @EnvironmentObject private var garage: GarageStore
+    @Binding var editing: ServiceEntry?
+    @Binding var deleting: ServiceEntry?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $editing) { entry in
+                if let vehicle = entry.vehicle {
+                    if entry.kind == .fuel { FuelLogView(vehicle: vehicle, editing: entry) } else { LogServiceView(vehicle: vehicle, editing: entry) }
+                }
+            }
+            .confirmationDialog("Delete this entry?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    if let deleting { garage.delete(deleting) }
+                    deleting = nil
+                }
+            } message: {
+                Text("It's removed for everyone the garage is shared with, along with its receipts and photos.")
+            }
     }
 }
 
@@ -163,14 +213,34 @@ struct VehicleHistoryView: View {
     /// Fill-ups only, rather than the service log.
     var fuel = false
 
+    @State private var search = ""
+    @State private var adding = false
+    @State private var editingEntry: ServiceEntry?
+    @State private var deletingEntry: ServiceEntry?
+
     var body: some View {
         let economy = fuel ? FuelEconomy.labels(for: [vehicle]) : [:]
+        let groups = years
+        let addAction: (() -> Void)? = search.isEmpty ? { adding = true } : nil
         List {
-            ForEach(years, id: \.year) { group in
+            if groups.isEmpty {
+                EmptyStateView(
+                    symbol: fuel ? "fuelpump" : "book.closed",
+                    title: search.isEmpty ? (fuel ? "No fill-ups yet" : "Nothing logged yet") : "Nothing matches",
+                    message: search.isEmpty
+                        ? (fuel ? "Each fill-up you log here works out the fuel economy from the one before." : "Every job logged on \(vehicle.displayName) shows up here, newest first.")
+                        : "Try a shop name, a job or a note.",
+                    actionTitle: search.isEmpty ? (fuel ? "Log a fill-up" : "Log service") : nil,
+                    action: addAction
+                )
+                .listRowBackground(Color.clear)
+            }
+            ForEach(groups, id: \.year) { group in
                 Section {
                     ForEach(group.entries) { entry in
                         NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false, economy: entry.id.flatMap { economy[$0] }) }
                             .listRowBackground(Theme.surface)
+                            .entrySwipeActions(entry, edit: $editingEntry, delete: $deletingEntry)
                     }
                 } header: {
                     GroupHeader(
@@ -183,11 +253,34 @@ struct VehicleHistoryView: View {
         .paperBackground()
         .navigationTitle(fuel ? "Fill-ups" : "History")
         .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: fuel ? "Stations, grades, notes" : "Jobs, shops, notes")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { adding = true } label: { Image(systemName: "plus") }
+                    .accessibilityLabel(fuel ? "Log a fill-up" : "Log service")
+            }
+        }
+        .sheet(isPresented: $adding) {
+            if fuel { FuelLogView(vehicle: vehicle) } else { LogServiceView(vehicle: vehicle) }
+        }
+        .entrySheets(edit: $editingEntry, delete: $deletingEntry)
+    }
+
+    private var entries: [ServiceEntry] {
+        _ = garage.revision
+        let all = fuel ? vehicle.fuelEntries : vehicle.serviceEntries
+        let query = search.trimmed.lowercased()
+        guard !query.isEmpty else { return all }
+        return all.filter { entry in
+            [entry.title, entry.shop, entry.notes, entry.loggedBy, entry.kind == .service ? nil : entry.kind.title, entry.grade?.title]
+                .compactMap { $0?.lowercased() }
+                .contains { $0.contains(query) }
+        }
     }
 
     private var years: [(year: Int, entries: [ServiceEntry], total: Double)] {
         var result: [(year: Int, entries: [ServiceEntry], total: Double)] = []
-        for entry in fuel ? vehicle.fuelEntries : vehicle.serviceEntries {
+        for entry in entries {
             let year = entry.date.map { Calendar.current.component(.year, from: $0) } ?? 0
             if result.last?.year == year {
                 result[result.count - 1].entries.append(entry)

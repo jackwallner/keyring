@@ -21,6 +21,7 @@ struct VehicleDetailView: View {
     @State private var showingLimitPaywall = false
     @State private var recalls: [Recall] = []
     @State private var recallsFailed = false
+    @State private var loadedRecallKey: String?
     @State private var confirmingDelete = false
     @State private var confirmingRetire = false
     @State private var routed = false
@@ -65,7 +66,7 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $showingLimitPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .sheet(isPresented: $importing) { ImportView(preselected: vehicle) }
         .sheet(isPresented: $storing) { StorageSheet(vehicle: vehicle) }
-        .task(id: vehicle.objectID) {
+        .task(id: recallKey) {
             if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
                 routed = true
                 if route == "record" { showingRecord = true }
@@ -79,8 +80,10 @@ struct VehicleDetailView: View {
                     proxy.scrollTo("explore", anchor: .top)
                 }
             }
+            if recallKey != loadedRecallKey { recalls = [] }
             if recalls.isEmpty, let cached = RecallWatcher.cached(for: vehicle) { recalls = cached }
             await loadRecalls()
+            loadedRecallKey = recallKey
             // The recall banner can land above Explore once it loads.
             if ScreenshotConfig.value(after: "-ScreenshotRoute") == "explore" {
                 try? await Task.sleep(for: .milliseconds(300))
@@ -238,10 +241,10 @@ struct VehicleDetailView: View {
                             .foregroundStyle(Theme.overdue)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(open.count == 1 ? "1 safety recall may apply" : "\(open.count) safety recalls may apply")
+                        Text(recallHeadline(open.count))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.ink)
-                        Text(open.contains { $0.parkIt } ? "NHTSA says not to drive it until it's fixed. Check your VIN to see if yours is affected." : "NHTSA lists these for the \(vehicle.descriptor). Check your VIN to see which a dealer already fixed.")
+                        Text(recallNote(open))
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
                             .multilineTextAlignment(.leading)
@@ -255,6 +258,24 @@ struct VehicleDetailView: View {
             }
             .buttonStyle(PressableStyle())
         }
+    }
+
+    private var vinChecked: Bool { VINRecallChecks.check(for: vehicle)?.covered == true }
+
+    /// Editing the year, make or model makes the recall list about another vehicle.
+    private var recallKey: String { "\(vehicle.objectID.uriRepresentation().absoluteString)|\(vehicle.year)|\(vehicle.make ?? "")|\(vehicle.model ?? "")" }
+
+    private func recallHeadline(_ count: Int) -> String {
+        if vinChecked { return count == 1 ? "1 recall open on this VIN" : "\(count) recalls open on this VIN" }
+        return count == 1 ? "1 safety recall may apply" : "\(count) safety recalls may apply"
+    }
+
+    private func recallNote(_ open: [Recall]) -> String {
+        let urgent = open.contains { $0.parkIt }
+        if vinChecked {
+            return urgent ? "NHTSA says not to drive it until it's fixed. The repair is free at a dealer." : "NHTSA shows it unrepaired on yours. Recall repairs are free at a dealer."
+        }
+        return urgent ? "NHTSA says not to drive it until it's fixed. Check the VIN to see if yours is affected." : "NHTSA lists these for the \(vehicle.descriptor). Check the VIN to see which are still open on yours."
     }
 
     private func loadRecalls() async {
@@ -365,7 +386,8 @@ struct VehicleDetailView: View {
         guard vehicle.year > 0, vehicle.make != nil else { return "Add year, make and model" }
         if recalls.isEmpty { return recallsFailed ? "Couldn't check" : "None listed" }
         let open = garage.openRecalls(recalls, for: vehicle).count
-        return open == 0 ? "All handled" : Format.count(open, "may apply", "may apply")
+        if open == 0 { return vinChecked ? "None open" : "All handled" }
+        return vinChecked ? Format.count(open, "open", "open") : Format.count(open, "may apply", "may apply")
     }
 
     private func tile<Destination: View>(_ title: String, detail: String, symbol: String, @ViewBuilder destination: @escaping () -> Destination) -> some View {
@@ -705,7 +727,10 @@ struct VehicleDetailView: View {
                     Haptics.success()
                 } label: {
                     Image(systemName: "doc.on.doc").font(.footnote)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.borderless)
                 .accessibilityLabel("Copy \(label)")
             }
         }
@@ -883,6 +908,17 @@ struct FactsEditor: View {
     @Environment(\.dismiss) private var dismiss
     let vehicle: Vehicle
     @State private var facts: [VehicleFact] = []
+    @State private var confirmingDiscard = false
+    @FocusState private var focus: Focus?
+
+    private enum Focus: Hashable { case label(UUID), value(UUID) }
+
+    private var isDirty: Bool { facts != vehicle.facts }
+
+    /// A label with nothing after it, or a value with no label, isn't kept.
+    private var halfFilled: Int {
+        facts.filter { $0.label.trimmed.isEmpty != $0.value.trimmed.isEmpty }.count
+    }
 
     var body: some View {
         NavigationStack {
@@ -893,26 +929,35 @@ struct FactsEditor: View {
                             TextField("Label", text: $fact.label)
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Theme.secondaryInk)
+                                .focused($focus, equals: .label(fact.id))
+                                .submitLabel(.next)
+                                .onSubmit { focus = .value(fact.id) }
                             HStack {
                                 TextField("Value", text: $fact.value)
+                                    .focused($focus, equals: .value(fact.id))
+                                    .submitLabel(.done)
                                 ScanFieldButton(kind: .text) { fact.value = $0 }
                             }
                         }
                     }
                     .onDelete { facts.remove(atOffsets: $0) }
                     .onMove { facts.move(fromOffsets: $0, toOffset: $1) }
+                } footer: {
+                    if halfFilled > 0 {
+                        Text(halfFilled == 1 ? "A line with only a label or only a value isn't kept." : "Lines with only a label or only a value aren't kept.")
+                    }
                 }
                 Section("Add") {
                     let used = Set(facts.map { $0.label.lowercased() })
                     ForEach(VehicleFact.suggestions.filter { !used.contains($0.lowercased()) }, id: \.self) { label in
                         Button {
-                            facts.append(VehicleFact(label: label, value: ""))
+                            add(VehicleFact(label: label, value: ""))
                         } label: {
                             Label(label, systemImage: "plus.circle")
                         }
                     }
                     Button {
-                        facts.append(VehicleFact(label: "", value: ""))
+                        add(VehicleFact(label: "", value: ""))
                     } label: {
                         Label("Something else", systemImage: "plus.circle")
                     }
@@ -922,19 +967,30 @@ struct FactsEditor: View {
             .navigationTitle("Quick facts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { if isDirty { confirmingDiscard = true } else { dismiss() } }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         vehicle.facts = facts
                             .map { VehicleFact(id: $0.id, label: $0.label.trimmed, value: $0.value.trimmed) }
                             .filter { !$0.label.isEmpty && !$0.value.isEmpty }
                         garage.saveVehicleEdits()
+                        Haptics.success()
                         dismiss()
                     }
+                    .disabled(!isDirty)
                 }
             }
+            .discardGuard(isDirty: isDirty, confirming: $confirmingDiscard) { dismiss() }
             .onAppear { facts = vehicle.facts }
         }
+    }
+
+    /// The new line gets the keyboard straight away, on whichever half is still empty.
+    private func add(_ fact: VehicleFact) {
+        facts.append(fact)
+        focus = fact.label.isEmpty ? .label(fact.id) : .value(fact.id)
     }
 }
 

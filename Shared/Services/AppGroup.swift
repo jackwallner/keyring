@@ -39,5 +39,6 @@ enum AppGroup {
         static let pendingFirstVehicle = "pendingFirstVehicle"
         static let recallCache = "recallCache"
         static let lastRecallCheck = "lastRecallCheck"
+        static let vinRecallChecks = "vinRecallChecks"
     }
 }

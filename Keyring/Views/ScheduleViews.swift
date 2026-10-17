@@ -139,7 +139,10 @@ struct TaskDetailView: View {
             ToolbarItem(placement: .topBarTrailing) { Button("Edit") { editing = true } }
         }
         .sheet(isPresented: $logging) { LogServiceView(vehicle: vehicle, preselected: [taskID]) }
-        .sheet(isPresented: $editing) { if let task { TaskEditor(vehicle: vehicle, task: task) } }
+        .sheet(isPresented: $editing, onDismiss: {
+            // Removed from the schedule in the editor: nothing left to show here.
+            if task == nil || task?.isEnabled == false { dismiss() }
+        }) { if let task { TaskEditor(vehicle: vehicle, task: task) } }
         .sheet(isPresented: $settingLast) { if let task { LastDoneSheet(vehicle: vehicle, task: task) } }
     }
 
@@ -275,6 +278,20 @@ struct TaskEditor: View {
     @State private var months: Double?
     @State private var notes = ""
     @State private var onAuxMeter = false
+    @State private var baseline: Snapshot?
+    @State private var confirmingDiscard = false
+    @State private var confirmingRemove = false
+
+    private struct Snapshot: Equatable {
+        var name: String
+        var distance: Double?
+        var months: Double?
+        var notes: String
+        var onAuxMeter: Bool
+    }
+
+    private var snapshot: Snapshot { Snapshot(name: name, distance: distance, months: months, notes: notes, onAuxMeter: onAuxMeter) }
+    private var isDirty: Bool { baseline.map { $0 != snapshot } ?? false }
 
     private var meter: MeterUnit {
         if let task { return task.countingMeter }
@@ -317,10 +334,18 @@ struct TaskEditor: View {
                 }
                 if let task {
                     Section {
-                        Button("Remove from schedule", role: .destructive) {
-                            garage.remove(task)
-                            dismiss()
-                        }
+                        Button("Remove from schedule", role: .destructive) { confirmingRemove = true }
+                            .confirmationDialog("Remove \(task.displayName.lowercasedFirst) from the schedule?", isPresented: $confirmingRemove, titleVisibility: .visible) {
+                                Button("Remove", role: .destructive) {
+                                    garage.remove(task)
+                                    Haptics.success()
+                                    dismiss()
+                                }
+                            } message: {
+                                Text(task.catalogKey == nil
+                                     ? "Its reminders stop. Past entries stay in the history."
+                                     : "Its reminders stop. Past entries stay in the history, and it can be added back from the catalog.")
+                            }
                     } footer: {
                         Text("Past entries stay in the history.")
                     }
@@ -330,7 +355,9 @@ struct TaskEditor: View {
             .navigationTitle(task == nil ? "New job" : "Edit job")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { if isDirty { confirmingDiscard = true } else { dismiss() } }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         if let task {
@@ -340,12 +367,15 @@ struct TaskEditor: View {
                             created.notes = notes.trimmed.nilIfEmpty
                             garage.saveVehicleEdits()
                         }
+                        Haptics.success()
                         dismiss()
                     }
                     .disabled(name.trimmed.isEmpty)
                 }
             }
+            .discardGuard(isDirty: isDirty, confirming: $confirmingDiscard) { dismiss() }
             .onAppear {
+                defer { baseline = snapshot }
                 guard let task else { return }
                 name = task.displayName
                 distance = task.intervalDistance > 0 ? task.intervalDistance : nil
@@ -393,6 +423,7 @@ struct LastDoneSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         garage.setBaseline(task, date: date, reading: reading)
+                        Haptics.success()
                         dismiss()
                     }
                     .fontWeight(.semibold)

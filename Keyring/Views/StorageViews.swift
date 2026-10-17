@@ -125,10 +125,10 @@ struct StorageSheet: View {
     private func save() {
         if returning {
             garage.returnFromStorage(vehicle, reading: value, auxReading: auxValue)
-            Haptics.success()
         } else {
             garage.store(vehicle, until: remind ? until : nil)
         }
+        Haptics.success()
         dismiss()
     }
 

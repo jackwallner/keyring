@@ -48,6 +48,15 @@ struct GarageView: View {
                             .buttonStyle(PressableStyle())
                             .contextMenu {
                                 Button { logging = LogRequest(vehicle: vehicle) } label: { Label("Log service", systemImage: "plus.circle") }
+                                if garage.vehicles.count > 1, let index = garage.vehicles.firstIndex(of: vehicle) {
+                                    Divider()
+                                    if index > 0 {
+                                        Button { move(vehicle, to: index - 1) } label: { Label("Move up", systemImage: "arrow.up") }
+                                    }
+                                    if index < garage.vehicles.count - 1 {
+                                        Button { move(vehicle, to: index + 1) } label: { Label("Move down", systemImage: "arrow.down") }
+                                    }
+                                }
                             }
                         }
                     }
@@ -252,6 +261,11 @@ struct GarageView: View {
             )
         }
         .buttonStyle(PressableStyle())
+    }
+
+    private func move(_ vehicle: Vehicle, to index: Int) {
+        Haptics.selected()
+        withAnimation(.snappy) { garage.move(vehicle, to: index) }
     }
 
     private func addVehicle() {

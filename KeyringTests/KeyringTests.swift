@@ -934,3 +934,38 @@ final class RecallMatchTests: XCTestCase {
         XCTAssertEqual(marked?.shop, "Dealer")
     }
 }
+
+final class VINRecallCheckTests: XCTestCase {
+    private func recall(_ campaign: String) -> Recall {
+        Recall(campaign: campaign, component: "FUEL SYSTEM", summary: "", consequence: "", remedy: "", reported: nil, parkIt: false, parkOutside: false)
+    }
+
+    func testCampaignKeysMatchAcrossForms() {
+        XCTAssertEqual(VINRecallCheck.key("25V455000"), "25V455")
+        XCTAssertEqual(VINRecallCheck.key("25v-455"), "25V455")
+        XCTAssertEqual(VINRecallCheck.key("26V1230"), "26V1230")
+    }
+
+    func testOnlyOpenAndNewerRecallsShow() throws {
+        let listed = [recall("25V455000"), recall("24V100000"), recall("23V010000")]
+        let json = #"{"state":"ok","vin":"1FM5K8LC8MGC14943","count":2,"recalls":[{"maker":"25S75","nhtsa":"25V455","status":"Recall Incomplete","summary":"IT IS POSSIBLE"},{"maker":"26S14","nhtsa":"26V117","status":"Recall Incomplete, remedy not yet available","summary":"THE REAR CAMERA"}]}"#
+        let check = try XCTUnwrap(VINRecallCheck.parse(json, vin: "1fm5k8lc8mgc14943", known: listed))
+        XCTAssertTrue(check.covered)
+        XCTAssertEqual(listed.filter(check.shows).map(\.campaign), ["25V455000"])
+        // Open on the VIN but not on the model's list yet.
+        let extra = check.unlisted(in: listed)
+        XCTAssertEqual(extra.map(\.campaign), ["26V117"])
+        XCTAssertEqual(extra.first?.summary, "The rear camera")
+        // Listed after the check: shown until the next one.
+        XCTAssertTrue(check.shows(recall("26V900000")))
+    }
+
+    func testOtherVINAndNoDataResults() {
+        XCTAssertNil(VINRecallCheck.parse(#"{"state":"ok","vin":"1HGCM82633A004352","count":0,"recalls":[]}"#, vin: "1FM5K8LC8MGC14943", known: []))
+        let none = VINRecallCheck.parse(#"{"state":"none"}"#, vin: "1FM5K8LC8MGC14943", known: [recall("25V455000")])
+        XCTAssertEqual(none?.covered, false)
+        XCTAssertEqual(none.map { [recall("25V455000")].filter($0.shows).count }, 1)
+        let clear = VINRecallCheck.parse(#"{"state":"ok","count":0,"recalls":[]}"#, vin: "1FM5K8LC8MGC14943", known: [recall("25V455000")])
+        XCTAssertEqual(clear.map { [recall("25V455000")].filter($0.shows).count }, 0)
+    }
+}

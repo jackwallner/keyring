@@ -47,7 +47,7 @@ struct TaskDue: Identifiable, Hashable {
 }
 
 /// What a new vehicle starts with.
-struct NewVehicle {
+struct NewVehicle: Equatable {
     var kind: VehicleKind = .car
     var powertrain: Powertrain = .gasoline
     var meter: MeterUnit = .miles
@@ -621,7 +621,7 @@ final class GarageStore: ObservableObject {
 
     // MARK: - Service log
 
-    struct ServiceDraft {
+    struct ServiceDraft: Equatable {
         var kind: EntryKind = .service
         var recallCampaign: String?
         var date: Date = .now
@@ -681,7 +681,7 @@ final class GarageStore: ObservableObject {
         return entry
     }
 
-    struct FuelDraft {
+    struct FuelDraft: Equatable {
         var date: Date = .now
         var reading: Double?
         /// In `unit`, as the pump showed it.
@@ -744,10 +744,13 @@ final class GarageStore: ObservableObject {
         return entries.compactMap(\.shop).filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }.prefix(5).map { $0 }
     }
 
-    /// Recalls still worth a look: not shown fixed in the log, not dismissed here.
+    /// Recalls still worth a look: open on the VIN check if there is one, not
+    /// shown fixed in the log, not dismissed here.
     func openRecalls(_ recalls: [Recall], for vehicle: Vehicle) -> [Recall] {
         let reviewed = RecallLedger.reviewed(for: vehicle.id)
-        return recalls.filter { !reviewed.contains($0.campaign) && RecallMatcher.fix(for: $0, on: vehicle) == nil }
+        let check = VINRecallChecks.check(for: vehicle)
+        let candidates = check.map { check in recalls.filter(check.shows) + check.unlisted(in: recalls) } ?? recalls
+        return candidates.filter { !reviewed.contains($0.campaign) && RecallMatcher.fix(for: $0, on: vehicle) == nil }
     }
 
     /// Recorded once the owner has checked the VIN and the dealer already did it.

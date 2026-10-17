@@ -81,6 +81,7 @@ struct ValueView: View {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") {
                             if let amount { garage.addValuation(amount, source: source, to: vehicle) }
+                            Haptics.success()
                             amount = nil
                             source = ""
                             adding = false
@@ -238,6 +239,21 @@ struct RecallsView: View {
     @State private var dismissed: Set<String> = []
     @State private var fixing: Recall?
     @State private var receiptsRead = 0
+    @State private var check: VINRecallCheck?
+    @State private var checkingVIN: String?
+    @State private var vinDraft = ""
+    @State private var vinError: String?
+
+    /// Open on the VIN when it has been checked, else every recall for the model.
+    private var shown: [Recall] {
+        guard let check else { return recalls }
+        return recalls.filter(check.shows) + check.unlisted(in: recalls)
+    }
+
+    private var hiddenCount: Int {
+        guard let check, check.covered else { return 0 }
+        return recalls.filter { !check.shows($0) }.count
+    }
 
     var body: some View {
         List {
@@ -253,37 +269,35 @@ struct RecallsView: View {
                 EmptyStateView(symbol: "checkmark.shield", title: "No recalls on file", message: "NHTSA lists no safety recalls for the \(vehicle.descriptor). The app keeps checking and lets you know if one is issued.")
                     .listRowBackground(Color.clear)
             } else {
-                Section {
-                    if let vin = vehicle.vin {
-                        LinkRow(title: "Check which apply to this VIN", detail: vin, symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls?vin=\(vin)")!)
-                    } else {
-                        LinkRow(title: "Check which apply to yours", detail: "Enter your VIN at nhtsa.gov", symbol: "magnifyingglass", url: URL(string: "https://www.nhtsa.gov/recalls")!)
+                if RecallRegion.isUS { vinSection }
+                if shown.isEmpty, let check {
+                    EmptyStateView(symbol: "checkmark.shield", title: "Nothing open on this VIN", message: "NHTSA shows no unrepaired recalls on \(vehicle.displayName) as of \(Format.shortDate(check.date)).")
+                        .listRowBackground(Color.clear)
+                } else {
+                    Section {
+                        ForEach(shown) { recall in
+                            RecallRow(
+                                recall: recall,
+                                fix: fixEntry(for: recall),
+                                dismissed: dismissed.contains(recall.campaign),
+                                vinStatus: vinStatus(for: recall),
+                                logFix: { fixing = recall },
+                                markFixed: { garage.markRecallFixedByDealer(recall, for: vehicle) },
+                                setDismissed: { value in
+                                    RecallLedger.setReviewed(recall.campaign, value, for: vehicle.id)
+                                    dismissed = RecallLedger.reviewed(for: vehicle.id)
+                                }
+                            )
+                        }
+                    } header: {
+                        Text(check?.covered == true
+                             ? Format.count(shown.count, "open on this VIN", "open on this VIN")
+                             : Format.count(recalls.count, "recall", "recalls") + " for this model")
+                    } footer: {
+                        Text(RecallRegion.isUS
+                             ? "From NHTSA. Recall repairs are free at a dealer. Logging the fix adds it to the history, so everyone in the garage and any buyer sees it was done."
+                             : "From NHTSA, the US safety agency. Models sold elsewhere often share these recalls, but check your own country's list too. Logging a fix adds it to the history.")
                     }
-                } header: {
-                    Text("Already fixed by a dealer?")
-                } footer: {
-                    Text("NHTSA's VIN check shows only recalls still open. One below that it doesn't show was already fixed: tap Already fixed. Recalls named on a saved receipt or in your notes are marked fixed for you.")
-                }
-                Section {
-                    ForEach(recalls) { recall in
-                        RecallRow(
-                            recall: recall,
-                            fix: fixEntry(for: recall),
-                            dismissed: dismissed.contains(recall.campaign),
-                            logFix: { fixing = recall },
-                            markFixed: { garage.markRecallFixedByDealer(recall, for: vehicle) },
-                            setDismissed: { value in
-                                RecallLedger.setReviewed(recall.campaign, value, for: vehicle.id)
-                                dismissed = RecallLedger.reviewed(for: vehicle.id)
-                            }
-                        )
-                    }
-                } header: {
-                    Text(Format.count(recalls.count, "recall", "recalls") + " for this model")
-                } footer: {
-                    Text(RecallRegion.isUS
-                         ? "From NHTSA. Recall repairs are free at a dealer. Logging the fix adds it to the history, so everyone in the garage and any buyer sees it was done."
-                         : "From NHTSA, the US safety agency. Models sold elsewhere often share these recalls, but check your own country's list too. Logging a fix adds it to the history.")
                 }
             }
             if !RecallRegion.isUS, let local = RecallRegion.localLookup {
@@ -298,12 +312,110 @@ struct RecallsView: View {
         .refreshable { await load() }
         .task {
             dismissed = RecallLedger.reviewed(for: vehicle.id)
+            check = VINRecallChecks.check(for: vehicle)
             if recalls.isEmpty { await load() }
             if await RecallMatcher.readReceipts(on: vehicle) { receiptsRead += 1 }
         }
         .sheet(item: $fixing) { recall in
             LogServiceView(vehicle: vehicle, recall: recall)
         }
+        .sheet(isPresented: Binding(get: { checkingVIN != nil }, set: { if !$0 { checkingVIN = nil } })) {
+            if let vin = checkingVIN {
+                VINCheckSheet(vin: vin, known: recalls) { result in
+                    VINRecallChecks.save(result, for: vehicle)
+                    check = result
+                    garage.objectWillChange.send()
+                }
+            }
+        }
+    }
+
+    /// Which of the model's recalls are still open on this one vehicle.
+    @ViewBuilder
+    private var vinSection: some View {
+        Section {
+            if let check {
+                HStack(spacing: Theme.sm) {
+                    Image(systemName: check.covered ? "checkmark.seal.fill" : "questionmark.circle")
+                        .foregroundStyle(check.covered ? Theme.good : Theme.secondaryInk)
+                        .frame(width: 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(check.covered ? "VIN checked \(Format.shortDate(check.date))" : "No VIN data from the maker")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Theme.ink)
+                        Text(check.vin).font(.caption.monospaced()).foregroundStyle(Theme.secondaryInk)
+                    }
+                    Spacer(minLength: Theme.xs)
+                    Button("Check again") { checkingVIN = check.vin }
+                        .font(.subheadline.weight(.semibold))
+                        .buttonStyle(.borderless)
+                }
+            } else if let vin = vehicle.vin, NHTSAClient.normalizedVIN(vin) != nil {
+                Button { checkingVIN = vin } label: {
+                    HStack(spacing: Theme.sm) {
+                        Image(systemName: "magnifyingglass").foregroundStyle(Theme.brass).frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("See which are still open").font(.body.weight(.medium)).foregroundStyle(Theme.ink)
+                            Text(vin).font(.caption.monospaced()).foregroundStyle(Theme.secondaryInk)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("recalls.checkVIN")
+            } else {
+                HStack(spacing: Theme.xs) {
+                    TextField("17-character VIN", text: $vinDraft)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .font(.body.monospaced())
+                        .submitLabel(.search)
+                        .onSubmit(checkDraft)
+                    ScanFieldButton(kind: .vin) { vinDraft = $0; checkDraft() }
+                }
+                Button("Check this VIN", action: checkDraft)
+                    .font(.body.weight(.semibold))
+                    .disabled(vinDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                if let vinError {
+                    Text(vinError).font(.footnote).foregroundStyle(Theme.overdue)
+                }
+            }
+        } header: {
+            Text("Open on yours")
+        } footer: {
+            Text(vinFooter)
+        }
+    }
+
+    private var vinFooter: String {
+        guard let check else {
+            return vehicle.vin == nil
+                ? "Add the VIN from the windshield or door sticker. NHTSA's lookup shows which recalls are still unrepaired on yours, and the ones a dealer already fixed are hidden."
+                : "NHTSA's lookup shows which recalls are still unrepaired on yours. The ones a dealer already fixed are hidden."
+        }
+        if !check.covered { return "NHTSA has no VIN data from this maker, so every recall for the model is listed. Mark any a dealer already fixed." }
+        return hiddenCount == 0
+            ? "Recall data comes from NHTSA. Check again after a dealer visit."
+            : "\(Format.count(hiddenCount, "other recall", "other recalls")) for this model \(hiddenCount == 1 ? "was" : "were") already fixed on this VIN, so \(hiddenCount == 1 ? "it's" : "they're") hidden."
+    }
+
+    private func checkDraft() {
+        guard let vin = NHTSAClient.normalizedVIN(vinDraft) else {
+            vinError = NHTSAClient.LookupError.invalidVIN.message
+            return
+        }
+        vinError = nil
+        vehicle.vin = vin
+        garage.saveVehicleEdits()
+        checkingVIN = vin
+    }
+
+    private func vinStatus(for recall: Recall) -> String? {
+        guard let check, check.covered else { return nil }
+        let key = VINRecallCheck.key(recall.campaign)
+        return check.open.first { VINRecallCheck.key($0.nhtsa) == key }?.status ?? (check.knew(recall) ? nil : "Listed after your VIN check")
     }
 
     private func fixEntry(for recall: Recall) -> ServiceEntry? {
@@ -330,11 +442,13 @@ private struct RecallRow: View {
     let recall: Recall
     let fix: ServiceEntry?
     let dismissed: Bool
+    let vinStatus: String?
     let logFix: () -> Void
     let markFixed: () -> Void
     let setDismissed: (Bool) -> Void
     @State private var expanded = false
     @State private var confirming = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var closed: Bool { fix != nil || dismissed }
 
@@ -376,26 +490,30 @@ private struct RecallRow: View {
                 Link("Read it at NHTSA", destination: recall.nhtsaURL).font(.footnote.weight(.semibold))
             }
             if fix == nil {
-                HStack(spacing: Theme.md) {
+                // Three actions in a row at normal sizes; one per line at accessibility sizes, where a row would truncate.
+                let stacked = dynamicTypeSize.isAccessibilitySize
+                let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.sm)) : AnyLayout(HStackLayout(spacing: Theme.md))
+                layout {
                     if dismissed {
                         Button("Undo") { setDismissed(false) }
                     } else {
                         Button("Log the fix", action: logFix)
-                        Button("Already fixed") { confirming = true }
+                        // The VIN check says it's still open, so a dealer hasn't fixed it.
+                        if vinStatus == nil { Button("Already fixed") { confirming = true } }
                         Button("Doesn't apply") { setDismissed(true) }
                             .foregroundStyle(Theme.secondaryInk)
                     }
                 }
                 .font(.footnote.weight(.semibold))
                 .buttonStyle(.borderless)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .lineLimit(stacked ? nil : 1)
+                .minimumScaleFactor(stacked ? 1 : 0.85)
                 .padding(.top, 2)
                 .confirmationDialog("Already fixed by a dealer?", isPresented: $confirming, titleVisibility: .visible) {
                     Button("Mark it fixed", action: markFixed)
                     Button("Cancel", role: .cancel) {}
                 } message: {
-                    Text("Use this when NHTSA's VIN check no longer lists it. It's added to the history as done by a dealer, date not known.")
+                    Text("Use this when a dealer did the repair. It's added to the history as done by a dealer, date not known.")
                 }
             }
         }
@@ -411,7 +529,7 @@ private struct RecallRow: View {
             return [found ? "Done \(date), named on \(fix.title ?? "a logged service")" : "Fixed \(date)", found ? nil : fix.shop]
                 .compactMap { $0 }.joined(separator: " · ")
         }
-        let base = [recall.campaign, recall.reported.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · ")
+        let base = [vinStatus ?? recall.campaign, vinStatus == nil ? recall.reported.map(Format.shortDate) : nil].compactMap { $0 }.joined(separator: " · ")
         return dismissed ? "Doesn't apply · \(base)" : base
     }
 }
@@ -433,6 +551,7 @@ struct GalleryView: View {
     @State private var showingPicker = false
     @State private var shareMessage: String?
     @State private var reporting: CommunityPhoto?
+    @State private var sharing = false
 
     var body: some View {
         ScrollView {
@@ -445,7 +564,7 @@ struct GalleryView: View {
                     } else if photos.isEmpty {
                         Text(vehicle.makeAndModel.isEmpty
                              ? "Add the make and model to see photos of others like yours."
-                             : "No photos yet. Share yours and it'll be the first.")
+                             : "No photos yet. Share yours and it'll be the first. If you're offline, pull down to try again once you're back.")
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
                             .card()
@@ -461,10 +580,13 @@ struct GalleryView: View {
                     Button {
                         if community.hasAcceptedTerms { showingPicker = true } else { showingTerms = true }
                     } label: {
-                        Label("Share a photo of yours", systemImage: "square.and.arrow.up")
+                        HStack(spacing: Theme.xs) {
+                            if sharing { ProgressView() }
+                            Label(sharing ? "Sharing" : "Share a photo of yours", systemImage: "square.and.arrow.up")
+                        }
                     }
                     .buttonStyle(SecondaryButtonStyle())
-                    .disabled(vehicle.makeAndModel.isEmpty)
+                    .disabled(vehicle.makeAndModel.isEmpty || sharing)
                     if let shareMessage {
                         Text(shareMessage).font(.footnote).foregroundStyle(Theme.secondaryInk)
                     }
@@ -479,6 +601,7 @@ struct GalleryView: View {
         .paperBackground()
         .navigationTitle("Photos")
         .navigationBarTitleDisplayMode(.inline)
+        .refreshable { photos = await community.photos(for: vehicle) }
         .task(id: community.blockedAuthors.count + community.reportedPhotos.count) {
             photos = await community.photos(for: vehicle)
             loading = false
@@ -497,7 +620,9 @@ struct GalleryView: View {
             Task {
                 pickerItem = nil
                 guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-                shareMessage = "Sharing…"
+                sharing = true
+                shareMessage = nil
+                defer { sharing = false }
                 do {
                     try await community.share(data, caption: vehicle.descriptor, for: vehicle)
                     shareMessage = "Shared. Thanks for adding to the gallery."
