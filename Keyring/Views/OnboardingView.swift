@@ -65,9 +65,11 @@ struct OnboardingView: View {
                 content()
             }
             .padding(.horizontal, Theme.xl)
-            .padding(.top, compact ? Theme.md : Theme.xxl)
+            .padding(.vertical, compact ? Theme.md : Theme.xl)
             .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            // Centered in the space above the footer, so a tall phone doesn't leave a hole under the text.
+            .frame(maxWidth: .infinity, minHeight: pageHeight, alignment: nameFocused ? .top : .center)
         }
         .scrollBounceBehavior(.basedOnSize)
     }
