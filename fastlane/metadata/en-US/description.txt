@@ -1,0 +1,35 @@
+Keyring is one shared maintenance log for every vehicle your family owns. The truck, your partner's SUV, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower all hang on one ring, and each one tells you what's due next.
+
+ONE GARAGE, THE WHOLE FAMILY
+Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders stay personal, so one oil change doesn't ping the whole house.
+
+KNOWS WHAT'S DUE
+Every vehicle starts with a recommended schedule for its kind and powertrain: oil, tires, brakes, filters, fluids, inspections, winterizing, impellers, annuals. Tell Keyring when each job was last done and it counts down by date and by miles, kilometers or engine hours, using how much you actually drive.
+
+LOG IN SECONDS
+Tick what was done, add the mileage, cost and shop, and snap the receipt. Every checked job restarts its own countdown. Scan the odometer or VIN with your camera.
+
+EVERY KIND OF VEHICLE
+Cars, SUVs, trucks, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers.
+
+RECALLS, VALUE AND PARTS
+- Open safety recalls from NHTSA for your year, make and model
+- One tap to Kelley Blue Book, Edmunds or J.D. Power with your vehicle filled in, and a place to note what it's worth
+- The tools and parts for the job that's due next
+- Quick facts you always look up: oil type, tire size, wiper lengths, paint code
+
+UPGRADES, CLUBS AND OTHER OWNERS
+Upgrade ideas worth doing for your kind of vehicle, owners clubs for your make, and photos from people who own the same model.
+
+A RECORD WORTH HANDING OVER
+Search and filter the whole history, export it to CSV, and with Keyring Pro print a clean Service Record PDF with every job and receipt for a buyer, a shop or the glovebox.
+
+FREE FOR YOUR FIRST TWO
+Two vehicles are free for good, with unlimited logging, reminders, recalls, family sharing and CSV export. Keyring Pro adds unlimited vehicles, the Service Record PDF, receipts that fill themselves in, and spending insights.
+
+Keyring Pro is available as an auto-renewing monthly or yearly subscription, each with a one-week free trial for eligible new subscribers, or as a one-time purchase. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel any time in your App Store account settings.
+
+Recommended schedules are general guidance. Your owner's manual and a qualified mechanic come first.
+
+Privacy Policy: https://jackwallner.github.io/keyring/privacy-policy.html
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

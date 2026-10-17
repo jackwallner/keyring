@@ -21,5 +21,4 @@ fi
 
 FL="$(dirname "$0")/fastlane-bin.sh"
 chmod +x "$FL"
-"$FL" upload_metadata "$@"
-exec "$FL" upload_screenshots "$@"
+exec "$FL" upload_metadata "$@"
