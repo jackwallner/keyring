@@ -1,0 +1,362 @@
+import SwiftUI
+
+/// The vehicle's maintenance plan: what's on it, how often, and the catalog
+/// of everything else that applies to this kind of vehicle.
+struct ScheduleView: View {
+    @EnvironmentObject private var garage: GarageStore
+    @ObservedObject var vehicle: Vehicle
+    @State private var addingCustom = false
+
+    var body: some View {
+        let dues = garage.dues(for: vehicle)
+        let enabledKeys = Set(vehicle.enabledTasks.compactMap(\.catalogKey))
+        let available = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain).filter { !enabledKeys.contains($0.key) }
+        List {
+            Section {
+                ForEach(dues) { due in
+                    NavigationLink {
+                        TaskDetailView(vehicle: vehicle, taskID: due.taskID)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                StatusDot(status: due.result.status)
+                                Text(due.name).font(.body.weight(.medium))
+                            }
+                            Text("Every \(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: vehicle.meter))")
+                                .font(.footnote)
+                                .foregroundStyle(Theme.secondaryInk)
+                        }
+                    }
+                }
+                .onDelete { offsets in
+                    for index in offsets {
+                        if let task = vehicle.enabledTasks.first(where: { $0.id == dues[index].taskID }) { garage.remove(task) }
+                    }
+                }
+            } header: {
+                Text("On the schedule")
+            } footer: {
+                Text("Intervals are typical figures for normal use, not your manufacturer's. Check your owner's manual and change any of them to match.")
+            }
+
+            if !available.isEmpty {
+                Section("Add from the catalog") {
+                    ForEach(available) { item in
+                        Button {
+                            garage.addCatalogItems([item], to: vehicle)
+                            Haptics.success()
+                        } label: {
+                            HStack(spacing: Theme.sm) {
+                                Image(systemName: item.symbol)
+                                    .foregroundStyle(Theme.brass)
+                                    .frame(width: 28)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.name).foregroundStyle(Theme.ink)
+                                    Text("Every \(Format.interval(distance: item.distanceInterval(for: vehicle.meter) ?? 0, months: item.months ?? 0, meter: vehicle.meter))")
+                                        .font(.footnote)
+                                        .foregroundStyle(Theme.secondaryInk)
+                                }
+                                Spacer()
+                                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.brass)
+                            }
+                        }
+                        .accessibilityLabel("Add \(item.name)")
+                    }
+                }
+            }
+
+            Section {
+                Button { addingCustom = true } label: { Label("Create your own job", systemImage: "plus") }
+            }
+        }
+        .paperBackground()
+        .navigationTitle("Schedule")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { EditButton() }
+        .sheet(isPresented: $addingCustom) { TaskEditor(vehicle: vehicle, task: nil) }
+    }
+}
+
+/// One job: why it matters, how often, when it was last done, what it
+/// needs, and every time it's been logged.
+struct TaskDetailView: View {
+    @EnvironmentObject private var garage: GarageStore
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var vehicle: Vehicle
+    let taskID: UUID
+
+    @State private var logging = false
+    @State private var editing = false
+    @State private var settingLast = false
+
+    private var task: MaintenanceTask? { (vehicle.tasks ?? []).first { $0.id == taskID } }
+    private var item: CatalogItem? { task?.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain) } }
+    private var due: TaskDue? { garage.dues(for: vehicle).first { $0.taskID == taskID } }
+
+    var body: some View {
+        ScrollView {
+            if let task {
+                VStack(alignment: .leading, spacing: Theme.lg) {
+                    header(task)
+                    status
+                    Button {
+                        logging = true
+                    } label: {
+                        Label("Log \(task.displayName.lowercasedFirst)", systemImage: "plus")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    if due?.result.status == .noRecord || due?.lastDate == nil {
+                        Button("It was done before I had Keyring") { settingLast = true }
+                            .buttonStyle(SecondaryButtonStyle())
+                    }
+                    if let gear = item?.gear, !gear.isEmpty { gearSection(gear) }
+                    pastSection
+                    if let notes = task.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: Theme.xs) {
+                            SectionHeader(title: "Notes")
+                            Text(notes).font(.subheadline).foregroundStyle(Theme.ink).card()
+                        }
+                    }
+                    if let source = item?.source {
+                        Text("Interval guidance: \(source). Always defer to your owner's manual.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.faintInk)
+                    }
+                }
+                .padding(.horizontal, Theme.margin)
+                .padding(.bottom, Theme.xxl)
+            }
+        }
+        .paperBackground()
+        .navigationTitle(task?.displayName ?? "Job")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { Button("Edit") { editing = true } }
+        }
+        .sheet(isPresented: $logging) { LogServiceView(vehicle: vehicle, preselected: [taskID]) }
+        .sheet(isPresented: $editing) { if let task { TaskEditor(vehicle: vehicle, task: task) } }
+        .sheet(isPresented: $settingLast) { if let task { LastDoneSheet(vehicle: vehicle, task: task) } }
+    }
+
+    private func header(_ task: MaintenanceTask) -> some View {
+        VStack(alignment: .leading, spacing: Theme.sm) {
+            Image(systemName: task.displaySymbol)
+                .font(.system(size: 28))
+                .foregroundStyle(Theme.brass)
+                .frame(width: 56, height: 56)
+                .background(Theme.brassSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            Text(task.displayName)
+                .font(Theme.title(28))
+                .foregroundStyle(Theme.ink)
+            if let detail = item?.detail {
+                Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
+            }
+            HStack(spacing: Theme.xs) {
+                Label("Every \(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: vehicle.meter))", systemImage: "arrow.clockwise")
+                if let difficulty = item?.difficulty {
+                    Text("·")
+                    Text(difficulty.title)
+                }
+            }
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(Theme.secondaryInk)
+        }
+        .padding(.top, Theme.sm)
+    }
+
+    @ViewBuilder
+    private var status: some View {
+        if let due {
+            VStack(alignment: .leading, spacing: Theme.sm) {
+                HStack {
+                    Image(systemName: due.result.status.symbol).foregroundStyle(due.result.status.color)
+                    Text(due.result.status.label).font(.subheadline.weight(.semibold)).foregroundStyle(due.result.status.color)
+                    Spacer()
+                }
+                if due.result.status != .noRecord {
+                    DueBar(progress: due.result.progress, status: due.result.status)
+                }
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Eyebrow(text: "Last done")
+                        Text(lastText(due)).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Eyebrow(text: "Next")
+                        Text(due.dueLine(meter: vehicle.meter, current: vehicle.reading))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+            }
+            .card()
+        }
+    }
+
+    private func lastText(_ due: TaskDue) -> String {
+        let parts = [due.lastDate.map(Format.shortDate), due.lastReading.map { Format.reading($0, vehicle.meter) }].compactMap { $0 }
+        return parts.isEmpty ? "Not recorded" : parts.joined(separator: " · ")
+    }
+
+    private func gearSection(_ gear: [GearSuggestion]) -> some View {
+        VStack(alignment: .leading, spacing: Theme.sm) {
+            SectionHeader(title: "What you'll need")
+            VStack(spacing: 0) {
+                ForEach(Array(gear.enumerated()), id: \.offset) { index, suggestion in
+                    if index > 0 { Divider().overlay(Theme.hairline) }
+                    LinkRow(
+                        title: suggestion.title,
+                        detail: "Search Amazon for \(AmazonLinks.resolve(suggestion.query, vehicle: vehicle))",
+                        symbol: "cart",
+                        url: AmazonLinks.search(AmazonLinks.resolve(suggestion.query, vehicle: vehicle))
+                    )
+                    .padding(.vertical, 10)
+                }
+            }
+            .card(padding: Theme.md)
+            if AmazonLinks.isAffiliate {
+                Text(AmazonLinks.disclosure).font(.caption2).foregroundStyle(Theme.faintInk)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var pastSection: some View {
+        let entries = vehicle.sortedEntries.filter { $0.coveredTaskIDs.contains(taskID) }
+        if !entries.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.sm) {
+                SectionHeader(title: "Done before")
+                VStack(spacing: 0) {
+                    ForEach(Array(entries.enumerated()), id: \.element.objectID) { index, entry in
+                        if index > 0 { Divider().overlay(Theme.hairline) }
+                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false) }
+                            .buttonStyle(.plain)
+                    }
+                }
+                .card(padding: Theme.sm)
+            }
+        }
+    }
+}
+
+/// Name and interval of a job, new or existing.
+struct TaskEditor: View {
+    @EnvironmentObject private var garage: GarageStore
+    @Environment(\.dismiss) private var dismiss
+    let vehicle: Vehicle
+    let task: MaintenanceTask?
+
+    @State private var name = ""
+    @State private var distance: Double?
+    @State private var months: Double?
+    @State private var notes = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Job") {
+                    TextField("Name", text: $name)
+                }
+                Section {
+                    if vehicle.meter.hasReading {
+                        LabeledContent("Every") {
+                            NumberField(title: "None", value: $distance, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                    LabeledContent(vehicle.meter.hasReading ? "Or every" : "Every") {
+                        NumberField(title: "None", value: $months, suffix: "months")
+                            .multilineTextAlignment(.trailing)
+                    }
+                } header: {
+                    Text("How often")
+                } footer: {
+                    Text(vehicle.meter.hasReading ? "Whichever comes first. Leave one empty to use only the other." : "Leave empty for a job you log only as needed.")
+                }
+                Section("Notes") {
+                    TextField("Part numbers, torque specs, the shop you trust", text: $notes, axis: .vertical).lineLimit(2...6)
+                }
+                if let task {
+                    Section {
+                        Button("Remove from schedule", role: .destructive) {
+                            garage.remove(task)
+                            dismiss()
+                        }
+                    } footer: {
+                        Text("Past entries stay in the history.")
+                    }
+                }
+            }
+            .paperBackground()
+            .navigationTitle(task == nil ? "New job" : "Edit job")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let task {
+                            garage.update(task, name: name, distance: distance ?? 0, months: Int(months ?? 0), notes: notes)
+                        } else {
+                            let created = garage.addCustomTask(name: name, distance: distance ?? 0, months: Int(months ?? 0), to: vehicle)
+                            created.notes = notes.trimmed.nilIfEmpty
+                            garage.saveVehicleEdits()
+                        }
+                        dismiss()
+                    }
+                    .disabled(name.trimmed.isEmpty)
+                }
+            }
+            .onAppear {
+                guard let task else { return }
+                name = task.displayName
+                distance = task.intervalDistance > 0 ? task.intervalDistance : nil
+                months = task.intervalMonths > 0 ? Double(task.intervalMonths) : nil
+                notes = task.notes ?? ""
+            }
+        }
+    }
+}
+
+/// "When was it last done?" for jobs done before the app.
+struct LastDoneSheet: View {
+    @EnvironmentObject private var garage: GarageStore
+    @Environment(\.dismiss) private var dismiss
+    let vehicle: Vehicle
+    let task: MaintenanceTask
+
+    @State private var date = Date.now
+    @State private var reading: Double?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    DatePicker("Date", selection: $date, in: ...Date.now, displayedComponents: .date)
+                    if vehicle.meter.hasReading {
+                        LabeledContent(vehicle.meter.meterName) {
+                            NumberField(title: "If you know it", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                } footer: {
+                    Text("A best guess is fine. It only sets when this is next due; it isn't added to the history.")
+                }
+            }
+            .paperBackground()
+            .navigationTitle("Last \(task.displayName.lowercasedFirst)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        garage.setBaseline(task, date: date, reading: reading)
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}

@@ -1,0 +1,38 @@
+name: KeyringCloudSchema
+options:
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: YXG4MP6W39
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: Apple Development
+    PROVISIONING_PROFILE_SPECIFIER: Keyring schema Mac dev
+targets:
+  KeyringCloudSchema:
+    type: application
+    platform: macOS
+    sources:
+      - SchemaMain.swift
+      - ../../Shared/Models/KeyringModel.swift
+      - ../../Shared/Models/VehicleKind.swift
+      - ../../Shared/Services/ShareInvite.swift
+      - ../../Shared/Utilities/Theme.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.keyring
+        INFOPLIST_FILE: SchemaInfo.plist
+        SCHEMA_CLOUDKIT_ENVIRONMENT: Development
+        CODE_SIGN_ENTITLEMENTS: Schema.entitlements
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: SchemaProduction.entitlements
+          SCHEMA_CLOUDKIT_ENVIRONMENT: Production
+schemes:
+  KeyringCloudSchema:
+    build:
+      targets:
+        KeyringCloudSchema: all

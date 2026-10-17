@@ -1,0 +1,264 @@
+import Foundation
+
+/// Every kind of thing a family keeps running. The kind picks the icon, the
+/// meter, the schedule and the suggestions, so it is the one choice that
+/// shapes everything else about a vehicle.
+enum VehicleKind: String, CaseIterable, Identifiable, Codable, Sendable {
+    case car, truck, suv, van, motorcycle, scooter
+    case rv, camper, trailer
+    case boat, sailboat, personalWatercraft
+    case aircraft
+    case atv, snowmobile, tractor
+    case ebike, golfCart
+    case other
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .car: "Car"
+        case .truck: "Truck"
+        case .suv: "SUV"
+        case .van: "Van"
+        case .motorcycle: "Motorcycle"
+        case .scooter: "Scooter"
+        case .rv: "Motorhome"
+        case .camper: "Camper"
+        case .trailer: "Trailer"
+        case .boat: "Boat"
+        case .sailboat: "Sailboat"
+        case .personalWatercraft: "Jet Ski"
+        case .aircraft: "Aircraft"
+        case .atv: "ATV / UTV"
+        case .snowmobile: "Snowmobile"
+        case .tractor: "Tractor / Mower"
+        case .ebike: "Bike / E-bike"
+        case .golfCart: "Golf Cart"
+        case .other: "Other"
+        }
+    }
+
+    /// SF Symbol name. `VehicleKindTests` proves each one exists on iOS 17.
+    var symbol: String {
+        switch self {
+        case .car: "car.side.fill"
+        case .truck: "truck.pickup.side.fill"
+        case .suv: "suv.side.fill"
+        case .van: "bus.fill"
+        case .motorcycle: "motorcycle.fill"
+        case .scooter: "scooter"
+        case .rv: "bus.doubledecker.fill"
+        case .camper: "tent.fill"
+        case .trailer: "box.truck.fill"
+        case .boat: "ferry.fill"
+        case .sailboat: "sailboat.fill"
+        case .personalWatercraft: "water.waves"
+        case .aircraft: "airplane"
+        case .atv: "car.rear.road.lane"
+        case .snowmobile: "snowflake"
+        case .tractor: "leaf.fill"
+        case .ebike: "bicycle"
+        case .golfCart: "figure.golf"
+        case .other: "wrench.and.screwdriver.fill"
+        }
+    }
+
+    /// The meter a new vehicle of this kind starts with. Owners can change it.
+    var defaultMeter: MeterUnit {
+        switch self {
+        case .boat, .sailboat, .personalWatercraft, .aircraft, .tractor: .hours
+        case .camper, .trailer: .miles
+        case .golfCart: .none
+        default: .miles
+        }
+    }
+
+    var defaultPowertrain: Powertrain {
+        switch self {
+        case .ebike, .golfCart: .electric
+        case .camper, .trailer, .sailboat: .none
+        case .boat: .outboard
+        case .aircraft: .piston
+        default: .gasoline
+        }
+    }
+
+    /// Powertrains worth offering for this kind, in the order a picker shows.
+    var powertrainChoices: [Powertrain] {
+        switch self {
+        case .car, .suv, .van: [.gasoline, .hybrid, .plugInHybrid, .electric, .diesel]
+        case .truck: [.gasoline, .diesel, .hybrid, .electric]
+        case .motorcycle, .scooter: [.gasoline, .electric]
+        case .rv: [.gasoline, .diesel]
+        case .camper, .trailer: [.none]
+        case .boat: [.outboard, .inboard, .sterndrive, .jetDrive, .electric]
+        case .sailboat: [.none, .outboard, .inboard]
+        case .personalWatercraft: [.jetDrive]
+        case .aircraft: [.piston, .turbine]
+        case .atv, .snowmobile: [.gasoline, .electric]
+        case .tractor: [.gasoline, .diesel, .electric]
+        case .ebike: [.electric, .none]
+        case .golfCart: [.electric, .gasoline]
+        case .other: Powertrain.allCases
+        }
+    }
+
+    /// Typical use per day in the vehicle's own meter, used to estimate when a
+    /// distance-based item comes due until the owner's real pace is known.
+    var typicalDailyUse: Double {
+        switch self {
+        case .car, .suv, .van: 33       // ~12,000 mi a year
+        case .truck: 35
+        case .motorcycle: 10
+        case .scooter: 8
+        case .rv: 14
+        case .camper, .trailer: 8
+        case .boat, .sailboat: 0.15     // ~55 engine hours a year
+        case .personalWatercraft: 0.1
+        case .aircraft: 0.25            // ~90 hours a year
+        case .atv: 3
+        case .snowmobile: 4
+        case .tractor: 0.15
+        case .ebike: 6
+        case .golfCart: 0
+        case .other: 10
+        }
+    }
+
+    /// Road-registered kinds NHTSA covers for recalls and VIN decoding.
+    var hasNHTSARecords: Bool {
+        switch self {
+        case .car, .truck, .suv, .van, .motorcycle, .scooter, .rv, .camper, .trailer: true
+        default: false
+        }
+    }
+
+    /// The word the app uses for this kind's serial number.
+    var identifierLabel: String {
+        switch self {
+        case .boat, .sailboat, .personalWatercraft: "Hull ID (HIN)"
+        case .aircraft: "Serial number"
+        case .ebike, .golfCart, .tractor: "Serial number"
+        default: "VIN"
+        }
+    }
+
+    /// The word for the plate or registration mark.
+    var registrationLabel: String {
+        switch self {
+        case .aircraft: "Tail number"
+        case .boat, .sailboat, .personalWatercraft: "Registration number"
+        default: "Plate"
+        }
+    }
+
+    /// Groupings for the kind picker, so nineteen choices read as four.
+    static let pickerSections: [(title: String, kinds: [VehicleKind])] = [
+        ("On the road", [.car, .suv, .truck, .van, .motorcycle, .scooter]),
+        ("Camping and towing", [.rv, .camper, .trailer]),
+        ("On the water and in the air", [.boat, .sailboat, .personalWatercraft, .aircraft]),
+        ("Off road and around home", [.atv, .snowmobile, .tractor, .ebike, .golfCart, .other]),
+    ]
+}
+
+enum MeterUnit: String, CaseIterable, Identifiable, Codable, Sendable {
+    case miles, kilometers, hours, none
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .miles: "Miles"
+        case .kilometers: "Kilometers"
+        case .hours: "Engine hours"
+        case .none: "No meter"
+        }
+    }
+
+    var short: String {
+        switch self {
+        case .miles: "mi"
+        case .kilometers: "km"
+        case .hours: "hrs"
+        case .none: ""
+        }
+    }
+
+    var meterName: String {
+        switch self {
+        case .miles, .kilometers: "Odometer"
+        case .hours: "Hour meter"
+        case .none: "Meter"
+        }
+    }
+
+    /// Catalog distances are written in miles. Kilometers convert and round to
+    /// a figure a person would actually say; hours are never converted.
+    func fromCatalogMiles(_ miles: Double) -> Double {
+        switch self {
+        case .kilometers:
+            let km = miles * 1.609344
+            let step: Double = km >= 10_000 ? 1_000 : (km >= 1_000 ? 500 : 50)
+            return (km / step).rounded() * step
+        default:
+            return miles
+        }
+    }
+
+    var hasReading: Bool { self != .none }
+}
+
+enum Powertrain: String, CaseIterable, Identifiable, Codable, Sendable {
+    case gasoline, diesel, hybrid, plugInHybrid, electric
+    case outboard, inboard, sterndrive, jetDrive
+    case piston, turbine
+    case none
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .gasoline: "Gas"
+        case .diesel: "Diesel"
+        case .hybrid: "Hybrid"
+        case .plugInHybrid: "Plug-in hybrid"
+        case .electric: "Electric"
+        case .outboard: "Outboard"
+        case .inboard: "Inboard"
+        case .sterndrive: "Sterndrive"
+        case .jetDrive: "Jet drive"
+        case .piston: "Piston"
+        case .turbine: "Turbine"
+        case .none: "No engine"
+        }
+    }
+
+    var burnsFuel: Bool {
+        switch self {
+        case .electric, .none: false
+        default: true
+        }
+    }
+}
+
+extension VehicleTint {
+    /// A sensible first color per kind, so a new garage isn't a row of grays.
+    static func defaultTint(for kind: VehicleKind) -> VehicleTint {
+        switch kind {
+        case .car: .navy
+        case .suv: .racingGreen
+        case .truck: .graphite
+        case .van: .sky
+        case .motorcycle, .scooter: .oxblood
+        case .rv, .camper: .sand
+        case .trailer: .silver
+        case .boat, .personalWatercraft: .marine
+        case .sailboat: .navy
+        case .aircraft: .sky
+        case .atv, .snowmobile: .orange
+        case .tractor: .olive
+        case .ebike, .golfCart: .plum
+        case .other: .graphite
+        }
+    }
+}

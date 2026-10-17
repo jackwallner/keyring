@@ -1,0 +1,1 @@
+{"timeRange": {"start": "2026-09-01", "end": "2026-09-30", "timeZone": "UTC", "granularity": "MONTHLY"}, "filters": [{"field": "countryOrRegion", "operator": "EQUALS", "value": "US"}], "sorting": [{"field": "rankInGenre", "sortOrder": "ASC"}], "pagination": {"offset": 0, "pageSize": 5000}}
