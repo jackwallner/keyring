@@ -144,7 +144,7 @@ struct ValueSource: Identifiable, Hashable {
             URLQueryItem(name: "LH_Sold", value: "1"),
             URLQueryItem(name: "LH_Complete", value: "1"),
         ]
-        return ValueSource(name: "eBay sold listings", detail: "What similar ones actually sold for", url: ebay.url!)
+        return ValueSource(name: "eBay sold listings", detail: "What similar ones sold for (sign in to eBay)", url: ebay.url!)
     }
 
     private static func usSources(for vehicle: Vehicle) -> [ValueSource] {
@@ -166,7 +166,7 @@ struct ValueSource: Identifiable, Hashable {
             components.queryItems = items
             list.append(ValueSource(name: "Kelley Blue Book", detail: "Trade-in and private party values", url: components.url!))
             var edmunds = "https://www.edmunds.com/"
-            if let make, let model, let year { edmunds += "\(make)/\(model)/\(year)/appraisal.html" } else { edmunds += "appraisal/" }
+            if let make, let model, let year { edmunds += "\(make)/\(model)/\(year)/appraisal-value/" } else { edmunds += "appraisal/" }
             list.append(ValueSource(name: "Edmunds", detail: "True Market Value appraisal", url: URL(string: edmunds)!))
         case .motorcycle, .scooter:
             list.append(ValueSource(name: "Kelley Blue Book", detail: "Motorcycle values", url: URL(string: "https://www.kbb.com/motorcycles/")!))

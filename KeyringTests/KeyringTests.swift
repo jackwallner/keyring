@@ -682,6 +682,19 @@ final class AuditRoundThreeTests: XCTestCase {
         XCTAssertEqual(ValueSource.sources(for: car, region: "US").first?.name, "Kelley Blue Book")
     }
 
+    /// Paths checked live against each site on 2026-10-17. Edmunds 404s on
+    /// its old `appraisal.html` path.
+    func testUSValueSourceURLs() {
+        let store = makeStore()
+        let truck = store.addVehicle(NewVehicle(kind: .truck, powertrain: .gasoline, meter: .miles, year: 2018, make: "Ford", model: "F-150"))
+        let urls = Dictionary(uniqueKeysWithValues: ValueSource.sources(for: truck, region: "US").map { ($0.name, $0.url.absoluteString) })
+        XCTAssertEqual(urls["Edmunds"], "https://www.edmunds.com/ford/f-150/2018/appraisal-value/")
+        XCTAssertEqual(urls["Kelley Blue Book"], "https://www.kbb.com/ford/f-150/2018/?intent=trade-in-sell")
+        let bare = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 0, make: "Ford", model: ""))
+        let bareURLs = Dictionary(uniqueKeysWithValues: ValueSource.sources(for: bare, region: "US").map { ($0.name, $0.url.absoluteString) })
+        XCTAssertEqual(bareURLs["Edmunds"], "https://www.edmunds.com/appraisal/")
+    }
+
     func testCarPlayAdapterOnlyWhereItFits() {
         let store = makeStore()
         let tesla = store.addVehicle(NewVehicle(kind: .car, powertrain: .electric, meter: .miles, year: 2023, make: "Tesla", model: "Model Y"))

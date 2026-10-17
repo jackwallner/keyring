@@ -2,7 +2,7 @@ import Foundation
 
 /// Where owners of the same thing gather: national clubs, the forums people
 /// actually search for answers, and the subreddit. Every domain was checked
-/// live on 2026-10-16; parked or dead ones were left out.
+/// live on 2026-10-17; parked or dead ones were left out.
 struct Club: Identifiable, Hashable, Sendable {
     enum Kind: String, Sendable {
         case club, forum, subreddit, organization
@@ -83,7 +83,7 @@ enum ClubDirectory {
         "land cruiser": [Club("Toyota Land Cruiser Association", "Trails, events and tech since 1975", .club, "https://tlca.org/")],
         "gr86": [Club("FT86Club", "86, BRZ and GR86 owners", .forum, "https://www.ft86club.com/"), .subreddit("GR86")],
         "f 150": [Club("F150 Forum", "F-150 owners and tech", .forum, "https://www.f150forum.com/"), .subreddit("f150")],
-        "mustang": [Club("Mustang Club of America", "National club with regional chapters and shows", .club, "https://www.mustang.org/"), .subreddit("Mustang")],
+        "mustang": [Club("AllFordMustangs", "Every generation of Mustang", .forum, "https://www.allfordmustangs.com/"), .subreddit("Mustang")],
         "bronco": [.subreddit("bronco")],
         "ranger": [Club("Ranger Forums", "Ford Ranger owners", .forum, "https://www.rangerforums.net/")],
         "maverick": [.subreddit("FordMaverickTruck")],
@@ -163,7 +163,7 @@ enum ClubDirectory {
         "bmw": [Club("BMW Car Club of America", "Chapters, track days and Roundel", .club, "https://www.bmwcca.org/"), Club("Bimmerfest", "BMW owners forum", .forum, "https://www.bimmerfest.com/"), .subreddit("BMW")],
         "mercedes": [Club("MBWorld", "Mercedes-Benz owners", .forum, "https://mbworld.org/"), .subreddit("mercedes_benz")],
         "porsche": [Club("Porsche Club of America", "The largest single-marque club in the world", .club, "https://www.pca.org/"), Club("Rennlist", "Porsche owners forum", .forum, "https://rennlist.com/"), .subreddit("Porsche")],
-        "volvo": [Club("Volvo Club of America", "Chapters and the Rolling magazine", .club, "https://www.vcoa.org/"), .subreddit("Volvo")],
+        "volvo": [Club("Volvo Club of America", "Chapters and the Rolling magazine", .club, "https://vcoa.org/"), .subreddit("Volvo")],
         "cadillac": [Club("Cadillac & LaSalle Club", "Since 1958", .club, "https://www.cadillaclasalleclub.org/"), .subreddit("Cadillac")],
         "buick": [Club("Buick Club of America", "Chapters and national meets", .club, "https://www.buickclub.org/"), .subreddit("Buick")],
         "lincoln": [Club("Lincoln & Continental Owners Club", "Lincoln history and meets", .club, "https://www.lincolnclub.org/"), Club("Lincoln Forum", "Lincoln owners", .forum, "https://www.lincolnforum.com/"), .subreddit("lincoln")],

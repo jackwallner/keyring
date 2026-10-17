@@ -224,7 +224,7 @@ enum RecallRegion {
         switch region {
         case "CA": ("Transport Canada recalls", URL(string: "https://tc.canada.ca/en/road-transportation/defects-recalls-vehicles-tires-child-car-seats")!)
         case "GB": ("DVSA vehicle recalls", URL(string: "https://www.check-vehicle-recalls.service.gov.uk")!)
-        case "AU": ("Australian recalls", URL(string: "https://www.productsafety.gov.au/recalls")!)
+        case "AU": ("Australian vehicle recalls", URL(string: "https://www.vehiclerecalls.gov.au/")!)
         default: nil
         }
     }
