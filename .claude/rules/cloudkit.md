@@ -32,6 +32,9 @@ or every real invite fails in Production with "Cannot create new type cloudkit.s
 Development to Production in CloudKit Console after any model change, before uploading a build that
 writes the new fields (Production rejects unknown fields and the export stalls for everyone). Never
 reset Production. `ServiceEntry.kindRaw` and `recallCampaign` were added and deployed to Production 2026-10-16 (build 4).
+Initialized in Development 2026-10-17, not yet in Production (deploy before any build after 4 ships): Vehicle
+`soldDate`, `soldPrice`, `auxMeterName`, `auxReading`, `auxReadingDate`, `storedSince`, `storedUntil`, `yearlyUse`;
+MaintenanceTask `usesAuxMeter`; ServiceEntry `auxReading`; MeterReading `isAux`.
 
 ## Sharing
 One `CKShare` per garage, `publicPermission = .readWrite` so a link or QR joins anyone (contact-only invites fail when
