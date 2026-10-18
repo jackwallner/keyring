@@ -209,7 +209,7 @@ struct GarageView: View {
                         let row = largeText ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.xs)) : AnyLayout(HStackLayout(spacing: Theme.sm))
                         row {
                             if !largeText {
-                                Circle().fill(vehicle.tint.color).frame(width: 10, height: 10)
+                                Circle().fill(vehicle.tint.color).tintOutline(vehicle.tint, in: Circle(), lineWidth: 1).frame(width: 10, height: 10)
                             }
                             VStack(alignment: .leading, spacing: 1) {
                                 Text("\(vehicle.displayName): \(due.name)")
@@ -319,6 +319,7 @@ struct VehicleCard: View {
         let tint = vehicle.tint
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 22, style: .continuous).fill(tint.color)
+                .tintOutline(tint, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             if vehicle.photo != nil {
                 photoLayer
             } else {

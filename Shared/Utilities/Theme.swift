@@ -67,10 +67,10 @@ enum Theme {
     }
 }
 
-/// A vehicle's own color. Dark tints carry light text; the two light ones
-/// carry ink.
+/// A vehicle's own color. Dark tints carry light text; the light ones carry
+/// ink. White would vanish on white, so it draws a black outline instead.
 enum VehicleTint: String, CaseIterable, Identifiable, Sendable {
-    case racingGreen, navy, oxblood, graphite, marine, sky, plum, olive, orange, sand, silver, cream
+    case racingGreen, navy, oxblood, graphite, marine, sky, plum, olive, orange, sand, silver, cream, white
 
     var id: String { rawValue }
 
@@ -88,12 +88,19 @@ enum VehicleTint: String, CaseIterable, Identifiable, Sendable {
         case .sand: 0xB69E76
         case .silver: 0x8C939A
         case .cream: 0xE6DCC4
+        case .white: 0xFFFFFF
         }
     }
 
     var color: Color { Color(hex: hex) }
 
-    var isLight: Bool { self == .cream || self == .sand }
+    var isLight: Bool { self == .cream || self == .sand || self == .white }
+
+    /// The edge that keeps a white tag visible on a white screen.
+    var outline: Color? { self == .white ? Color(hex: 0x1C1B19) : nil }
+
+    /// The tint a stored hex came from, for views that only kept the number.
+    static func matching(hex: UInt32) -> VehicleTint? { allCases.first { $0.hex == hex } }
 
     var foreground: Color { isLight ? Color(hex: 0x1C1B19) : Color(hex: 0xF8F5EE) }
 
@@ -111,7 +118,15 @@ enum VehicleTint: String, CaseIterable, Identifiable, Sendable {
         case .sand: "Sand"
         case .silver: "Silver"
         case .cream: "Cream"
+        case .white: "White"
         }
+    }
+}
+
+extension View {
+    /// Draws the tint's outline, if it has one, around a filled shape.
+    func tintOutline<S: InsettableShape>(_ tint: VehicleTint, in shape: S, lineWidth: CGFloat = 1.5) -> some View {
+        overlay { if let outline = tint.outline { shape.strokeBorder(outline, lineWidth: lineWidth) } }
     }
 }
 

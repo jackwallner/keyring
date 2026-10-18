@@ -71,7 +71,7 @@ struct AddVehicleFlow: View {
         let used = Set(garage.vehicles.map(\.tint))
         let preferred = VehicleTint.defaultTint(for: kind)
         guard used.contains(preferred) else { return preferred }
-        return VehicleTint.allCases.first { !used.contains($0) && $0 != .cream && $0 != .silver } ?? preferred
+        return VehicleTint.allCases.first { !used.contains($0) && $0 != .cream && $0 != .silver && $0 != .white } ?? preferred
     }
 
     private func finish() {
@@ -211,6 +211,7 @@ struct VehicleDetailsForm: View {
                 header {
                     ZStack {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill((draft.tint ?? .defaultTint(for: draft.kind)).color)
+                            .tintOutline(draft.tint ?? .defaultTint(for: draft.kind), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         if let data = draft.photo, let image = UIImage(data: data) {
                             Image(uiImage: image).resizable().scaledToFill()
                                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -384,6 +385,7 @@ struct VehicleDetailsForm: View {
                             } label: {
                                 Circle()
                                     .fill(tint.color)
+                                    .tintOutline(tint, in: Circle(), lineWidth: 1)
                                     .frame(width: 34, height: 34)
                                     .overlay(Circle().strokeBorder(Theme.ink, lineWidth: (draft.tint ?? .defaultTint(for: draft.kind)) == tint ? 2.5 : 0).padding(-4))
                                     .padding(4)

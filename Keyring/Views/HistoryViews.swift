@@ -40,7 +40,7 @@ struct HistoryView: View {
                         HStack(spacing: Theme.xs) {
                             chip("All", selected: filter == nil) { filter = nil }
                             ForEach(allVehicles) { vehicle in
-                                chip(vehicle.displayName, tint: vehicle.tint.color, retired: vehicle.isRetired, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
+                                chip(vehicle.displayName, tint: vehicle.tint, retired: vehicle.isRetired, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
                             }
                         }
                         .padding(.horizontal, Theme.margin)
@@ -142,13 +142,13 @@ struct HistoryView: View {
         return result.map { ($0.0, $0.1, $0.2) }
     }
 
-    private func chip(_ title: String, tint: Color? = nil, retired: Bool = false, selected: Bool, action: @escaping () -> Void) -> some View {
+    private func chip(_ title: String, tint: VehicleTint? = nil, retired: Bool = false, selected: Bool, action: @escaping () -> Void) -> some View {
         Button {
             Haptics.selected()
             action()
         } label: {
             HStack(spacing: 6) {
-                if let tint { Circle().fill(tint).frame(width: 8, height: 8) }
+                if let tint { Circle().fill(tint.color).tintOutline(tint, in: Circle(), lineWidth: 1).frame(width: 8, height: 8) }
                 Text(title).lineLimit(1)
             }
             .font(.footnote.weight(.semibold))

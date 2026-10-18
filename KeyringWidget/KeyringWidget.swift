@@ -67,9 +67,10 @@ struct UpcomingWidgetView: View {
             HStack {
                 Image(systemName: item.vehicle.symbol)
                     .font(.footnote)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(foreground(item.vehicle.tintHex))
                     .frame(width: 26, height: 26)
                     .background(Color(hex: item.vehicle.tintHex), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .overlay { outline(item.vehicle.tintHex, RoundedRectangle(cornerRadius: 7, style: .continuous)) }
                 Spacer()
                 Circle().fill(color(item.item.statusRaw)).frame(width: 8, height: 8)
             }
@@ -116,9 +117,10 @@ struct UpcomingWidgetView: View {
         HStack(spacing: 8) {
             Image(systemName: item.vehicle.symbol)
                 .font(.caption)
-                .foregroundStyle(.white)
+                .foregroundStyle(foreground(item.vehicle.tintHex))
                 .frame(width: 24, height: 24)
                 .background(Color(hex: item.vehicle.tintHex), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay { outline(item.vehicle.tintHex, RoundedRectangle(cornerRadius: 6, style: .continuous)) }
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.item.name).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1)
                 Text(item.vehicle.name).font(.caption2).foregroundStyle(Theme.secondaryInk).lineLimit(1)
@@ -129,6 +131,15 @@ struct UpcomingWidgetView: View {
                 .foregroundStyle(color(item.item.statusRaw))
                 .lineLimit(1)
         }
+    }
+
+    private func foreground(_ hex: UInt32) -> Color {
+        VehicleTint.matching(hex: hex)?.foreground ?? .white
+    }
+
+    @ViewBuilder
+    private func outline<S: InsettableShape>(_ hex: UInt32, _ shape: S) -> some View {
+        if let outline = VehicleTint.matching(hex: hex)?.outline { shape.strokeBorder(outline, lineWidth: 1) }
     }
 
     private func color(_ raw: Int) -> Color {

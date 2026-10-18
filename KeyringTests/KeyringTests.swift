@@ -682,6 +682,16 @@ final class AuditRoundThreeTests: XCTestCase {
         XCTAssertEqual(ValueSource.sources(for: car, region: "US").first?.name, "Kelley Blue Book")
     }
 
+    /// White is the only tint with an outline, carries ink, and survives the
+    /// widget's hex round trip.
+    func testWhiteTintIsOutlined() {
+        XCTAssertTrue(VehicleTint.white.isLight)
+        XCTAssertNotNil(VehicleTint.white.outline)
+        XCTAssertEqual(VehicleTint.allCases.filter { $0.outline != nil }, [.white])
+        XCTAssertEqual(VehicleTint.matching(hex: VehicleTint.white.hex), .white)
+        XCTAssertEqual(Set(VehicleTint.allCases.map(\.hex)).count, VehicleTint.allCases.count)
+    }
+
     /// Paths checked live against each site on 2026-10-17. Edmunds 404s on
     /// its old `appraisal.html` path.
     func testUSValueSourceURLs() {

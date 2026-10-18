@@ -207,6 +207,34 @@ final class SmokeUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 10))
     }
 
+    func testWhiteColorSaves() {
+        launch("vehicle")
+        expectTitle("The Tacoma", timeout: 10)
+        app.navigationBars.buttons["Edit"].tap()
+        let white = app.buttons["White"]
+        let first = app.buttons["Racing green"]
+        scrollTo(first)
+        let row = app.scrollViews.containing(.button, identifier: "Racing green").firstMatch
+        for _ in 0..<3 where !white.isHittable { row.swipeLeft() }
+        XCTAssertTrue(white.waitForExistence(timeout: 5), "No White swatch")
+        white.tap()
+        XCTAssertTrue(white.isSelected)
+        attach("white-swatch")
+        tapButton("Save")
+        expectTitle("The Tacoma")
+        XCTAssertTrue(app.navigationBars.buttons["Edit"].waitForExistence(timeout: 5))
+        attach("white-detail")
+        goBack()
+        attach("white-garage")
+    }
+
+    private func attach(_ name: String) {
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = name
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
+
     func testGarageListsDemoVehicles() {
         launch()
         for name in ["The Tacoma", "Sam's RAV4", "Rebel", "Lake boat", "N734CP"] {

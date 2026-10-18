@@ -192,7 +192,7 @@ struct DueBar: View {
 /// A vehicle's picture: its photo when there is one, otherwise its kind's
 /// silhouette on its own color.
 struct VehicleArt: View {
-    let vehicle: Vehicle
+    @ObservedObject var vehicle: Vehicle
     var cornerRadius: CGFloat = Theme.smallRadius
     var symbolScale: CGFloat = 0.42
 
@@ -214,6 +214,7 @@ struct VehicleArt: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .tintOutline(vehicle.tint, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .accessibilityHidden(true)
     }
 }
