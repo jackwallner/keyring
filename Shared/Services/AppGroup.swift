@@ -25,8 +25,6 @@ enum AppGroup {
         static let appearance = "appearance"
         static let mutedVehicles = "mutedVehicles"
         static let reminderHour = "reminderHour"
-        static let blockedAuthors = "blockedAuthors"
-        static let reportedPhotos = "reportedPhotos"
         static let acceptedCommunityTerms = "acceptedCommunityTerms"
         static let reviewedRecalls = "reviewedRecalls"
         static let launchCount = "launchCount"

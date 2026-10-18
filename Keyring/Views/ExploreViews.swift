@@ -1,5 +1,4 @@
 import Charts
-import PhotosUI
 import SwiftUI
 
 // MARK: - Value
@@ -534,259 +533,36 @@ private struct RecallRow: View {
     }
 }
 
-// MARK: - Photos
+// MARK: - Service nearby
 
-/// Others like it: owner photos shared through Keyring and freely licensed
-/// reference shots, plus this vehicle's own photo album from its history.
-struct GalleryView: View {
-    @EnvironmentObject private var community: CommunityPhotos
-    @EnvironmentObject private var garage: GarageStore
-    @ObservedObject var vehicle: Vehicle
-
-    @State private var photos: [CommunityPhoto] = []
-    @State private var loading = true
-    @State private var viewing: CommunityPhoto?
-    @State private var showingTerms = false
-    @State private var pickerItem: PhotosPickerItem?
-    @State private var showingPicker = false
-    @State private var shareMessage: String?
-    @State private var reporting: CommunityPhoto?
-    @State private var sharing = false
+/// Shops, mobile mechanics and detailers. Map searches open around wherever
+/// the owner is; the booking sites open in Safari.
+struct ServiceNearbyView: View {
+    let vehicle: Vehicle
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
-                ownSection
-                VStack(alignment: .leading, spacing: Theme.sm) {
-                    SectionHeader(title: vehicle.makeAndModel.isEmpty ? "Others like it" : "Other \(vehicle.makeAndModel)s")
-                    if loading {
-                        ProgressView().frame(maxWidth: .infinity, minHeight: 120)
-                    } else if photos.isEmpty {
-                        Text(vehicle.makeAndModel.isEmpty
-                             ? "Add the make and model to see photos of others like yours."
-                             : "No photos yet. Share yours and it'll be the first. If you're offline, pull down to try again once you're back.")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.secondaryInk)
-                            .card()
-                    } else {
-                        LazyVGrid(columns: [GridItem(.flexible(), spacing: Theme.xs), GridItem(.flexible(), spacing: Theme.xs)], spacing: Theme.xs) {
-                            ForEach(photos) { photo in
-                                Button { viewing = photo } label: { PhotoTile(photo: photo) }
-                                    .buttonStyle(PressableStyle())
-                                    .contextMenu { moderationButtons(photo) }
-                            }
+        let services = ServiceFinder.services(for: vehicle, us: RecallRegion.isUS)
+        List {
+            ForEach(LocalService.Group.allCases, id: \.self) { group in
+                let items = services.filter { $0.group == group }
+                if !items.isEmpty {
+                    Section(group.title) {
+                        ForEach(items) { service in
+                            LinkRow(title: service.title, detail: service.detail, symbol: service.symbol, url: service.url)
+                                .padding(.vertical, 4)
                         }
                     }
-                    Button {
-                        if community.hasAcceptedTerms { showingPicker = true } else { showingTerms = true }
-                    } label: {
-                        HStack(spacing: Theme.xs) {
-                            if sharing { ProgressView() }
-                            Label(sharing ? "Sharing" : "Share a photo of yours", systemImage: "square.and.arrow.up")
-                        }
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .disabled(vehicle.makeAndModel.isEmpty || sharing)
-                    if let shareMessage {
-                        Text(shareMessage).font(.footnote).foregroundStyle(Theme.secondaryInk)
-                    }
-                    Text("Owner photos are shared publicly with other Vehicle Maintenance Log users who have the same make and model. Reference photos come from Wikimedia Commons under their own licenses.")
-                        .font(.caption)
-                        .foregroundStyle(Theme.faintInk)
                 }
             }
-            .padding(.horizontal, Theme.margin)
-            .padding(.bottom, Theme.xxl)
+            Section {
+                EmptyView()
+            } footer: {
+                Text("Map searches open Apple Maps near you. Check reviews and get a written quote before work starts.")
+            }
         }
         .paperBackground()
-        .navigationTitle("Photos")
+        .navigationTitle("Service nearby")
         .navigationBarTitleDisplayMode(.inline)
-        .refreshable { photos = await community.photos(for: vehicle) }
-        .task(id: community.blockedAuthors.count + community.reportedPhotos.count) {
-            photos = await community.photos(for: vehicle)
-            loading = false
-        }
-        .sheet(item: $viewing) { photo in PhotoViewer(photo: photo, onReport: { reporting = photo; viewing = nil }, onBlock: { community.block(photo); viewing = nil }) }
-        .sheet(isPresented: $showingTerms) {
-            CommunityTermsSheet {
-                community.acceptTerms()
-                showingTerms = false
-                showingPicker = true
-            }
-        }
-        .photosPicker(isPresented: $showingPicker, selection: $pickerItem, matching: .images)
-        .onChange(of: pickerItem) { _, item in
-            guard let item else { return }
-            Task {
-                pickerItem = nil
-                guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-                sharing = true
-                shareMessage = nil
-                defer { sharing = false }
-                do {
-                    try await community.share(data, caption: vehicle.descriptor, for: vehicle)
-                    shareMessage = "Shared. Thanks for adding to the gallery."
-                    photos = await community.photos(for: vehicle)
-                } catch let error as CommunityPhotos.ShareError {
-                    shareMessage = error.message
-                } catch {
-                    shareMessage = CommunityPhotos.ShareError.failed.message
-                }
-            }
-        }
-        .confirmationDialog("Report this photo?", isPresented: Binding(get: { reporting != nil }, set: { if !$0 { reporting = nil } }), titleVisibility: .visible) {
-            ForEach(["Not this vehicle", "Offensive or inappropriate", "Personal information", "Spam"], id: \.self) { reason in
-                Button(reason) {
-                    if let reporting { community.report(reporting, reason: reason) }
-                    reporting = nil
-                }
-            }
-        } message: {
-            Text("It's hidden for you right away and reviewed within 24 hours.")
-        }
-    }
-
-    @ViewBuilder
-    private var ownSection: some View {
-        let own = vehicle.sortedEntries.flatMap { $0.sortedAttachments.filter { !$0.isReceipt } }
-        if vehicle.photo != nil || !own.isEmpty {
-            VStack(alignment: .leading, spacing: Theme.sm) {
-                SectionHeader(title: "Yours")
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Theme.xs) {
-                        if let data = vehicle.photo, let image = ImageTools.thumbnail(data, maxDimension: 500) {
-                            Image(uiImage: image).resizable().scaledToFill().frame(width: 150, height: 110)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        }
-                        ForEach(own.prefix(20)) { attachment in
-                            if let image = ImageTools.thumbnail(attachment.data, maxDimension: 500) {
-                                Image(uiImage: image).resizable().scaledToFill().frame(width: 150, height: 110)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func moderationButtons(_ photo: CommunityPhoto) -> some View {
-        if photo.isOwnerPhoto {
-            Button(role: .destructive) { reporting = photo } label: { Label("Report", systemImage: "flag") }
-            Button(role: .destructive) { community.block(photo) } label: { Label("Block this person", systemImage: "hand.raised") }
-        } else {
-            Button(role: .destructive) { reporting = photo } label: { Label("Hide, not this vehicle", systemImage: "eye.slash") }
-        }
-    }
-}
-
-private struct PhotoTile: View {
-    let photo: CommunityPhoto
-
-    var body: some View {
-        // The image fills a fixed box; on its own, scaledToFill widens the
-        // grid cell past the screen.
-        Color.clear
-            .frame(maxWidth: .infinity)
-            .frame(height: 130)
-            .overlay {
-                AsyncImage(url: photo.imageURL) { phase in
-                    switch phase {
-                    case let .success(image): image.resizable().scaledToFill()
-                    case .failure: Theme.raised.overlay(Image(systemName: "photo").foregroundStyle(Theme.faintInk))
-                    default: Theme.raised
-                    }
-                }
-            }
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(alignment: .bottomLeading) {
-            if photo.isOwnerPhoto {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.white)
-                    .shadow(radius: 2)
-                    .padding(6)
-            }
-        }
-        .accessibilityLabel(photo.caption)
-    }
-}
-
-private struct PhotoViewer: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
-    let photo: CommunityPhoto
-    let onReport: () -> Void
-    let onBlock: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: Theme.md) {
-                AsyncImage(url: photo.imageURL) { image in
-                    image.resizable().scaledToFit()
-                } placeholder: {
-                    ProgressView().frame(maxWidth: .infinity, minHeight: 240)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                Text(photo.caption).font(.headline).foregroundStyle(Theme.ink)
-                Text(photo.credit).font(.footnote).foregroundStyle(Theme.secondaryInk)
-                if case let .commons(page, _, _) = photo.source {
-                    Button("View on Wikimedia Commons") { openURL(page) }.font(.footnote.weight(.semibold))
-                }
-                Spacer()
-            }
-            .padding(Theme.margin)
-            .paperBackground()
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button(role: .destructive, action: onReport) { Label(photo.isOwnerPhoto ? "Report" : "Hide, not this vehicle", systemImage: "flag") }
-                        if photo.isOwnerPhoto {
-                            Button(role: .destructive, action: onBlock) { Label("Block this person", systemImage: "hand.raised") }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                    .accessibilityLabel("More")
-                }
-            }
-        }
-    }
-}
-
-/// Agreed once before the first share (App Review 1.2).
-struct CommunityTermsSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let accept: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Theme.md) {
-                    Text("Before you share")
-                        .font(Theme.title(26))
-                    Text("Photos you share are public to other Vehicle Maintenance Log users who own the same make and model.")
-                    VStack(alignment: .leading, spacing: Theme.sm) {
-                        Label("Only photos of the vehicle itself, that you took or have the right to share.", systemImage: "car.side")
-                        Label("No people, plates you don't own, addresses or anything personal.", systemImage: "person.crop.circle.badge.xmark")
-                        Label("Nothing offensive, hateful or unrelated. There's no tolerance for objectionable content or abusive users.", systemImage: "hand.raised")
-                        Label("Anyone can report a photo. Reported photos are hidden and reviewed within 24 hours, and people who break these rules are removed.", systemImage: "flag")
-                    }
-                    .font(.subheadline)
-                    Link("Read the community guidelines", destination: AppLinks.communityGuidelines).font(.subheadline.weight(.semibold))
-                    Button("I agree") { accept() }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .padding(.top, Theme.sm)
-                }
-                .padding(Theme.margin)
-            }
-            .paperBackground()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-        }
-        .presentationDetents([.large])
     }
 }
 

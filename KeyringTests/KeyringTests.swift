@@ -124,6 +124,7 @@ final class CatalogTests: XCTestCase {
                 symbols.formUnion(UpgradeCatalog.upgrades(for: kind, powertrain: powertrain).map(\.symbol))
             }
         }
+        symbols.formUnion(VehicleKind.allCases.flatMap { ServiceFinder.services(kind: $0, make: "Ford", us: true).map(\.symbol) })
         symbols.formUnion(ProFeature.allCases.map(\.symbol))
         symbols.formUnion([Club.Kind.club, .forum, .subreddit, .organization].map(\.symbol))
         let missing = symbols.filter { UIImage(systemName: $0) == nil }.sorted()
@@ -564,13 +565,6 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(ValueSource.slug("  "), nil)
     }
 
-    func testCommonsParsingKeepsOnlyMatchingFiles() {
-        let json = #"{"query":{"pages":{"1":{"title":"File:2019 Toyota Tacoma SR5.jpg","index":1,"imageinfo":[{"thumburl":"https://upload.wikimedia.org/a.jpg","descriptionurl":"https://commons.wikimedia.org/wiki/File:A.jpg","extmetadata":{"Artist":{"value":"<a href=\"x\">Someone</a>"},"LicenseShortName":{"value":"CC BY-SA 4.0"}}}]},"2":{"title":"File:Sunset from a car.jpg","index":2,"imageinfo":[{"thumburl":"https://upload.wikimedia.org/b.jpg","descriptionurl":"https://commons.wikimedia.org/wiki/File:B.jpg"}]}}}}"#
-        let photos = CommunityPhotos.parseCommons(Data(json.utf8), mustMention: ["Toyota", "Tacoma"])
-        XCTAssertEqual(photos.count, 1)
-        XCTAssertEqual(photos[0].credit, "Photo: Someone · CC BY-SA 4.0")
-    }
-
     func testAmazonLinks() {
         let url = AmazonLinks.search("2019 Toyota Tacoma oil filter", region: "US")
         XCTAssertEqual(url.host(), "www.amazon.com")
@@ -705,14 +699,35 @@ final class AuditRoundThreeTests: XCTestCase {
         XCTAssertEqual(bareURLs["Edmunds"], "https://www.edmunds.com/appraisal/")
     }
 
-    func testCarPlayAdapterOnlyWhereItFits() {
-        let store = makeStore()
-        let tesla = store.addVehicle(NewVehicle(kind: .car, powertrain: .electric, meter: .miles, year: 2023, make: "Tesla", model: "Model Y"))
-        let classic = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 1972, make: "Ford", model: "Bronco"))
-        let modern = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Honda", model: "Accord"))
-        XCTAssertFalse(UpgradeCatalog.upgrades(for: tesla).contains { $0.title.contains("CarPlay") })
-        XCTAssertFalse(UpgradeCatalog.upgrades(for: classic).contains { $0.title.contains("CarPlay") })
-        XCTAssertTrue(UpgradeCatalog.upgrades(for: modern).contains { $0.title.contains("CarPlay") })
+    /// Map searches are worded per kind; booking sites are US road only.
+    func testServiceNearbyFitsTheVehicle() {
+        let truck = ServiceFinder.services(kind: .truck, make: "Toyota", us: true)
+        XCTAssertEqual(Set(truck.map(\.group)), [.shops, .mobile, .detailing])
+        XCTAssertTrue(truck.contains { $0.title == "Toyota dealer service" })
+        XCTAssertEqual(truck.first { $0.title == "Mobile mechanics" }?.url.absoluteString, "https://maps.apple.com/?q=mobile%20mechanic")
+        XCTAssertFalse(ServiceFinder.services(kind: .truck, make: "Toyota", us: false).contains { $0.title == "YourMechanic" })
+        let boat = ServiceFinder.services(kind: .boat, make: nil, us: true)
+        XCTAssertTrue(boat.contains { $0.url.absoluteString.contains("marine%20mechanic") })
+        XCTAssertFalse(boat.contains { $0.title == "Wrench" })
+        for kind in VehicleKind.allCases {
+            XCTAssertFalse(ServiceFinder.services(kind: kind, make: nil, us: true).isEmpty, "\(kind) has no services")
+        }
+    }
+
+    /// Road vehicles get the three enthusiast sections; EVs skip engine
+    /// mods, and lowering is for cars, leveling for trucks.
+    func testRoadUpgradesFitTheVehicle() {
+        func titles(_ kind: VehicleKind, _ powertrain: Powertrain) -> Set<String> {
+            Set(UpgradeCatalog.upgrades(for: kind, powertrain: powertrain).map(\.title))
+        }
+        let sections = Set(UpgradeCatalog.upgrades(for: .car, powertrain: .gasoline).map(\.category))
+        XCTAssertEqual(sections, [.performance, .handling, .detailing])
+        XCTAssertTrue(titles(.car, .gasoline).isSuperset(of: ["Cold air intake", "Lowering springs", "Performance tires", "Clay bar kit"]))
+        XCTAssertFalse(titles(.car, .electric).contains("Cold air intake"))
+        XCTAssertFalse(titles(.car, .electric).contains("Brake pads and rotors"))
+        XCTAssertTrue(titles(.car, .electric).contains("Shocks and struts"))
+        XCTAssertTrue(titles(.truck, .gasoline).isSuperset(of: ["Leveling kit", "All-terrain tires"]))
+        XCTAssertFalse(titles(.truck, .gasoline).contains("Lowering springs"))
     }
 
     func testMixedUnitsInsights() {

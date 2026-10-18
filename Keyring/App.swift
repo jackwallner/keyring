@@ -12,7 +12,6 @@ struct KeyringApp: App {
     @StateObject private var garage = GarageStore.shared
     @StateObject private var store = StoreService.shared
     @StateObject private var sharing = SharingService.shared
-    @StateObject private var community = CommunityPhotos.shared
     @AppStorage(AppGroup.Key.appearance, store: AppGroup.defaults) private var appearance = Appearance.system.rawValue
 
     init() {
@@ -35,7 +34,6 @@ struct KeyringApp: App {
                 .environmentObject(garage)
                 .environmentObject(store)
                 .environmentObject(sharing)
-                .environmentObject(community)
                 .tint(Theme.brass)
                 .preferredColorScheme(Appearance(rawValue: appearance)?.colorScheme)
                 .onOpenURL { NotificationRouter.shared.open($0) }

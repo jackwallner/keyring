@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Everything about one vehicle on one scroll: what's due, what was done,
 /// the numbers you always look up, and the world around it (value, parts,
-/// clubs, photos of others like it).
+/// upgrades, clubs, service nearby).
 struct VehicleDetailView: View {
     @EnvironmentObject private var garage: GarageStore
     @EnvironmentObject private var store: StoreService
@@ -354,7 +354,7 @@ struct VehicleDetailView: View {
                 tile("Parts and tools", detail: "For what's due next", symbol: "wrench.and.screwdriver.fill") { GearView(vehicle: vehicle) }
                 tile("Upgrades", detail: "Popular add-ons", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
                 tile("Clubs", detail: "Owners like you", symbol: "person.3.fill") { ClubsView(vehicle: vehicle) }
-                tile("Photos", detail: "Others like it", symbol: "photo.on.rectangle.angled") { GalleryView(vehicle: vehicle) }
+                tile("Service nearby", detail: "Shops, mobile mechanics, detailing", symbol: "mappin.and.ellipse") { ServiceNearbyView(vehicle: vehicle) }
                 if vehicle.kind.hasNHTSARecords {
                     tile(RecallRegion.isUS ? "Recalls" : "US recalls", detail: recallDetail, symbol: "exclamationmark.shield.fill") { RecallsView(vehicle: vehicle, recalls: recalls) }
                 }

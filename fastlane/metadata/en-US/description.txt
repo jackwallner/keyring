@@ -30,8 +30,8 @@ RECALLS, VALUE AND PARTS
 - The tools and parts for the job that's due next
 - Quick facts you always look up: oil type, tire size, wiper lengths, paint code
 
-UPGRADES, CLUBS AND OTHER OWNERS
-Upgrade ideas worth doing for your kind of vehicle, owners clubs for your make, and photos from people who own the same model.
+UPGRADES, CLUBS AND SERVICE NEARBY
+Performance, handling and detailing upgrades owners actually recommend, with the honest tradeoffs. Owners clubs and forums for your make. Repair shops, mobile mechanics and mobile detailers near you.
 
 A RECORD WORTH HANDING OVER
 Search and filter the whole history, export it to CSV, and with Pro print a clean Service Record PDF with every job and receipt for a buyer, a shop or the glovebox.

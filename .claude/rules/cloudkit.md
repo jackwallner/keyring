@@ -22,7 +22,7 @@ open -W --stdout /tmp/keyring-schema.log build/NativeCloudSchema/Build/Products/
 ```
 
 Flags: none (dry run), `--initialize-development`, `--verify-share` (creates `cloudkit.share`), `--public-types`
-(creates `OwnerPhoto` and `PhotoReport`). Always launch through `open`, never the bare executable (Core Data's
+(creates `OwnerPhoto` and `PhotoReport`; the app stopped using both when community photos were removed on 2026-10-17). Always launch through `open`, never the bare executable (Core Data's
 CloudKit scheduler is unreachable from a shell process).
 
 ## Production

@@ -1,14 +1,21 @@
 import Foundation
 
-/// Worthwhile upgrades owners actually recommend to each other: the ones
-/// that pay back in safety, convenience or resale, not stickers. Each opens
-/// an Amazon search tailored to the vehicle.
+/// Upgrades owners actually recommend to each other. Road vehicles get
+/// performance, handling and detailing picks from enthusiast forums and
+/// Amazon's best sellers (checked 2026-10-17), with the honest tradeoff in
+/// each line; other kinds get the gear that protects and looks after them.
+/// Each opens an Amazon search tailored to the vehicle. Left out on purpose:
+/// throttle body spacers, pedal "tuners" and cheap chips, which forums agree
+/// do nothing.
 struct Upgrade: Identifiable, Hashable, Sendable {
     enum Category: String, CaseIterable, Sendable {
-        case safety, protection, convenience, care
+        case performance, handling, detailing, safety, protection, convenience, care
 
         var title: String {
             switch self {
+            case .performance: "Performance"
+            case .handling: "Handling"
+            case .detailing: "Detailing"
             case .safety: "Safety"
             case .protection: "Protection"
             case .convenience: "Convenience"
@@ -28,21 +35,14 @@ struct Upgrade: Identifiable, Hashable, Sendable {
 }
 
 enum UpgradeCatalog {
-    /// Drops what can't fit this one: a CarPlay adapter needs a car with
-    /// wired CarPlay, which Teslas and anything before about 2016 don't have.
     static func upgrades(for vehicle: Vehicle) -> [Upgrade] {
-        let list = upgrades(for: vehicle.kind, powertrain: vehicle.powertrain)
-        let noCarPlay = vehicle.make?.lowercased() == "tesla" || (vehicle.year > 0 && vehicle.year < 2016)
-        return noCarPlay ? list.filter { !$0.title.contains("CarPlay") } : list
+        upgrades(for: vehicle.kind, powertrain: vehicle.powertrain)
     }
 
     static func upgrades(for kind: VehicleKind, powertrain: Powertrain) -> [Upgrade] {
         var list: [Upgrade]
         switch kind {
-        case .car, .suv, .van, .truck:
-            list = road
-            if kind == .truck { list += truck }
-            if powertrain == .electric || powertrain == .plugInHybrid { list += ev }
+        case .car, .suv, .van, .truck: list = road(kind: kind, powertrain: powertrain)
         case .motorcycle, .scooter: list = motorcycle
         case .rv, .camper: list = rv
         case .trailer: list = trailer
@@ -57,26 +57,50 @@ enum UpgradeCatalog {
         return list
     }
 
-    static let road: [Upgrade] = [
-        Upgrade(title: "All-weather floor liners", why: "Laser-fit liners keep mud and spills off the carpet, which is the first thing a buyer looks at.", symbol: "square.stack.3d.down.forward.fill", category: .protection, query: "{vehicle} all weather floor liners"),
-        Upgrade(title: "Dash camera", why: "Front and rear footage settles fault disputes and some insurers discount for it.", symbol: "video.fill", category: .safety, query: "front and rear dash cam"),
-        Upgrade(title: "Portable jump starter", why: "Starts a dead battery without a second car, and doubles as a phone charger.", symbol: "bolt.car.fill", category: .safety, query: "portable car jump starter"),
-        Upgrade(title: "Tire inflator", why: "A cordless inflator turns a slow leak into a five minute stop instead of a tow.", symbol: "gauge.with.dots.needle.67percent", category: .safety, query: "cordless tire inflator"),
-        Upgrade(title: "Ceramic coating kit", why: "Makes washing easier and protects paint for a year or more.", symbol: "sparkles", category: .care, query: "ceramic coating kit car"),
-        Upgrade(title: "Seat-back organizer", why: "Gets the kids' stuff off the floor on long drives.", symbol: "tray.full.fill", category: .convenience, query: "car seat back organizer"),
-        Upgrade(title: "Wireless CarPlay adapter", why: "Wired CarPlay goes wireless for cars that shipped without it.", symbol: "iphone.radiowaves.left.and.right", category: .convenience, query: "wireless carplay adapter"),
-        Upgrade(title: "Roadside emergency kit", why: "Cables, flares, gloves and a first aid kit in one bag for the trunk.", symbol: "cross.case.fill", category: .safety, query: "roadside emergency kit car"),
+    /// An EV has no intake, exhaust or fluid to upgrade, and regenerative
+    /// braking means its pads rarely wear, so its list starts at handling.
+    /// Lowering and strut braces suit cars; trucks and SUVs level and go
+    /// all-terrain instead.
+    static func road(kind: VehicleKind, powertrain: Powertrain) -> [Upgrade] {
+        let offRoad = kind == .truck || kind == .suv
+        var list = powertrain == .electric ? [] : performance
+        list.append(offRoad ? allTerrainTires : performanceTires)
+        list += handling
+        if kind == .car { list += carHandling }
+        if offRoad { list.append(levelingKit) }
+        return list + detailing
+    }
+
+    static let performance: [Upgrade] = [
+        Upgrade(title: "Brake pads and rotors", why: "The upgrade you feel every drive: shorter stops and less fade than worn factory parts, for a little more dust or noise.", symbol: "exclamationmark.brakesignal", category: .performance, query: "{vehicle} brake pads and rotors"),
+        Upgrade(title: "Cold air intake", why: "Mostly sound and throttle feel. Expect a few horsepower on a non-turbo engine and next to nothing on a stock turbo without a tune.", symbol: "wind", category: .performance, query: "{vehicle} cold air intake"),
+        Upgrade(title: "Cat-back exhaust", why: "Bought for the sound, not the power. Listen to clips first, since drone on the highway is the common regret.", symbol: "speaker.wave.3.fill", category: .performance, query: "{vehicle} cat back exhaust"),
+        Upgrade(title: "High-temp brake fluid", why: "Only worth it for mountain roads or track days. For commuting, fresh fluid at the factory spec does the job.", symbol: "drop.fill", category: .performance, query: "DOT 4 high temperature brake fluid"),
     ]
 
-    static let truck: [Upgrade] = [
-        Upgrade(title: "Tonneau cover", why: "Keeps the bed dry and locked, and can improve highway mileage.", symbol: "rectangle.fill.on.rectangle.fill", category: .protection, query: "{vehicle} tonneau cover"),
-        Upgrade(title: "Bed liner mat", why: "Stops cargo sliding and saves the bed paint.", symbol: "square.grid.3x3.fill", category: .protection, query: "{vehicle} bed mat"),
-        Upgrade(title: "Hitch lock and pin set", why: "Cheap insurance for an expensive trailer or bike rack.", symbol: "lock.fill", category: .safety, query: "trailer hitch lock"),
+    static let performanceTires = Upgrade(title: "Performance tires", why: "The biggest handling gain for the money, everywhere owners compare notes. Match the size on the driver's door sticker and pick for your climate.", symbol: "steeringwheel", category: .handling, query: "{vehicle} performance tires")
+
+    static let allTerrainTires = Upgrade(title: "All-terrain tires", why: "More grip on gravel, mud and snow for a little road noise and mileage. Match the size on the driver's door sticker.", symbol: "steeringwheel", category: .handling, query: "{vehicle} all terrain tires")
+
+    static let handling: [Upgrade] = [
+        Upgrade(title: "Shocks and struts", why: "Fresh dampers bring back the control worn ones lose so gradually you stop noticing. Usually done past 60,000 miles or with a lift.", symbol: "arrow.up.and.down.circle.fill", category: .handling, query: "{vehicle} shocks and struts"),
+        Upgrade(title: "Rear sway bar", why: "Cuts body roll in corners and when towing without making the ride harsh. Check the listing includes the bar, not just end links.", symbol: "arrow.left.and.right.circle.fill", category: .handling, query: "{vehicle} rear sway bar"),
     ]
 
-    static let ev: [Upgrade] = [
-        Upgrade(title: "Level 2 home charger", why: "Overnight full charges at home cost far less than public fast charging.", symbol: "ev.charger.fill", category: .convenience, query: "level 2 ev charger"),
-        Upgrade(title: "Charging cable organizer", why: "Keeps the cable off the garage floor and away from tires.", symbol: "cable.connector", category: .convenience, query: "ev charger cable organizer"),
+    static let carHandling: [Upgrade] = [
+        Upgrade(title: "Lowering springs", why: "Less roll and a better stance for a firmer ride. Keep it under about two inches or stock shocks wear out fast.", symbol: "arrow.down.to.line", category: .handling, query: "{vehicle} lowering springs"),
+        Upgrade(title: "Strut tower brace", why: "Cheap and a bolt-on, but owners call the gain small. Sharper turn-in more than lap times.", symbol: "wrench.adjustable.fill", category: .handling, query: "{vehicle} strut tower brace"),
+    ]
+
+    static let levelingKit = Upgrade(title: "Leveling kit", why: "Raises the front to match the rear and makes room for bigger tires. It's for looks and clearance, not handling.", symbol: "arrow.up.to.line", category: .handling, query: "{vehicle} leveling kit")
+
+    static let detailing: [Upgrade] = [
+        Upgrade(title: "Two-bucket wash kit", why: "Grit guards keep dirt off the mitt, which is how most swirl marks get started.", symbol: "bubbles.and.sparkles.fill", category: .detailing, query: "car wash bucket kit grit guard"),
+        Upgrade(title: "Microfiber drying towels", why: "A big plush towel dries without scratching and replaces the chamois.", symbol: "rectangle.stack.fill", category: .detailing, query: "microfiber car drying towel"),
+        Upgrade(title: "Clay bar kit", why: "Pulls out the bonded grit washing leaves behind, so paint feels smooth and wax bonds. Start with a mild clay.", symbol: "circle.hexagongrid.fill", category: .detailing, query: "clay bar kit car"),
+        Upgrade(title: "Ceramic spray sealant", why: "Months of gloss and water beading from a spray-on, wipe-off coat. Far easier than a full ceramic coating.", symbol: "sparkles", category: .detailing, query: "ceramic spray coating car"),
+        Upgrade(title: "Trim restorer", why: "Brings faded black plastic back for months, the quickest way to make an older car look newer.", symbol: "paintbrush.fill", category: .detailing, query: "ceramic trim restorer"),
+        Upgrade(title: "Dual action polisher", why: "The first real tool detailers suggest. It removes swirls safely, but plan on pads, polish and an afternoon of practice.", symbol: "circle.dashed.inset.filled", category: .detailing, query: "dual action polisher car"),
     ]
 
     static let motorcycle: [Upgrade] = [

@@ -6,7 +6,6 @@ struct SettingsView: View {
     @EnvironmentObject private var garage: GarageStore
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var sharing: SharingService
-    @EnvironmentObject private var community: CommunityPhotos
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.openURL) private var openURL
 
@@ -123,9 +122,6 @@ struct SettingsView: View {
                 if !garage.retiredVehicles.isEmpty {
                     NavigationLink { RetiredVehiclesView() } label: { Label("Sold and retired", systemImage: "archivebox") }
                 }
-                if !community.blockedAuthors.isEmpty {
-                    Button("Unblock \(Format.count(community.blockedAuthors.count, "person", "people")) in photos") { community.unblockAll() }
-                }
             } header: {
                 Text("Your data")
             } footer: {
@@ -147,7 +143,6 @@ struct SettingsView: View {
             Section {
                 Link("Privacy Policy", destination: AppLinks.privacyPolicy)
                 Link("Terms of Use", destination: AppLinks.standardEULA)
-                Link("Community guidelines", destination: AppLinks.communityGuidelines)
             } footer: {
                 Text("Maintenance intervals are typical figures for normal use, not manufacturer schedules. Always follow your owner's manual. This app is not an official aircraft or vessel logbook and doesn't replace one.\n\nVehicle Maintenance Log \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
             }

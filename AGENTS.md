@@ -5,7 +5,6 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 ## Tech Stack
 - Swift 6 / SwiftUI (strict concurrency), iOS 17+
 - Core Data + `NSPersistentCloudKitContainer`, two stores (private + shared) for garage sharing via `CKShare`
-- CloudKit public database for owner photos (`OwnerPhoto`, `PhotoReport`)
 - RevenueCat, entitlement `pro`, offering `default`
 - Vision (receipt OCR), VisionKit (VIN / odometer / invite scanning), PDFKit-free PDF rendering via UIGraphicsPDFRenderer
 - WidgetKit (upcoming jobs)
@@ -20,14 +19,13 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 ## Architecture
 - `Shared/Models`: `KeyringModel` (code-built Core Data model: Garage, Vehicle, MaintenanceTask, ServiceEntry, MeterReading, Valuation, Attachment), `VehicleKind` (kinds, powertrains, meters)
 - `Shared/Catalog`: maintenance schedules per kind/powertrain, makes, clubs, upgrades
-- `Shared/Services`: `GarageStore` (all reads/writes), `DueEngine` (pure due math), `ReminderScheduler`, `SharingService` + `ShareInvite`, `NHTSAClient` (VIN decode, recalls), `CommunityPhotos`, `ReceiptReader`, `StoreService`, `DemoSeed` (DEBUG)
+- `Shared/Services`: `GarageStore` (all reads/writes), `DueEngine` (pure due math), `ReminderScheduler`, `SharingService` + `ShareInvite`, `NHTSAClient` (VIN decode, recalls), `ReceiptReader`, `StoreService`, `DemoSeed` (DEBUG)
 - `Shared/Export`: `ServiceRecordPDF`, `RecordBuilder`, CSV, cost insights
-- `Keyring/Views`: Garage (key-tag cards), VehicleDetail, LogService, Schedule, History, Explore (value, gear, upgrades, clubs, recalls, gallery, insights), Family, AddVehicleFlow, Paywall, Onboarding, Settings
+- `Keyring/Views`: Garage (key-tag cards), VehicleDetail, LogService, Schedule, History, Explore (value, gear, upgrades, clubs, service nearby, recalls, insights), Family, AddVehicleFlow, Paywall, Onboarding, Settings
 
 ## Rules that hold everywhere
 - Third-party values (KBB, Edmunds, J.D. Power, Aircraft Bluebook) are deep links only. Never show one as the app's own number.
 - Amazon links open in Safari, never an in-app webview or the PDF. `AmazonLinks.associateTag` is empty; the disclosure only shows once a tag is set.
-- Community photos need terms consent, report, block and 24-hour review (App Review 1.2). Keep all four.
 - `StoreService` never configures the `appl_` key on the simulator.
 - Before a release: `xcodebuild test -scheme KeyringUITests` walks every main screen and taps the value, club, parts, recall and settings links (expects Safari to open); `scripts/check-links.py` fetches every outside URL. Bot-walled sites (Edmunds, eBay, J.D. Power, nhtsa.gov) need a real browser check.
 - Debug launch args: `-SeedDemo`, `-DemoPro`, `-EmptyLog`, `-ScreenshotRoute vehicle|explore|record|log|fuel|fuelcard|family|add|history|settings`, `-PaywallSnapshot monthly|yearly|lifetime`.
@@ -35,7 +33,7 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 ## Deep notes (load on demand)
 | File | Covers | Read when |
 |---|---|---|
-| `.claude/rules/cloudkit.md` | schema tool, sharing, public DB, Production deploy | touching Persistence, sharing, community photos, the model |
+| `.claude/rules/cloudkit.md` | schema tool, sharing, public DB, Production deploy | touching Persistence, sharing, the model |
 
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.

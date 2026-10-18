@@ -62,7 +62,7 @@ final class SmokeUITests: XCTestCase {
             ("Parts and tools", "Parts and tools"),
             ("Upgrades", "Upgrades"),
             ("Clubs", "Clubs and forums"),
-            ("Photos", "Photos"),
+            ("Service nearby", "Service nearby"),
             ("Insights", "Insights"),
         ]
         for (tile, title) in tiles {
@@ -94,7 +94,26 @@ final class SmokeUITests: XCTestCase {
         goBack()
         tapButton("Upgrades")
         expectTitle("Upgrades")
-        XCTAssertGreaterThan(app.buttons.count, 3)
+        for header in ["Performance", "Handling"] {
+            XCTAssertTrue(app.staticTexts[header].waitForExistence(timeout: 5), "No \(header) section")
+        }
+        expectOpensSafari(button(containing: "Leveling kit"))
+        expectOpensSafari(button(containing: "Clay bar kit"))
+    }
+
+    func testServiceNearbyLinks() {
+        launch("vehicle")
+        expectTitle("The Tacoma", timeout: 10)
+        tapButton("Service nearby")
+        expectTitle("Service nearby")
+        expectOpensSafari(button(containing: "YourMechanic"))
+        let mobile = button(containing: "Mobile car detailing")
+        scrollTo(mobile)
+        XCTAssertTrue(mobile.waitForExistence(timeout: 5))
+        mobile.tap()
+        let maps = XCUIApplication(bundleIdentifier: "com.apple.Maps")
+        XCTAssertTrue(maps.wait(for: .runningForeground, timeout: 10), "Maps did not open")
+        app.activate()
     }
 
     func testRecallsOpen() {
@@ -187,7 +206,7 @@ final class SmokeUITests: XCTestCase {
     func testSettingsRowsPresent() {
         launch("settings")
         expectTitle("Settings", timeout: 10)
-        for label in ["Family sharing", "Export everything (CSV)", "Import from another app", "Rate the app", "Send feedback", "Tell a friend", "Help", "Privacy Policy", "Terms of Use", "Community guidelines"] {
+        for label in ["Family sharing", "Export everything (CSV)", "Import from another app", "Rate the app", "Send feedback", "Tell a friend", "Help", "Privacy Policy", "Terms of Use"] {
             let element = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
             scrollTo(element)
             XCTAssertTrue(element.exists, "Missing \(label)")

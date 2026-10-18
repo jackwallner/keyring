@@ -11,7 +11,6 @@ enum AppLinks {
     static let privacyPolicy = URL(string: "https://jackwallner.github.io/keyring/privacy-policy.html")!
     static let terms = URL(string: "https://jackwallner.github.io/keyring/terms.html")!
     static let support = URL(string: "https://jackwallner.github.io/keyring/support.html")!
-    static let communityGuidelines = URL(string: "https://jackwallner.github.io/keyring/community.html")!
     static let standardEULA = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     static let manageSubscriptions = URL(string: "https://apps.apple.com/account/subscriptions")!
     static let supportEmail = "jackwallner@gmail.com"
