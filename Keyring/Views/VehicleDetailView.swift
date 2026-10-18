@@ -37,8 +37,8 @@ struct VehicleDetailView: View {
                 actions
                 if vehicle.isRetired { retiredNote } else if vehicle.storedSince != nil { storedNote }
                 recallBanner
-                dueSection
                 exploreSection.id("explore")
+                dueSection
                 fuelSection.id("fuel")
                 historySection
                 factsSection
@@ -774,7 +774,7 @@ struct TaskRow: View {
                 Text(due.dueLine())
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
-                if due.result.status != .noRecord {
+                if due.result.status != .noRecord, due.hasInterval {
                     DueBar(progress: due.result.progress, status: due.result.status)
                         .padding(.top, 2)
                 }

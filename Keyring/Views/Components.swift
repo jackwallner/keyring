@@ -140,6 +140,10 @@ extension TaskDue {
     func dueLine(now: Date = .now, notingPace: Bool = true) -> String {
         let meter = self.meter
         let current = currentReading
+        if !hasInterval {
+            guard let lastDate else { return "Not logged yet" }
+            return "Last done \(Format.relative(lastDate, now: now))"
+        }
         switch result.status {
         case .noRecord:
             return "When was it last done?"

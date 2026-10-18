@@ -126,9 +126,18 @@ enum MaintenanceCatalog {
         case .other:
             list = generic
         }
+        if [.car, .suv, .van, .truck, .motorcycle, .scooter, .rv].contains(kind) { list.append(wash) }
         list += paperwork(for: kind)
         return list
     }
+
+    /// No interval and no reminders: just when it last got a wash.
+    static let wash = CatalogItem(
+        key: "wash", name: "Wash", detail: "No schedule, no nagging. Log a wash and the list shows how long it's been.",
+        symbol: "bubbles.and.sparkles",
+        gear: [.init(title: "Car wash soap", query: "car wash soap"),
+               .init(title: "Microfiber drying towels", query: "microfiber car drying towel")]
+    )
 
     static func winterTires(core: Bool) -> CatalogItem {
         CatalogItem(

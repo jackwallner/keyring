@@ -176,13 +176,16 @@ struct TaskDetailView: View {
     private var status: some View {
         if let due {
             VStack(alignment: .leading, spacing: Theme.sm) {
-                HStack {
-                    Image(systemName: due.result.status.symbol).foregroundStyle(due.result.status.color)
-                    Text(due.result.status.label).font(.subheadline.weight(.semibold)).foregroundStyle(due.result.status.color)
-                    Spacer()
-                }
-                if due.result.status != .noRecord {
-                    DueBar(progress: due.result.progress, status: due.result.status)
+                // An as-needed job (a wash) has no due status, only its last date.
+                if due.hasInterval {
+                    HStack {
+                        Image(systemName: due.result.status.symbol).foregroundStyle(due.result.status.color)
+                        Text(due.result.status.label).font(.subheadline.weight(.semibold)).foregroundStyle(due.result.status.color)
+                        Spacer()
+                    }
+                    if due.result.status != .noRecord {
+                        DueBar(progress: due.result.progress, status: due.result.status)
+                    }
                 }
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -190,12 +193,14 @@ struct TaskDetailView: View {
                         Text(lastText(due)).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Eyebrow(text: "Next")
-                        Text(nextText(due))
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Theme.ink)
-                            .multilineTextAlignment(.trailing)
+                    if due.hasInterval {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Eyebrow(text: "Next")
+                            Text(nextText(due))
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Theme.ink)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
                 }
             }

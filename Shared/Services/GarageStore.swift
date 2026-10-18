@@ -24,6 +24,10 @@ struct TaskDue: Identifiable, Hashable {
     var currentReading: Double = 0
     var usesAuxMeter = false
 
+    /// False for an "as needed" job such as a wash, which only tracks when it
+    /// was last done.
+    var hasInterval: Bool { intervalMonths > 0 || (intervalDistance > 0 && meter.hasReading) }
+
     /// Overdue, due soon, then up to date by date, with jobs that have no
     /// record yet last so they never push a real date down the list.
     private static func rank(_ status: DueStatus) -> Int {

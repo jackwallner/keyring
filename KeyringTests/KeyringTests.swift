@@ -94,11 +94,23 @@ final class CatalogTests: XCTestCase {
                 let items = MaintenanceCatalog.items(for: kind, powertrain: powertrain)
                 XCTAssertFalse(items.filter(\.isCore).isEmpty, "\(kind) \(powertrain) has no core jobs")
                 XCTAssertEqual(Set(items.map(\.key)).count, items.count, "\(kind) \(powertrain) repeats a key")
-                for item in items {
+                for item in items where item.key != "wash" {
                     XCTAssertTrue(item.miles != nil || item.hours != nil || item.months != nil, "\(item.key) has no interval")
                 }
             }
         }
+    }
+
+    func testWashIsOnTheRoadScheduleWithoutAnInterval() {
+        let car = MaintenanceCatalog.items(for: .car, powertrain: .gasoline)
+        let wash = car.first { $0.key == "wash" }
+        XCTAssertEqual(wash?.isCore, true)
+        XCTAssertNil(wash?.months)
+        XCTAssertTrue(MaintenanceCatalog.items(for: .motorcycle, powertrain: .electric).contains { $0.key == "wash" })
+        XCTAssertFalse(MaintenanceCatalog.items(for: .aircraft, powertrain: .piston).contains { $0.key == "wash" })
+        let status = DueEngine.evaluate(DueInput(intervalDistance: 0, intervalMonths: 0, lastDate: nil, lastReading: nil,
+                                                 currentReading: 0, dailyUse: 0, meter: .miles, calendarMonths: false)).status
+        XCTAssertEqual(status, .ok)
     }
 
     func testHourMeterKindsGetHourIntervals() {
@@ -375,6 +387,20 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(Format.interval(distance: 0, months: 0, meter: .miles), "As needed")
         XCTAssertEqual(Format.reading(1_234.5, .hours), "1,234.5 hrs")
         XCTAssertEqual(Format.reading(1_234, .hours), "1,234 hrs")
+    }
+
+    func testAsNeededJobShowsWhenItWasLastDone() {
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        func wash(lastDate: Date?) -> TaskDue {
+            TaskDue(
+                id: NSManagedObjectID(), taskID: UUID(), name: "Wash", symbol: "bubbles.and.sparkles", catalogKey: "wash",
+                result: DueResult(status: .ok, dueDate: nil, dueReading: nil, progress: 0, dateIsEstimated: false),
+                lastDate: lastDate, lastReading: nil, intervalDistance: 0, intervalMonths: 0
+            )
+        }
+        XCTAssertFalse(wash(lastDate: nil).hasInterval)
+        XCTAssertEqual(wash(lastDate: nil).dueLine(now: now), "Not logged yet")
+        XCTAssertEqual(wash(lastDate: now.addingTimeInterval(-5 * 86_400)).dueLine(now: now), "Last done 5 days ago")
     }
 
     func testCSVExportEscapesAndBlocksFormulas() {
