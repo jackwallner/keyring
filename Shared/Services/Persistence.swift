@@ -10,10 +10,8 @@ import UIKit
 /// one shared store (a garage another family member shared with this account). Both
 /// use the same model, so every query runs across the pair.
 ///
-/// The app opens it with CloudKit mirroring on. Widgets and intents open the
-/// same files with mirroring off and simply write; the app's container picks
-/// their inserts up from persistent history and exports them next time it
-/// runs. Tests use an in-memory pair.
+/// Only the app opens it, with CloudKit mirroring on; the widget reads a JSON
+/// snapshot instead. Tests use an in-memory pair.
 ///
 /// A store that will not open never ends the process. A CloudKit push can
 /// launch the app in the background before the phone has been unlocked since
@@ -76,14 +74,14 @@ final class Persistence: @unchecked Sendable {
         self.saveOperation = saveOperation
         container = NSPersistentCloudKitContainer(name: "Keyring", managedObjectModel: KeyringModel.model)
 
-        let directory = directory ?? AppGroup.containerURL.appendingPathComponent("KeyringData", isDirectory: true)
+        let directory = directory ?? (inMemory ? FileManager.default.temporaryDirectory : Self.defaultDirectory)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         privateDescription = NSPersistentStoreDescription(
-            url: inMemory ? URL(fileURLWithPath: "/dev/null/private") : directory.appendingPathComponent("private.sqlite")
+            url: inMemory ? URL(fileURLWithPath: "/dev/null/private") : directory.appendingPathComponent(Self.storeNames[0])
         )
         sharedDescription = NSPersistentStoreDescription(
-            url: inMemory ? URL(fileURLWithPath: "/dev/null/shared") : directory.appendingPathComponent("shared.sqlite")
+            url: inMemory ? URL(fileURLWithPath: "/dev/null/shared") : directory.appendingPathComponent(Self.storeNames[1])
         )
         for description in [privateDescription, sharedDescription] {
             description.type = inMemory ? NSInMemoryStoreType : NSSQLiteStoreType
@@ -167,6 +165,54 @@ final class Persistence: @unchecked Sendable {
 
     deinit {
         if let unlockObserver { NotificationCenter.default.removeObserver(unlockObserver) }
+    }
+
+    // MARK: - Location
+
+    static let storeNames = ["private.sqlite", "shared.sqlite"]
+
+    /// The app's own Application Support. The stores used to sit in the App
+    /// Group, but nothing else opens them, and an SQLite lock held in a shared
+    /// container when the app suspends gets it killed (0xdead10cc).
+    private static var defaultDirectory: URL {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let legacy = AppGroup.containerURL.appendingPathComponent("KeyringData", isDirectory: true)
+        return adoptStores(from: legacy, into: support.appendingPathComponent("KeyringData", isDirectory: true))
+    }
+
+    /// Copies each store in `legacy` that `directory` lacks through the
+    /// coordinator, which carries the WAL and the CloudKit sync state along,
+    /// and deletes the originals only once every copy has landed. Returns
+    /// where to open the stores: `legacy` when a copy failed (a locked phone,
+    /// a full disk), so a half move never opens an empty log. The next launch
+    /// tries again.
+    static func adoptStores(from legacy: URL, into directory: URL) -> URL {
+        let files = FileManager.default
+        try? files.createDirectory(at: directory, withIntermediateDirectories: true)
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: KeyringModel.model)
+        let moves = storeNames
+            .map { (from: legacy.appendingPathComponent($0), to: directory.appendingPathComponent($0)) }
+            .filter { files.fileExists(atPath: $0.from.path) && !files.fileExists(atPath: $0.to.path) }
+        var copied: [URL] = []
+        for move in moves {
+            do {
+                try coordinator.replacePersistentStore(at: move.to, withPersistentStoreFrom: move.from, type: .sqlite)
+                copied.append(move.to)
+            } catch {
+                logger.error("Moving \(move.from.lastPathComponent, privacy: .public) out of the App Group failed: \(String(describing: error), privacy: .public)")
+                for url in copied { try? coordinator.destroyPersistentStore(at: url, type: .sqlite) }
+                return legacy
+            }
+        }
+        for move in moves {
+            try? coordinator.destroyPersistentStore(at: move.from, type: .sqlite)
+            // Destroying empties the file but can leave it, and its sidecars, behind.
+            let base = move.from.deletingPathExtension().lastPathComponent
+            let leftovers = ["", "-wal", "-shm"].map { URL(fileURLWithPath: move.from.path + $0) }
+                + [legacy.appendingPathComponent(".\(base)_SUPPORT")]
+            for url in leftovers { try? files.removeItem(at: url) }
+        }
+        return directory
     }
 
     // MARK: - Opening

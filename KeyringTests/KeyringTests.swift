@@ -229,6 +229,27 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(entries.first?.vehicle?.model, "Civic")
     }
 
+    func testStoresMoveOutOfTheAppGroupIntact() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let legacy = root.appendingPathComponent("group")
+        let here = root.appendingPathComponent("support")
+        let old = Persistence(cloudKit: false, directory: legacy)
+        GarageStore(persistence: old).addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Honda", model: "Civic", reading: 50_000))
+        let coordinator = old.container.persistentStoreCoordinator
+        for store in coordinator.persistentStores { try coordinator.remove(store) }
+
+        XCTAssertEqual(Persistence.adoptStores(from: legacy, into: here), here)
+        for name in Persistence.storeNames {
+            XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.appendingPathComponent(name).path))
+        }
+        let moved = Persistence(cloudKit: false, directory: here)
+        XCTAssertFalse(moved.isStandingIn)
+        let vehicles = try moved.container.viewContext.fetch(NSFetchRequest<Vehicle>(entityName: "Vehicle"))
+        XCTAssertEqual(vehicles.map(\.model), ["Civic"])
+        XCTAssertEqual(Persistence.adoptStores(from: legacy, into: here), here, "Nothing left to move")
+    }
+
     func testRepairsAndRecallFixesAreKeptApart() {
         let store = makeStore()
         let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2019, make: "Honda", model: "Civic", reading: 50_000))
