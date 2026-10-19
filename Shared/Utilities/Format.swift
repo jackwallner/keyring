@@ -111,3 +111,9 @@ enum Format {
         return sameYear ? date.formatted(.dateTime.month(.abbreviated).day()) : date.formatted(.dateTime.month(.abbreviated).day().year())
     }
 }
+
+extension String {
+    var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+    var lowercasedFirst: String { prefix(1).lowercased() + dropFirst() }
+}

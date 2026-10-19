@@ -1258,12 +1258,6 @@ final class GarageStore: ObservableObject {
     }
 }
 
-extension String {
-    var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
-    var nilIfEmpty: String? { isEmpty ? nil : self }
-    var lowercasedFirst: String { prefix(1).lowercased() + dropFirst() }
-}
-
 extension TaskDue {
     /// "Every 7,500 mi or 1 year", in this job's own meters.
     func intervalText(auxName: String?) -> String {

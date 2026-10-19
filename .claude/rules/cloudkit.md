@@ -37,9 +37,12 @@ Added 2026-10-17 and deployed to Production the same day (build 5): Vehicle
 MaintenanceTask `usesAuxMeter`; ServiceEntry `auxReading`; MeterReading `isAux`.
 Fill-ups added 2026-10-17 and deployed to Production the same day (build 6): ServiceEntry
 `fuelVolume`, `fuelUnitPrice`, `fuelGrade`, `fuelPartial`.
-Enthusiast fields added 2026-10-19 (build 15): Vehicle `auxMeterRaw`, `profileJSON` and the `documents` relation
-(Attachment `vehicle`); MaintenanceTask `auxInterval`, `triggerRaw`; ServiceEntry `detailsJSON`; Attachment `name`;
-Valuation `kindRaw`. `profileJSON` (`VehicleProfile`) and `detailsJSON` (`EntryDetails`) are JSON so new traits,
+Enthusiast fields added 2026-10-19 and deployed to Production the same day (build 15): Vehicle `auxMeterRaw`,
+`profileJSON` and the `documents` relation (Attachment `vehicle`); MaintenanceTask `auxInterval`, `triggerRaw`;
+ServiceEntry `detailsJSON`; Attachment `name`; Valuation `kindRaw`. The schema tool timed out that day (cloudd's
+requests to gateway.icloud.com hung), so they were added by hand in Console: a String attribute is `CD_<name>`
+STRING plus `CD_<name>_ckAsset` ASSET, a Double is DOUBLE, a to-one relationship is `CD_<name>` STRING with no asset.
+The schema tool compiles `VehicleProfile.swift` and `Format.swift` now; add any file the model starts to reference. `profileJSON` (`VehicleProfile`) and `detailsJSON` (`EntryDetails`) are JSON so new traits,
 parts or measurement fields need no schema change; keep unknown values when decoding.
 
 ## Sharing

@@ -17,6 +17,8 @@ targets:
       - SchemaMain.swift
       - ../../Shared/Models/KeyringModel.swift
       - ../../Shared/Models/VehicleKind.swift
+      - ../../Shared/Models/VehicleProfile.swift
+      - ../../Shared/Utilities/Format.swift
       - ../../Shared/Services/ShareInvite.swift
       - ../../Shared/Utilities/Theme.swift
     settings:
