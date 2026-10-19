@@ -31,6 +31,7 @@ struct VehicleDetailView: View {
     @State private var loggingMod = false
     @State private var changingOdometer = false
     @State private var checkingTrip = false
+    @State private var showingBuild = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var sectionOrder = ""
 
@@ -72,6 +73,7 @@ struct VehicleDetailView: View {
             ToolbarItem(placement: .topBarTrailing) { moreMenu }
         }
         .navigationDestination(isPresented: $checkingTrip) { TripCheckView(vehicle: vehicle) }
+        .navigationDestination(isPresented: $showingBuild) { BuildListView(vehicle: vehicle) }
         .sheet(isPresented: $loggingEvent) { LogEventSheet(vehicle: vehicle) }
         .sheet(isPresented: $loggingMod) { LogServiceView(vehicle: vehicle, startingKind: .mod) }
         .sheet(isPresented: $changingOdometer) { OdometerChangeSheet(vehicle: vehicle) }
@@ -90,6 +92,7 @@ struct VehicleDetailView: View {
                 routed = true
                 if route == "record" { showingRecord = true }
                 if route == "fuel" { fueling = true }
+                if route == "build" { showingBuild = true }
                 if route == "fuelcard" {
                     try? await Task.sleep(for: .milliseconds(300))
                     proxy.scrollTo("fuel", anchor: .top)

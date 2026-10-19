@@ -35,6 +35,31 @@ enum DemoSeed {
             VehicleFact(label: "Paint code", value: "6X3 Army Green"),
         ]
         store.addValuation(31_850, source: "Kelley Blue Book, private party", to: truck, at: ago(20))
+        // The build: what went on the truck, with part numbers.
+        let build: [(Double, Double, String, String, String, Double, String, Bool)] = [
+            (610, 25_900, "Bilstein", "5100 shocks, front and rear", "24-285964", 520, "", true),
+            (600, 26_100, "BFGoodrich", "All-Terrain T/A KO2 265/70R16", "KO2-2657016", 1_236, "Les Schwab", false),
+            (480, 29_800, "RCI", "Full skid plate set", "RCI-TAC16-SKID", 1_150, "", true),
+            (390, 33_050, "Rigid Industries", "D-Series ditch lights", "RIG-202113", 389.95, "", true),
+            (300, 36_200, "Old Man Emu", "BP-51 lift, 2.5 in", "OME-BP51-TAC", 3_480, "Sierra Overland", false),
+            (210, 39_900, "Method", "701 wheels, 16x8", "MR70168060500", 1_040, "Les Schwab", false),
+            (120, 43_600, "Rago Fabrication", "Molle panel set", "RAGO-TAC-MOLLE", 179.99, "", true),
+        ]
+        for (daysAgo, reading, brand, name, number, price, shop, diy) in build {
+            var mod = GarageStore.ServiceDraft()
+            mod.kind = .mod
+            mod.date = ago(daysAgo)
+            mod.reading = reading
+            mod.title = "\(brand) \(name)"
+            mod.cost = price
+            mod.shop = shop
+            mod.isDIY = diy
+            mod.details.parts = [EntryPart(name: name, brand: brand, number: number, quantity: 1, price: price)]
+            let entry = store.log(mod, for: truck)
+            entry.loggedBy = "Jack"
+            // The BP-51s replaced the Bilsteins.
+            if brand == "Bilstein" { store.setRemoved(entry, on: ago(300)) }
+        }
         // Fill-ups about every nine days, one of them a top-up.
         let fills: [(Double, Double, Double, Double, String, Bool)] = [
             (66, 46_000, 15.902, 3.599, "Costco", false),

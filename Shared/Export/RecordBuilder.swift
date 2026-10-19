@@ -23,7 +23,12 @@ enum RecordBuilder {
             if covered.count > 1 || (covered.count == 1 && covered[0] != title) {
                 details.append(covered.joined(separator: ", "))
             }
-            let parts = entry.details.parts.map(\.summary).filter { !$0.isEmpty }
+            // A part the title already names shows just its number.
+            let parts = entry.details.parts.map { part -> String in
+                let label = [part.brand.trimmed, part.name.trimmed].filter { !$0.isEmpty }.joined(separator: " ")
+                let named = !label.isEmpty && title.localizedCaseInsensitiveContains(label) && (part.quantity ?? 1) == 1
+                return named ? part.number.trimmed : part.summary
+            }.filter { !$0.isEmpty }
             if !parts.isEmpty { details.append("Parts: \(parts.joined(separator: "; "))") }
             if includeNotes {
                 let specs = entry.details.specs.map { "\($0.name) \($0.display)" }
