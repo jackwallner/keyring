@@ -18,11 +18,11 @@ struct KeyringApp: App {
         let ink = UIColor(Theme.ink)
         UINavigationBar.appearance().largeTitleTextAttributes = [
             .foregroundColor: ink,
-            .font: UIFont(descriptor: UIFont.systemFont(ofSize: 34, weight: .bold).fontDescriptor.withDesign(.serif)!, size: 34),
+            .font: UIFont.systemFont(ofSize: 34, weight: .bold),
         ]
         UINavigationBar.appearance().titleTextAttributes = [
             .foregroundColor: ink,
-            .font: UIFont(descriptor: UIFont.systemFont(ofSize: 17, weight: .semibold).fontDescriptor.withDesign(.serif)!, size: 17),
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
         ]
         ConversionDiagnostics.recordAppOpen()
         ReviewPrompter.recordLaunch()

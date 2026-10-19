@@ -50,12 +50,12 @@ enum ServiceRecordPDF {
     private static var contentWidth: CGFloat { pageSize.width - margin * 2 }
 
     private enum Font {
-        static let title = UIFont(descriptor: UIFont.systemFont(ofSize: 24, weight: .semibold).fontDescriptor.withDesign(.serif)!, size: 24)
+        static let title = UIFont.systemFont(ofSize: 24, weight: .bold)
         static let subtitle = UIFont.systemFont(ofSize: 11, weight: .regular)
         static let label = UIFont.systemFont(ofSize: 7.5, weight: .semibold)
         static let value = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
         static let stat = UIFont.monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
-        static let section = UIFont(descriptor: UIFont.systemFont(ofSize: 13, weight: .semibold).fontDescriptor.withDesign(.serif)!, size: 13)
+        static let section = UIFont.systemFont(ofSize: 13, weight: .bold)
         static let header = UIFont.systemFont(ofSize: 7.5, weight: .semibold)
         static let cell = UIFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
         static let cellStrong = UIFont.systemFont(ofSize: 9, weight: .semibold)

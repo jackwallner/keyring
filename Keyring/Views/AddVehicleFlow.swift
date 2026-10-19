@@ -241,7 +241,7 @@ struct VehicleDetailsForm: View {
                         TextField("VIN (optional)", text: $draft.vin)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
-                            .font(.body.monospaced())
+                            .font(.body.monospacedDigit())
                         ScanFieldButton(kind: .vin) { vin in
                             draft.vin = vin
                             Task { await lookUp() }
@@ -368,7 +368,7 @@ struct VehicleDetailsForm: View {
                             TextField("Optional", text: $draft.vin)
                                 .textInputAutocapitalization(.characters)
                                 .multilineTextAlignment(.trailing)
-                                .font(.body.monospaced())
+                                .font(.body.monospacedDigit())
                             ScanFieldButton(kind: .text) { draft.vin = $0.uppercased() }
                         }
                     }

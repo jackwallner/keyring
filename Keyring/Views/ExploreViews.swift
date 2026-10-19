@@ -342,7 +342,7 @@ struct RecallsView: View {
                         Text(check.covered ? "VIN checked \(Format.shortDate(check.date))" : "No VIN data from the maker")
                             .font(.body.weight(.medium))
                             .foregroundStyle(Theme.ink)
-                        Text(check.vin).font(.caption.monospaced()).foregroundStyle(Theme.secondaryInk)
+                        Text(check.vin).font(.caption.monospacedDigit()).foregroundStyle(Theme.secondaryInk)
                     }
                     Spacer(minLength: Theme.xs)
                     Button("Check again") { checkingVIN = check.vin }
@@ -355,7 +355,7 @@ struct RecallsView: View {
                         Image(systemName: "magnifyingglass").foregroundStyle(Theme.brass).frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("See which are still open").font(.body.weight(.medium)).foregroundStyle(Theme.ink)
-                            Text(vin).font(.caption.monospaced()).foregroundStyle(Theme.secondaryInk)
+                            Text(vin).font(.caption.monospacedDigit()).foregroundStyle(Theme.secondaryInk)
                         }
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
@@ -369,7 +369,7 @@ struct RecallsView: View {
                     TextField("17-character VIN", text: $vinDraft)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
-                        .font(.body.monospaced())
+                        .font(.body.monospacedDigit())
                         .submitLabel(.search)
                         .onSubmit(checkDraft)
                     ScanFieldButton(kind: .vin) { vinDraft = $0; checkDraft() }

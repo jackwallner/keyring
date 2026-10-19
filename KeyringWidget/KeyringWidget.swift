@@ -47,7 +47,7 @@ struct UpcomingWidgetView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Image(systemName: "key.horizontal.fill").foregroundStyle(Theme.brass)
                     Text(entry.snapshot.vehicles.isEmpty ? "Add a vehicle in the app" : "All caught up")
-                        .font(.system(.subheadline, design: .serif, weight: .semibold))
+                        .font(.subheadline.weight(.bold))
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,7 +80,7 @@ struct UpcomingWidgetView: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .lineLimit(1)
             Text(item.item.name)
-                .font(.system(.headline, design: .serif))
+                .font(.headline)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(2)
             Text(when(item.item))
@@ -100,7 +100,7 @@ struct UpcomingWidgetView: View {
     private func list(_ items: [(vehicle: WidgetSnapshot.VehicleSummary, item: WidgetSnapshot.Item)]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Up next")
-                .font(.system(.subheadline, design: .serif, weight: .semibold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(Theme.ink)
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 if let url = WidgetSnapshot.url(forVehicle: item.vehicle.id) {

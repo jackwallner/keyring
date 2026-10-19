@@ -22,7 +22,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; }
 nav .brand img { width: 32px; height: 32px; border-radius: 8px; }
 nav .links a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 15px; }
-h1, h2, .serif { font-family: "New York", ui-serif, Georgia, "Times New Roman", serif; }
+h1, h2, .serif { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; font-weight: 700; }
 h1 { font-size: 48px; line-height: 1.06; letter-spacing: -0.015em; margin: 48px 0 16px; }
 h2 { font-size: 26px; margin: 48px 0 8px; }
 h3 { font-size: 18px; margin: 0 0 4px; }
@@ -41,7 +41,7 @@ a { color: var(--ink); }
 .tag { background: var(--green); color: #f8f5ee; border-radius: 22px; padding: 22px 24px; margin-top: 28px; position: relative; }
 .tag::before { content: ""; position: absolute; top: 18px; left: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); box-shadow: 0 0 0 3px rgba(255,255,255,.25); }
 .tag small { display: block; margin-top: 20px; letter-spacing: .12em; font-size: 12px; opacity: .75; text-transform: uppercase; }
-.tag strong { font-family: "New York", ui-serif, Georgia, serif; font-size: 30px; display: block; }
+.tag strong { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 30px; display: block; }
 .tag .chip { display: inline-block; margin-top: 12px; background: rgba(0,0,0,.22); border-radius: 999px; padding: 5px 12px; font-size: 14px; }
 .legal p, .legal li { color: var(--ink); }
 .faq details { border-bottom: 1px solid var(--line); padding: 14px 0; }

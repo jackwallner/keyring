@@ -42,12 +42,13 @@ enum Theme {
 
     // MARK: Type
 
-    /// Serif for names and headlines: the logbook voice. Sizes snap to the
-    /// nearest text style so every heading grows with the reader's text size.
-    static func title(_ size: CGFloat = 28) -> Font { .system(style(for: size), design: .serif, weight: .semibold) }
-    /// Rounded, fixed-width digits for every meter and money figure.
+    /// One typeface everywhere (SF Pro); headings differ by size and weight
+    /// only. Sizes snap to the nearest text style so every heading grows with
+    /// the reader's text size.
+    static func title(_ size: CGFloat = 28) -> Font { .system(style(for: size), weight: .bold) }
+    /// Fixed-width digits for every meter and money figure, so columns line up.
     static func figure(_ size: CGFloat = 17, weight: Font.Weight = .semibold) -> Font {
-        .system(style(for: size), design: .rounded, weight: weight).monospacedDigit()
+        .system(style(for: size), weight: weight).monospacedDigit()
     }
     static let caption = Font.caption.weight(.semibold).smallCaps()
 
