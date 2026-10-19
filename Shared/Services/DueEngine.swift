@@ -112,6 +112,35 @@ enum DueEngine {
         )
     }
 
+    /// A job brought due by an event: owed now if it has happened, owed by
+    /// then if it's coming up.
+    static func triggered(by event: Date, now: Date = .now) -> DueResult {
+        let status: DueStatus = event <= now ? .overdue
+            : (event.timeIntervalSince(now) <= soonWindowDays * 86_400 ? .dueSoon : .ok)
+        return DueResult(status: status, dueDate: event, dueReading: nil, progress: event <= now ? 1 : 0, dateIsEstimated: false)
+    }
+
+    /// One answer from several ways a job comes due (two meters, an event):
+    /// the most urgent status and the earliest date. The first result keeps
+    /// its due reading, since that's the meter the job is shown on.
+    static func combine(_ results: [DueResult]) -> DueResult {
+        guard var combined = results.first else {
+            return DueResult(status: .ok, dueDate: nil, dueReading: nil, progress: 0, dateIsEstimated: false)
+        }
+        for result in results.dropFirst() {
+            // "No record" only stands when nothing else knows better.
+            if combined.status == .noRecord || (result.status != .noRecord && result.status < combined.status) {
+                combined.status = result.status
+            }
+            if let date = result.dueDate, date < (combined.dueDate ?? .distantFuture) {
+                combined.dueDate = date
+                combined.dateIsEstimated = result.dateIsEstimated
+            }
+            combined.progress = max(combined.progress, result.progress)
+        }
+        return combined
+    }
+
     private static func timeDue(after last: Date, input: DueInput, calendar: Calendar) -> Date? {
         guard let due = calendar.date(byAdding: .month, value: input.intervalMonths, to: last) else { return nil }
         guard input.calendarMonths, let month = calendar.dateInterval(of: .month, for: due) else { return due }

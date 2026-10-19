@@ -119,7 +119,7 @@ enum DemoSeed {
                 if let task = tasks.first(where: { $0.catalogKey == key }), let id = task.id {
                     task.isEnabled = true
                     ids.append(id)
-                } else if let item = MaintenanceCatalog.item(key: key, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)) {
+                } else if let item = vehicle.catalogItem(key: key) {
                     let task = store.makeTask(from: item, for: vehicle)
                     if let id = task.id { ids.append(id) }
                 }

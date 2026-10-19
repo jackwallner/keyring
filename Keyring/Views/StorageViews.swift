@@ -71,10 +71,10 @@ struct StorageSheet: View {
             Section {
                 HStack {
                     NumberField(
-                        title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours),
+                        title: NumberField.display(vehicle.shownReading, allowsDecimal: vehicle.meter == .hours),
                         value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours
                     )
-                    ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { value = Double($0) }
+                    ScanFieldButton(kind: .reading(last: vehicle.shownReading, meter: vehicle.meter)) { value = Double($0) }
                 }
             } header: {
                 Text(vehicle.meter.meterName)

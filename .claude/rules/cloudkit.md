@@ -37,6 +37,10 @@ Added 2026-10-17 and deployed to Production the same day (build 5): Vehicle
 MaintenanceTask `usesAuxMeter`; ServiceEntry `auxReading`; MeterReading `isAux`.
 Fill-ups added 2026-10-17 and deployed to Production the same day (build 6): ServiceEntry
 `fuelVolume`, `fuelUnitPrice`, `fuelGrade`, `fuelPartial`.
+Enthusiast fields added 2026-10-19 (build 15): Vehicle `auxMeterRaw`, `profileJSON` and the `documents` relation
+(Attachment `vehicle`); MaintenanceTask `auxInterval`, `triggerRaw`; ServiceEntry `detailsJSON`; Attachment `name`;
+Valuation `kindRaw`. `profileJSON` (`VehicleProfile`) and `detailsJSON` (`EntryDetails`) are JSON so new traits,
+parts or measurement fields need no schema change; keep unknown values when decoding.
 
 ## Sharing
 One `CKShare` per garage, `publicPermission = .readWrite` so a link or QR joins anyone (contact-only invites fail when

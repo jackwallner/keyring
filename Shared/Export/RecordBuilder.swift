@@ -9,16 +9,25 @@ enum RecordBuilder {
         includeSchedule: Bool = true, includeNotes: Bool = true
     ) -> ServiceRecord {
         let tasks = (vehicle.tasks ?? [])
-        // Fill-ups stay out: a buyer or a shop reads the maintenance.
-        let rows = vehicle.serviceEntries.map { entry -> ServiceRecord.Row in
+        // Fill-ups and events stay out: a buyer or a shop reads the work.
+        let rows = vehicle.serviceEntries.filter { $0.kind != .event }.map { entry -> ServiceRecord.Row in
             let covered = tasks.filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }
                 .map(\.displayName)
             let title = entry.title ?? "Service"
             var details: [String] = []
             if entry.kind == .repair { details.append("Repair") }
+            if entry.kind == .mod {
+                details.append(entry.details.removedOn.map { "Modification, removed \(Format.shortDate($0))" } ?? "Modification")
+            }
             if entry.kind == .recall, let campaign = entry.recallCampaign { details.append("Safety recall, NHTSA \(campaign)") }
             if covered.count > 1 || (covered.count == 1 && covered[0] != title) {
                 details.append(covered.joined(separator: ", "))
+            }
+            let parts = entry.details.parts.map(\.summary).filter { !$0.isEmpty }
+            if !parts.isEmpty { details.append("Parts: \(parts.joined(separator: "; "))") }
+            if includeNotes {
+                let specs = entry.details.specs.map { "\($0.name) \($0.display)" }
+                if !specs.isEmpty { details.append(specs.joined(separator: ", ")) }
             }
             if includeNotes, let notes = entry.notes, !notes.isEmpty { details.append(notes) }
             return ServiceRecord.Row(
@@ -45,7 +54,7 @@ enum RecordBuilder {
             }
             return ServiceRecord.ScheduleRow(
                 name: due.name,
-                interval: Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter, auxName: due.usesAuxMeter ? vehicle.auxMeterName : nil),
+                interval: due.intervalText(auxName: vehicle.auxMeterName),
                 last: last.isEmpty ? "Not recorded" : last,
                 next: next.isEmpty ? "Not recorded" : next,
                 status: due.result.status
@@ -56,6 +65,15 @@ enum RecordBuilder {
         if let plate = vehicle.plate { identifiers.append((vehicle.kind.registrationLabel, plate)) }
         if let trim = vehicle.trim { identifiers.append(("Trim", trim)) }
         identifiers.append(("Powertrain", vehicle.powertrain.title))
+        if let bought = vehicle.purchaseDate { identifiers.append(("Owned since", bought.formatted(.dateTime.month(.abbreviated).year()))) }
+        let profile = vehicle.profile
+        if profile.mileageStatus != .actual { identifiers.append(("Mileage", profile.mileageStatus.title)) }
+        for change in profile.odometerChanges {
+            identifiers.append((change.replaced ? "Odometer replaced" : "Odometer rolled over",
+                                "\(change.date.formatted(.dateTime.month(.abbreviated).year())) at \(Format.reading(change.lastShown, vehicle.meter))"))
+        }
+        // The owner's own facts: engine and chassis numbers, paint code.
+        for fact in vehicle.facts.prefix(10) { identifiers.append((fact.label, fact.value)) }
         return ServiceRecord(
             vehicleName: vehicle.displayName,
             descriptor: [vehicle.descriptor, vehicle.trim].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " "),
@@ -76,7 +94,7 @@ enum RecordBuilder {
 /// Every entry as a spreadsheet. Free, always: a log you can't take with you
 /// isn't yours.
 enum CSVExport {
-    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Type", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by", "Fuel", "Fuel unit", "Price per unit", "Grade", "Partial fill"]
+    static let header = ["Vehicle", "Year", "Make", "Model", "Date", "Odometer", "Unit", "Type", "Work", "Covered jobs", "Cost", "Shop", "DIY", "Notes", "Logged by", "Fuel", "Fuel unit", "Price per unit", "Grade", "Partial fill", "Parts", "Measurements", "Second meter"]
 
     @MainActor
     static func csv(for vehicles: [Vehicle]) -> String {
@@ -103,7 +121,11 @@ enum CSVExport {
                     entry.isDIY ? "Yes" : "",
                     entry.notes ?? "",
                     entry.loggedBy ?? "",
-                ] + fuelFields(entry)
+                ] + fuelFields(entry) + [
+                    entry.details.parts.map(\.summary).filter { !$0.isEmpty }.joined(separator: "; "),
+                    entry.details.specs.map { "\($0.name): \($0.display)" }.joined(separator: "; "),
+                    entry.hasAuxReading ? Format.reading(entry.auxReading, vehicle.auxMeter) : "",
+                ]
                 lines.append(fields.map(escape).joined(separator: ","))
             }
         }
@@ -163,6 +185,8 @@ struct CostInsights: Equatable {
     var diyShare: Double
     /// Unplanned repairs, last 12 months: the number owners most want to see.
     var repairs: Double
+    /// Spent on mods, last 12 months, kept apart from upkeep.
+    var mods: Double = 0
     var costPerDistance: Double?
     var distanceUnit: String
 
@@ -186,11 +210,20 @@ struct CostInsights: Equatable {
         var vehicleTotals: [String: Double] = [:]
         for (vehicle, entry) in recent { vehicleTotals[vehicle.displayName, default: 0] += entry.cost }
         var jobTotals: [String: Double] = [:]
-        for (_, entry) in recent where entry.cost > 0 { jobTotals[entry.kind == .fuel ? "Fuel" : entry.title ?? "Service", default: 0] += entry.cost }
+        for (_, entry) in recent where entry.cost > 0 {
+            let name = switch entry.kind {
+            case .fuel: "Fuel"
+            case .mod: "Mods"
+            default: entry.title ?? "Service"
+            }
+            jobTotals[name, default: 0] += entry.cost
+        }
 
-        // The DIY share is of maintenance spending, so fuel stays out of it.
-        let diy = recent.filter { $0.1.isDIY }.reduce(0) { $0 + $1.1.cost }
-        let maintenance = recent.filter { $0.1.kind != .fuel }.reduce(0) { $0 + $1.1.cost }
+        // The DIY share is of upkeep spending, so fuel and mods stay out of it.
+        let upkeep = recent.filter { $0.1.kind.isUpkeep }
+        let diy = upkeep.filter { $0.1.isDIY }.reduce(0) { $0 + $1.1.cost }
+        let maintenance = upkeep.reduce(0) { $0 + $1.1.cost }
+        let mods = recent.filter { $0.1.kind == .mod }.reduce(0) { $0 + $1.1.cost }
         let repairs = recent.filter { $0.1.kind == .repair }.reduce(0) { $0 + $1.1.cost }
 
         // Cost per mile (or km) from distance-metered vehicles with enough
@@ -205,7 +238,8 @@ struct CostInsights: Equatable {
                 + vehicle.mainReadings.filter { ($0.date ?? .distantPast) >= yearAgo }.map(\.value)
             guard let low = points.min(), let high = points.max(), high - low > 500 else { continue }
             distance += vehicle.meter.convert(high - low, to: target) ?? 0
-            spend += vehicle.sortedEntries.filter { ($0.date ?? .distantPast) >= yearAgo }.reduce(0) { $0 + $1.cost }
+            // Running cost: mods make it better, they don't keep it going.
+            spend += vehicle.sortedEntries.filter { ($0.date ?? .distantPast) >= yearAgo && $0.kind != .mod }.reduce(0) { $0 + $1.cost }
         }
         let unit = target.short
 
@@ -217,6 +251,7 @@ struct CostInsights: Equatable {
             byJob: jobTotals.map { Slice(name: $0.key, total: $0.value) }.sorted { $0.total > $1.total }.prefix(6).map { $0 },
             diyShare: maintenance > 0 ? diy / maintenance : 0,
             repairs: repairs,
+            mods: mods,
             costPerDistance: distance > 0 ? spend / distance : nil,
             distanceUnit: unit
         )

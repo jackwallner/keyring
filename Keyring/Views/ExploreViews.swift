@@ -12,6 +12,7 @@ struct ValueView: View {
     @State private var adding = false
     @State private var amount: Double?
     @State private var source = ""
+    @State private var kind: ValuationKind = .estimate
 
     var body: some View {
         List {
@@ -43,7 +44,7 @@ struct ValueView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text(Format.money(valuation.amount)).font(Theme.figure(17))
-                            Text([valuation.source, valuation.date.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · "))
+                            Text([valuation.kind == .estimate ? nil : valuation.kind.title, valuation.source, valuation.date.map(Format.shortDate)].compactMap { $0 }.joined(separator: " · "))
                                 .font(.footnote).foregroundStyle(Theme.secondaryInk)
                         }
                     }
@@ -53,7 +54,7 @@ struct ValueView: View {
             } header: {
                 Text("Your notes")
             } footer: {
-                Text("Jot down a quote or a trade-in offer to watch it over time. It goes in the Service Record if you sell.")
+                Text("Jot down a quote, an offer, an appraisal or your agreed insurance value to watch it over time. Keep the appraisal itself in Documents.")
             }
         }
         .paperBackground()
@@ -69,7 +70,10 @@ struct ValueView: View {
                             ScanFieldButton(kind: .amount) { amount = Double($0) }
                         }
                     }
-                    TextField("Source, such as KBB trade-in", text: $source)
+                    Picker("Kind", selection: $kind) {
+                        ForEach(ValuationKind.allCases) { Text($0.title).tag($0) }
+                    }
+                    TextField(kind == .appraisal ? "Appraiser" : kind == .agreedValue ? "Insurer" : "Source, such as KBB trade-in", text: $source)
                 }
                 .paperBackground()
                 .fittedSheet()
@@ -79,10 +83,11 @@ struct ValueView: View {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") {
-                            if let amount { garage.addValuation(amount, source: source, to: vehicle) }
+                            if let amount { garage.addValuation(amount, source: source, kind: kind, to: vehicle) }
                             Haptics.success()
                             amount = nil
                             source = ""
+                            kind = .estimate
                             adding = false
                         }
                         .disabled(amount == nil)
@@ -104,7 +109,7 @@ struct GearView: View {
         let dues = garage.dues(for: vehicle)
         let groups = dues.compactMap { due -> (TaskDue, [GearSuggestion])? in
             guard let key = due.catalogKey,
-                  let item = MaintenanceCatalog.item(key: key, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)),
+                  let item = vehicle.catalogItem(key: key),
                   !item.gear.isEmpty else { return nil }
             return (due, item.gear)
         }
@@ -624,7 +629,7 @@ struct InsightsView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Eyebrow(text: "Maintenance vs. repairs")
-                            Text("\(Format.money(insights.lastTwelveMonths - insights.repairs)) planned · \(Format.money(insights.repairs)) unplanned")
+                            Text("\(Format.money(insights.lastTwelveMonths - insights.repairs - insights.mods)) planned · \(Format.money(insights.repairs)) unplanned\(insights.mods > 0 ? " · \(Format.money(insights.mods)) on mods" : "")")
                                 .font(.subheadline.weight(.semibold))
                         }
                         Spacer()

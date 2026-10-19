@@ -23,10 +23,16 @@ struct TaskDue: Identifiable, Hashable {
     var meter: MeterUnit = .miles
     var currentReading: Double = 0
     var usesAuxMeter = false
+    /// The whichever-first interval on the second meter, and that meter.
+    var secondInterval: Double = 0
+    var secondMeter: MeterUnit = .hours
+    /// The event that also brings it due, and the pending one if any.
+    var trigger: UsageEvent?
+    var pendingEvent: Date?
 
     /// False for an "as needed" job such as a wash, which only tracks when it
     /// was last done.
-    var hasInterval: Bool { intervalMonths > 0 || (intervalDistance > 0 && meter.hasReading) }
+    var hasInterval: Bool { intervalMonths > 0 || (intervalDistance > 0 && meter.hasReading) || secondInterval > 0 }
 
     /// Overdue, due soon, then up to date by date, with jobs that have no
     /// record yet last so they never push a real date down the list.
@@ -63,12 +69,17 @@ struct NewVehicle: Equatable {
     var vin = ""
     var plate = ""
     var reading: Double = 0
-    /// A second hour meter's name ("Generator"), or empty for none.
+    /// A second meter's name ("Generator", "Track"), or empty for none.
     var auxMeterName = ""
+    var auxMeter: MeterUnit = .hours
+    var traits: Set<VehicleTrait> = []
+    var drive: FinalDrive?
     /// How far it goes in a year, in its own unit. 0 = not given.
     var yearlyUse: Double = 0
     var photo: Data?
     var tint: VehicleTint?
+    var purchaseDate: Date?
+    var purchasePrice: Double = 0
     /// "When was the oil last changed?" from setup, keyed by catalog key.
     var lastDone: [String: Date] = [:]
 }
@@ -125,7 +136,7 @@ final class GarageStore: ObservableObject {
             let existing = Set((vehicle.tasks ?? []).compactMap(\.catalogKey))
             let missing = Self.backfilledKeys.subtracting(existing)
             guard !missing.isEmpty else { continue }
-            let items = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year))
+            let items = vehicle.catalogItems
             for item in items where missing.contains(item.key) && item.isCore {
                 makeTask(from: item, for: vehicle)
                 changed = true
@@ -248,9 +259,11 @@ final class GarageStore: ObservableObject {
 
     /// The most recent time this job was done: a logged entry that covered it,
     /// or the "last done" the owner gave at setup, whichever is later.
-    func lastDone(for task: MaintenanceTask) -> (date: Date?, reading: Double?) {
+    func lastDone(for task: MaintenanceTask, onAux: Bool? = nil) -> (date: Date?, reading: Double?) {
+        let onAux = onAux ?? task.usesAuxMeter
         var date = task.baselineDate
-        var reading: Double? = task.baselineReading >= 0 ? task.baselineReading : nil
+        // The setup baseline is on the job's own meter only.
+        var reading: Double? = task.baselineReading >= 0 && onAux == task.usesAuxMeter ? task.baselineReading : nil
         guard let id = task.id, let entries = task.vehicle?.entries else { return (date, reading) }
         let covering = entries.filter { $0.coveredTaskIDs.contains(id) }
             .sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
@@ -258,7 +271,7 @@ final class GarageStore: ObservableObject {
             date = latestDate
             // No reading on the entry: the meter as it stood that day, never an
             // older visit's reading, which would leave the job overdue.
-            if task.usesAuxMeter {
+            if onAux {
                 reading = latest.hasAuxReading ? latest.auxReading : task.vehicle.flatMap { self.auxReading(of: $0, on: latestDate) }
             } else {
                 reading = latest.hasReading ? latest.reading : task.vehicle.flatMap { self.reading(of: $0, on: latestDate) }
@@ -305,9 +318,9 @@ final class GarageStore: ObservableObject {
             guard let id = task.id else { return nil }
             let last = lastDone(for: task)
             let onAux = task.usesAuxMeter && vehicle.hasAuxMeter
-            let meter: MeterUnit = onAux ? .hours : vehicle.meter
+            let meter: MeterUnit = onAux ? vehicle.auxMeter : vehicle.meter
             let current = onAux ? vehicle.auxReading : vehicle.reading
-            let result = DueEngine.evaluate(DueInput(
+            var results = [DueEngine.evaluate(DueInput(
                 intervalDistance: task.intervalDistance,
                 intervalMonths: Int(task.intervalMonths),
                 lastDate: last.date,
@@ -316,15 +329,38 @@ final class GarageStore: ObservableObject {
                 dailyUse: onAux ? auxPace : pace,
                 meter: meter,
                 calendarMonths: MaintenanceCatalog.usesCalendarMonths(key: task.catalogKey, kind: vehicle.kind)
-            ), now: now)
+            ), now: now)]
+            let second = task.secondInterval
+            if second > 0 {
+                let lastAux = lastDone(for: task, onAux: true)
+                results.append(DueEngine.evaluate(DueInput(
+                    intervalDistance: second, intervalMonths: 0, lastDate: lastAux.date, lastReading: lastAux.reading,
+                    currentReading: vehicle.auxReading, dailyUse: auxPace, meter: vehicle.auxMeter
+                ), now: now))
+            }
+            let pending = task.trigger.flatMap { pendingEvent($0, on: vehicle, after: last.date) }
+            if let pending { results.append(DueEngine.triggered(by: pending, now: now)) }
             return TaskDue(
                 id: task.objectID, taskID: id, name: task.displayName, symbol: task.displaySymbol,
-                catalogKey: task.catalogKey, result: result, lastDate: last.date, lastReading: last.reading,
+                catalogKey: task.catalogKey, result: DueEngine.combine(results), lastDate: last.date, lastReading: last.reading,
                 intervalDistance: task.intervalDistance, intervalMonths: Int(task.intervalMonths),
-                meter: meter, currentReading: current, usesAuxMeter: onAux
+                meter: meter, currentReading: current, usesAuxMeter: onAux,
+                secondInterval: second, secondMeter: vehicle.auxMeter,
+                trigger: task.trigger, pendingEvent: pending
             )
         }
         .sorted(by: TaskDue.ordering)
+    }
+
+    /// The earliest event of this kind logged after the job was last done:
+    /// past means it's owed now, future means it's owed by then.
+    func pendingEvent(_ event: UsageEvent, on vehicle: Vehicle, after lastDone: Date?) -> Date? {
+        let since = lastDone.map { Calendar.current.startOfDay(for: $0).addingTimeInterval(86_400) } ?? .distantPast
+        return (vehicle.entries ?? [])
+            .filter { $0.kind == .event && $0.details.event == event }
+            .compactMap(\.date)
+            .filter { $0 >= since }
+            .min()
     }
 
     /// The worst known status on a vehicle and the next job, for its card.
@@ -356,9 +392,16 @@ final class GarageStore: ObservableObject {
         vehicle.plate = draft.plate.trimmed.uppercased().nilIfEmpty
         vehicle.reading = max(0, draft.reading)
         vehicle.readingDate = draft.meter.hasReading ? now : nil
-        vehicle.auxMeterName = draft.kind.offersAuxMeter ? draft.auxMeterName.trimmed.nilIfEmpty : nil
+        vehicle.auxMeterName = draft.auxMeterName.trimmed.nilIfEmpty
+        vehicle.auxMeter = draft.auxMeter
+        var profile = VehicleProfile()
+        profile.traits = draft.traits
+        profile.drive = draft.kind == .motorcycle ? draft.drive : nil
+        vehicle.profile = profile
         vehicle.yearlyUse = draft.meter.hasReading ? max(0, draft.yearlyUse) : 0
         vehicle.photo = draft.photo
+        vehicle.purchaseDate = draft.purchaseDate
+        vehicle.purchasePrice = max(0, draft.purchasePrice)
         vehicle.tint = draft.tint ?? .defaultTint(for: draft.kind)
         vehicle.sortIndex = Int16(clamping: (garage.vehicles?.count ?? 0))
         vehicle.garage = garage
@@ -371,8 +414,8 @@ final class GarageStore: ObservableObject {
             reading.loggedBy = ownerName
             reading.vehicle = vehicle
         }
-        let starting = MaintenanceCatalog.items(for: draft.kind, powertrain: draft.powertrain, year: draft.year)
-            .filter { $0.isCore || (vehicle.hasAuxMeter && $0.auxHours != nil) }
+        let starting = vehicle.catalogItems
+            .filter { $0.isCore || (vehicle.hasAuxMeter && vehicle.auxMeter == .hours && $0.auxHours != nil) }
         for (index, item) in starting.enumerated() {
             let task = makeTask(from: item, for: vehicle, createdAt: now.addingTimeInterval(Double(index) * 0.001))
             if let date = draft.lastDone[item.key] {
@@ -397,24 +440,35 @@ final class GarageStore: ObservableObject {
         task.catalogKey = item.key
         task.name = item.name
         task.symbol = item.symbol
-        if let auxHours = item.auxHours, vehicle.hasAuxMeter {
+        if let auxHours = item.auxHours, vehicle.hasAuxMeter, vehicle.auxMeter == .hours {
             task.usesAuxMeter = true
             task.intervalDistance = auxHours
         } else {
             task.intervalDistance = item.distanceInterval(for: vehicle.meter) ?? 0
+            task.auxInterval = Self.secondInterval(for: item, on: vehicle)
         }
         task.intervalMonths = Int16(item.months ?? 0)
+        task.trigger = item.trigger
         task.baselineReading = -1
         task.isEnabled = true
         task.vehicle = vehicle
         return task
     }
 
+    /// A catalog job's figure on the second meter when that meter reads a
+    /// different unit from the main one: a UTV's 1,000 miles beside its
+    /// 100 hours.
+    static func secondInterval(for item: CatalogItem, on vehicle: Vehicle) -> Double {
+        guard vehicle.hasAuxMeter, vehicle.auxMeter != vehicle.meter,
+              vehicle.auxMeter.convert(1, to: vehicle.meter) == nil else { return 0 }
+        return item.distanceInterval(for: vehicle.auxMeter) ?? 0
+    }
+
     /// After a powertrain change: switches off catalog jobs the new
     /// powertrain doesn't have (spark plugs on an EV), but only ones that were
     /// never done, so nothing with history disappears.
     func switchOffInapplicableTasks(on vehicle: Vehicle) {
-        let applicable = Set(MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)).map(\.key))
+        let applicable = Set(vehicle.catalogItems.map(\.key))
         for task in vehicle.enabledTasks {
             guard let key = task.catalogKey, !applicable.contains(key) else { continue }
             let last = lastDone(for: task)
@@ -438,7 +492,8 @@ final class GarageStore: ObservableObject {
     }
 
     @discardableResult
-    func addCustomTask(name: String, symbol: String = "wrench.adjustable", distance: Double, months: Int, onAuxMeter: Bool = false, to vehicle: Vehicle) -> MaintenanceTask {
+    func addCustomTask(name: String, symbol: String = "wrench.adjustable", distance: Double, months: Int, onAuxMeter: Bool = false,
+                       auxInterval: Double = 0, trigger: UsageEvent? = nil, to vehicle: Vehicle) -> MaintenanceTask {
         let task = MaintenanceTask(context: context)
         persistence.place(task, beside: vehicle, in: context)
         task.id = UUID()
@@ -449,18 +504,51 @@ final class GarageStore: ObservableObject {
         task.intervalMonths = Int16(clamping: max(0, months))
         task.baselineReading = -1
         task.usesAuxMeter = onAuxMeter && vehicle.hasAuxMeter
+        task.auxInterval = task.usesAuxMeter ? 0 : max(0, auxInterval)
+        task.trigger = trigger
         task.isEnabled = true
         task.vehicle = vehicle
         save()
         return task
     }
 
-    func update(_ task: MaintenanceTask, name: String, distance: Double, months: Int, notes: String) {
+    func update(_ task: MaintenanceTask, name: String, distance: Double, months: Int, notes: String,
+                auxInterval: Double? = nil, trigger: UsageEvent?? = nil) {
         task.name = name.trimmed.nilIfEmpty ?? task.name
         task.intervalDistance = max(0, distance)
         task.intervalMonths = Int16(clamping: max(0, months))
         task.notes = notes.trimmed.nilIfEmpty
+        if let auxInterval { task.auxInterval = task.usesAuxMeter ? 0 : max(0, auxInterval) }
+        if let trigger { task.trigger = trigger }
         save()
+    }
+
+    /// New setup answers (4x4, track days, a belt drive): adds the core jobs
+    /// they bring and switches off never-done ones that no longer apply.
+    func setProfile(_ vehicle: Vehicle, traits: Set<VehicleTrait>, drive: FinalDrive?) {
+        var profile = vehicle.profile
+        guard profile.traits != traits || profile.drive != drive else { return }
+        let old = vehicle.catalogItems
+        let before = Set(old.filter(\.isCore).map(\.key))
+        profile.traits = traits
+        profile.drive = drive
+        vehicle.profile = profile
+        let items = vehicle.catalogItems
+        // Tuned figures (track brake fluid every six months) follow onto
+        // jobs the owner never edited; their own figures stay.
+        for task in vehicle.tasks ?? [] where !task.usesAuxMeter {
+            guard let key = task.catalogKey,
+                  let was = old.first(where: { $0.key == key }),
+                  let item = items.first(where: { $0.key == key }),
+                  task.intervalDistance == (was.distanceInterval(for: vehicle.meter) ?? 0),
+                  Int(task.intervalMonths) == (was.months ?? 0) else { continue }
+            task.intervalDistance = item.distanceInterval(for: vehicle.meter) ?? 0
+            task.intervalMonths = Int16(item.months ?? 0)
+            if task.trigger == was.trigger { task.trigger = item.trigger }
+        }
+        let added = items.filter { $0.isCore && !before.contains($0.key) }
+        addCatalogItems(added, to: vehicle)
+        switchOffInapplicableTasks(on: vehicle)
     }
 
     func remove(_ task: MaintenanceTask) {
@@ -518,32 +606,39 @@ final class GarageStore: ObservableObject {
         save()
     }
 
-    /// Turns the second hour meter on, renames it, or (with nil) removes it.
-    /// Jobs the catalog counts in its hours, like generator service, follow.
-    func setAuxMeter(_ vehicle: Vehicle, name: String?) {
+    /// Turns the second meter on, renames it, changes its unit, or (with nil)
+    /// removes it. Jobs the catalog counts in its hours, like generator
+    /// service, follow, and so do whichever-first figures on it.
+    func setAuxMeter(_ vehicle: Vehicle, name: String?, unit: MeterUnit? = nil) {
         let name = name?.trimmed.nilIfEmpty
         let wasOn = vehicle.hasAuxMeter
+        let unitChanged = unit.map { $0 != vehicle.auxMeter } ?? false
         vehicle.auxMeterName = name
-        if name != nil, !wasOn {
+        if let unit { vehicle.auxMeter = unit }
+        if name != nil, !wasOn || unitChanged {
             vehicle.auxReading = 0
             vehicle.auxReadingDate = nil
+            for reading in vehicle.auxReadings { context.delete(reading) }
         }
+        let hours = name != nil && vehicle.auxMeter == .hours
         for task in vehicle.tasks ?? [] {
-            guard let key = task.catalogKey,
-                  let item = MaintenanceCatalog.item(key: key, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)),
-                  let auxHours = item.auxHours else { continue }
-            task.usesAuxMeter = name != nil
-            task.intervalDistance = name != nil ? auxHours : (item.distanceInterval(for: vehicle.meter) ?? 0)
-            task.baselineReading = -1
+            guard let key = task.catalogKey, let item = vehicle.catalogItem(key: key) else { continue }
+            if let auxHours = item.auxHours {
+                task.usesAuxMeter = hours
+                task.intervalDistance = hours ? auxHours : (item.distanceInterval(for: vehicle.meter) ?? 0)
+                task.baselineReading = -1
+            }
+            if !task.usesAuxMeter { task.auxInterval = Self.secondInterval(for: item, on: vehicle) }
         }
-        if name == nil {
-            for task in vehicle.tasks ?? [] where task.usesAuxMeter {
+        if !hours {
+            for task in vehicle.tasks ?? [] where task.usesAuxMeter && (name == nil || unitChanged) {
                 task.usesAuxMeter = false
                 task.intervalDistance = 0
             }
-        } else if !wasOn {
+        }
+        if hours, !wasOn || unitChanged {
             let existing = Set((vehicle.tasks ?? []).filter(\.isEnabled).compactMap(\.catalogKey))
-            for item in MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year))
+            for item in vehicle.catalogItems
             where item.auxHours != nil && !existing.contains(item.key) {
                 if let task = (vehicle.tasks ?? []).first(where: { $0.catalogKey == item.key }) {
                     task.isEnabled = true
@@ -588,8 +683,11 @@ final class GarageStore: ObservableObject {
         save()
     }
 
-    func updateReading(_ vehicle: Vehicle, to value: Double, at date: Date = .now) {
-        guard vehicle.meter.hasReading, value >= 0 else { return }
+    /// `shown` is what the odometer reads; a rolled-over or replaced
+    /// odometer's missing distance is added back.
+    func updateReading(_ vehicle: Vehicle, to shown: Double, at date: Date = .now) {
+        guard vehicle.meter.hasReading, shown >= 0 else { return }
+        let value = vehicle.trueReading(shown: shown, on: date)
         let reading = MeterReading(context: context)
         persistence.place(reading, beside: vehicle, in: context)
         reading.id = UUID()
@@ -606,8 +704,9 @@ final class GarageStore: ObservableObject {
 
     /// Fixes a mistyped meter: the vehicle reads exactly `value` now, and any
     /// saved reading above it (the typo) is removed so the pace recovers.
-    func correctReading(_ vehicle: Vehicle, to value: Double, at date: Date = .now) {
-        guard vehicle.meter.hasReading, value >= 0 else { return }
+    func correctReading(_ vehicle: Vehicle, to shown: Double, at date: Date = .now) {
+        guard vehicle.meter.hasReading, shown >= 0 else { return }
+        let value = vehicle.trueReading(shown: shown, on: date)
         for reading in vehicle.mainReadings where reading.value > value {
             context.delete(reading)
         }
@@ -644,7 +743,7 @@ final class GarageStore: ObservableObject {
             for entry in vehicle.entries ?? [] { entry.reading = -1 }
             for task in vehicle.tasks ?? [] where !task.usesAuxMeter {
                 task.baselineReading = -1
-                let item = task.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)) }
+                let item = task.catalogKey.flatMap { vehicle.catalogItem(key: $0) }
                 task.intervalDistance = item?.distanceInterval(for: meter) ?? 0
             }
         }
@@ -676,7 +775,8 @@ final class GarageStore: ObservableObject {
     }
 
     /// A reading far beyond the vehicle's pace is usually a typo: an extra digit.
-    func isSuspiciousJump(_ value: Double, for vehicle: Vehicle) -> Bool {
+    func isSuspiciousJump(_ shown: Double, for vehicle: Vehicle) -> Bool {
+        let value = vehicle.trueReading(shown: shown)
         guard vehicle.meter.hasReading, vehicle.reading > 0, value > vehicle.reading else { return false }
         let days = max(1, Date.now.timeIntervalSince(vehicle.readingDate ?? .now) / 86_400)
         let plausible = max(dailyUse(for: vehicle), typicalDailyUse(for: vehicle)) * days * 4 + vehicle.meter.typoSlack
@@ -697,8 +797,19 @@ final class GarageStore: ObservableObject {
         var shop = ""
         var isDIY = false
         var notes = ""
+        var details = EntryDetails()
         var photos: [Data] = []
         var receipts: [Data] = []
+        /// Files picked from Files or Mail: (name, data), PDFs or images.
+        var files: [(name: String, data: Data)] = []
+
+        static func == (lhs: ServiceDraft, rhs: ServiceDraft) -> Bool {
+            lhs.kind == rhs.kind && lhs.recallCampaign == rhs.recallCampaign && lhs.date == rhs.date
+                && lhs.reading == rhs.reading && lhs.auxReading == rhs.auxReading && lhs.taskIDs == rhs.taskIDs
+                && lhs.title == rhs.title && lhs.cost == rhs.cost && lhs.shop == rhs.shop && lhs.isDIY == rhs.isDIY
+                && lhs.notes == rhs.notes && lhs.details == rhs.details && lhs.photos == rhs.photos
+                && lhs.receipts == rhs.receipts && lhs.files.map(\.name) == rhs.files.map(\.name)
+        }
     }
 
     @discardableResult
@@ -715,11 +826,19 @@ final class GarageStore: ObservableObject {
         // A service visit can close a recall too, when its receipt names one.
         entry.recallCampaign = draft.recallCampaign
         entry.date = draft.date
-        entry.reading = draft.reading ?? -1
+        let reading = draft.reading.map { vehicle.trueReading(shown: $0, on: draft.date) }
+        entry.reading = reading ?? -1
         entry.auxReading = vehicle.hasAuxMeter ? (draft.auxReading ?? -1) : -1
-        entry.coveredTaskIDs = draft.taskIDs
-        entry.title = draft.title.trimmed.nilIfEmpty
-            ?? (draft.kind == .repair && draft.taskIDs.isEmpty ? "Repair" : title(for: draft.taskIDs, on: vehicle))
+        // Mods and events don't do scheduled jobs; an event's own jobs come
+        // due from it instead.
+        entry.coveredTaskIDs = draft.kind == .event ? [] : draft.taskIDs
+        var details = draft.details
+        details.parts = details.parts.filter { !$0.isBlank }
+        details.specs = details.specs.filter { !$0.isBlank }
+        if draft.kind != .event { details.event = nil }
+        if draft.kind != .mod { details.removedOn = nil }
+        entry.details = details
+        entry.title = draft.title.trimmed.nilIfEmpty ?? defaultTitle(for: draft, on: vehicle)
         entry.cost = max(0, draft.cost)
         entry.shop = draft.isDIY ? nil : draft.shop.trimmed.nilIfEmpty
         entry.isDIY = draft.isDIY
@@ -733,7 +852,11 @@ final class GarageStore: ObservableObject {
             attachment.data = data
             attachment.entry = entry
         }
-        if let reading = draft.reading, reading > vehicle.reading {
+        for file in draft.files {
+            let attachment = makeDocument(file.name, data: file.data, beside: vehicle)
+            attachment.entry = entry
+        }
+        if let reading, reading > vehicle.reading, draft.date <= .now {
             vehicle.reading = reading
             vehicle.readingDate = draft.date
         }
@@ -743,6 +866,94 @@ final class GarageStore: ObservableObject {
         }
         save()
         return entry
+    }
+
+    private func defaultTitle(for draft: ServiceDraft, on vehicle: Vehicle) -> String {
+        switch draft.kind {
+        case .event: return draft.details.event?.title ?? EntryKind.event.title
+        case .mod: return draft.details.parts.first(where: { !$0.isBlank })?.summary.nilIfEmpty ?? "Mod"
+        case .repair where draft.taskIDs.isEmpty: return "Repair"
+        default: return title(for: draft.taskIDs, on: vehicle)
+        }
+    }
+
+    /// Logs a track day or a water crossing, which brings its jobs due.
+    @discardableResult
+    func logEvent(_ event: UsageEvent, on date: Date, notes: String = "", for vehicle: Vehicle) -> ServiceEntry {
+        var draft = ServiceDraft()
+        draft.kind = .event
+        draft.date = date
+        draft.notes = notes
+        draft.details.event = event
+        return log(draft, for: vehicle)
+    }
+
+    /// Jobs a kind of event brings due on this vehicle.
+    func jobs(triggeredBy event: UsageEvent, on vehicle: Vehicle) -> [MaintenanceTask] {
+        vehicle.enabledTasks.filter { $0.trigger == event }
+    }
+
+    /// A mod that came off. It stays in the history, out of the build list.
+    func setRemoved(_ entry: ServiceEntry, on date: Date?) {
+        var details = entry.details
+        details.removedOn = date
+        entry.details = details
+        save()
+    }
+
+    // MARK: - Documents
+
+    /// A file kept against a vehicle or a visit: PDFs stay PDFs, images are
+    /// scaled down like photos.
+    func makeDocument(_ name: String, data: Data, beside vehicle: Vehicle) -> Attachment {
+        let attachment = Attachment(context: context)
+        persistence.place(attachment, beside: vehicle, in: context)
+        attachment.id = UUID()
+        attachment.createdAt = .now
+        let isPDF = data.starts(with: Array("%PDF".utf8))
+        attachment.kindRaw = isPDF ? "pdf" : "photo"
+        attachment.data = isPDF ? data : (ImageTools.jpeg(data) ?? data)
+        attachment.name = name.trimmed.nilIfEmpty
+        return attachment
+    }
+
+    func addDocument(_ name: String, data: Data, to vehicle: Vehicle) {
+        let attachment = makeDocument(name, data: data, beside: vehicle)
+        attachment.vehicle = vehicle
+        save()
+    }
+
+    func rename(_ attachment: Attachment, to name: String) {
+        attachment.name = name.trimmed.nilIfEmpty
+        save()
+    }
+
+    // MARK: - Odometer changes
+
+    /// The odometer rolled over or was replaced: what it showed before and
+    /// after. The true total carries on, so nothing comes due by mistake.
+    func recordOdometerChange(_ vehicle: Vehicle, on date: Date, lastShown: Double, newShown: Double, replaced: Bool) {
+        guard vehicle.meter.hasReading, lastShown >= 0, newShown >= 0 else { return }
+        var profile = vehicle.profile
+        profile.odometerChanges.append(OdometerChange(date: date, lastShown: lastShown, newShown: newShown, replaced: replaced))
+        profile.odometerChanges.sort { $0.date < $1.date }
+        vehicle.profile = profile
+        save()
+        updateReading(vehicle, to: newShown, at: date)
+    }
+
+    func removeOdometerChange(_ change: OdometerChange, from vehicle: Vehicle) {
+        var profile = vehicle.profile
+        profile.odometerChanges.removeAll { $0.id == change.id }
+        vehicle.profile = profile
+        save()
+    }
+
+    func setMileageStatus(_ status: MileageStatus, on vehicle: Vehicle) {
+        var profile = vehicle.profile
+        profile.mileageStatus = status
+        vehicle.profile = profile
+        save()
     }
 
     struct FuelDraft: Equatable {
@@ -776,7 +987,8 @@ final class GarageStore: ObservableObject {
         entry.kind = .fuel
         entry.title = EntryKind.fuel.title
         entry.date = draft.date
-        entry.reading = draft.reading ?? -1
+        let reading = draft.reading.map { vehicle.trueReading(shown: $0, on: draft.date) }
+        entry.reading = reading ?? -1
         entry.fuelVolume = fields.volume.map(draft.unit.liters) ?? 0
         entry.fuelUnitPrice = fields.unitPrice.map(draft.unit.perLiter) ?? 0
         entry.cost = max(0, fields.total ?? 0)
@@ -793,7 +1005,7 @@ final class GarageStore: ObservableObject {
             attachment.data = data
             attachment.entry = entry
         }
-        if let reading = draft.reading, reading > vehicle.reading {
+        if let reading, reading > vehicle.reading {
             vehicle.reading = reading
             vehicle.readingDate = draft.date
         }
@@ -874,8 +1086,11 @@ final class GarageStore: ObservableObject {
         var outcome = ImportOutcome()
         let calendar = Calendar.current
         let dayKey = { (date: Date, title: String) in "\(calendar.startOfDay(for: date).timeIntervalSince1970)|\(title.lowercased().trimmed)" }
+        // Same day, same work and same cost is the same visit; front and rear
+        // brakes on one day at different prices are two.
+        let serviceKey = { (date: Date, title: String, cost: Double) in dayKey(date, "\(title)|\(Int((cost * 100).rounded()))") }
         var existing = Set((vehicle.entries ?? []).compactMap { entry in
-            entry.date.map { dayKey($0, entry.kind == .fuel ? "\(EntryKind.fuel.title)|\(Int(entry.reading))" : entry.title ?? "") }
+            entry.date.map { entry.kind == .fuel ? dayKey($0, "\(EntryKind.fuel.title)|\(Int(entry.reading))") : serviceKey($0, entry.title ?? "", entry.cost) }
         })
         var readingDays = Set(vehicle.mainReadings.compactMap { reading in
             reading.date.map { "\(calendar.startOfDay(for: $0).timeIntervalSince1970)|\(Int(reading.value))" }
@@ -886,7 +1101,7 @@ final class GarageStore: ObservableObject {
         for row in rows {
             let reading = row.reading.flatMap { value in
                 guard vehicle.meter.hasReading else { return nil as Double? }
-                return (row.unit ?? vehicle.meter).convert(value, to: vehicle.meter)
+                return (row.unit ?? vehicle.meter).convert(value, to: vehicle.meter).map { vehicle.trueReading(shown: $0, on: row.date) }
             }
             if let reading, reading > (highest?.value ?? -1) { highest = (reading, row.date) }
             if row.isFillUp, keepFillUps, row.volume != nil || row.cost > 0 {
@@ -934,7 +1149,7 @@ final class GarageStore: ObservableObject {
             }
             let taskIDs = matchingTasks(for: row.work, on: vehicle)
             let title = row.work.nilIfEmpty ?? (taskIDs.isEmpty ? "Service" : self.title(for: taskIDs, on: vehicle))
-            guard existing.insert(dayKey(row.date, title)).inserted else {
+            guard existing.insert(serviceKey(row.date, title, row.cost)).inserted else {
                 outcome.duplicates += 1
                 continue
             }
@@ -980,13 +1195,14 @@ final class GarageStore: ObservableObject {
 
     // MARK: - Value
 
-    func addValuation(_ amount: Double, source: String, to vehicle: Vehicle, at date: Date = .now) {
+    func addValuation(_ amount: Double, source: String, kind: ValuationKind = .estimate, to vehicle: Vehicle, at date: Date = .now) {
         let valuation = Valuation(context: context)
         persistence.place(valuation, beside: vehicle, in: context)
         valuation.id = UUID()
         valuation.date = date
         valuation.amount = amount
         valuation.source = source.trimmed.nilIfEmpty
+        valuation.kind = kind
         valuation.vehicle = vehicle
         save()
     }
@@ -1046,4 +1262,41 @@ extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
     var nilIfEmpty: String? { isEmpty ? nil : self }
     var lowercasedFirst: String { prefix(1).lowercased() + dropFirst() }
+}
+
+extension TaskDue {
+    /// "Every 7,500 mi or 1 year", in this job's own meters.
+    func intervalText(auxName: String?) -> String {
+        Format.interval(
+            distance: intervalDistance, months: intervalMonths, meter: meter, auxName: usesAuxMeter ? auxName : nil,
+            second: secondInterval, secondMeter: secondMeter, secondName: auxName, trigger: trigger
+        )
+    }
+}
+
+extension MaintenanceTask {
+    var intervalText: String {
+        Format.interval(
+            distance: intervalDistance, months: Int(intervalMonths), meter: countingMeter,
+            auxName: countsOnAuxMeter ? vehicle?.auxMeterName : nil,
+            second: secondInterval, secondMeter: vehicle?.auxMeter ?? .hours, secondName: vehicle?.auxMeterName,
+            trigger: trigger
+        )
+    }
+}
+
+extension CatalogItem {
+    /// How often it would run if added to this vehicle.
+    @MainActor func intervalText(on vehicle: Vehicle) -> String {
+        let onAux = vehicle.hasAuxMeter && vehicle.auxMeter == .hours && auxHours != nil
+        return Format.interval(
+            distance: onAux ? (auxHours ?? 0) : (distanceInterval(for: vehicle.meter) ?? 0),
+            months: months ?? 0,
+            meter: onAux ? .hours : vehicle.meter,
+            auxName: onAux ? vehicle.auxMeterName : nil,
+            second: onAux ? 0 : GarageStore.secondInterval(for: self, on: vehicle),
+            secondMeter: vehicle.auxMeter, secondName: vehicle.auxMeterName,
+            trigger: trigger
+        )
+    }
 }

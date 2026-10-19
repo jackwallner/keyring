@@ -94,10 +94,20 @@ struct ValueSource: Identifiable, Hashable {
 
     static func sources(for vehicle: Vehicle, region: String? = Locale.current.region?.identifier) -> [ValueSource] {
         let isRoad = [.car, .suv, .truck, .van].contains(vehicle.kind)
+        let collector = collectorSources(for: vehicle)
         if isRoad, let local = localCarSources(for: vehicle, region: region) {
-            return local + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
+            return collector + local + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
         }
-        return usSources(for: vehicle) + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
+        return collector + usSources(for: vehicle) + [ebaySold(for: vehicle, region: region)].compactMap { $0 }
+    }
+
+    /// Collector cars and bikes trade on condition, not book value: the
+    /// collector guide goes first for anything old or marked a collector.
+    private static func collectorSources(for vehicle: Vehicle) -> [ValueSource] {
+        let road = [.car, .suv, .truck, .van, .motorcycle].contains(vehicle.kind)
+        let old = vehicle.year > 1885 && Int(vehicle.year) <= Calendar.current.component(.year, from: .now) - 25
+        guard road, old || vehicle.traits.contains(.collector) else { return [] }
+        return [ValueSource(name: "Hagerty Valuation Tools", detail: "Collector values by condition", url: URL(string: "https://www.hagerty.com/valuation-tools")!)]
     }
 
     /// Price guides people outside the US actually use.

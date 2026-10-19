@@ -7,7 +7,7 @@ import UserNotifications
 ///
 /// Rules, to stay useful rather than ignored: one heads-up a week ahead, one
 /// on the day, and overdue jobs roll up into a single Saturday-morning note
-/// instead of a daily nag.
+/// (repeated for a few weeks) instead of a daily nag.
 @MainActor
 final class ReminderScheduler {
     static let shared = ReminderScheduler()
@@ -53,6 +53,8 @@ final class ReminderScheduler {
         /// The vehicle a tap opens. The weekend roll-up spans several, so it has none.
         var vehicleID: String?
     }
+
+    static let overdueWeeks = 4
 
     /// Pure planning, so the rules are testable without a notification center.
     static func plan(
@@ -110,12 +112,17 @@ final class ReminderScheduler {
             if let saturday = calendar.nextDate(after: now, matching: components, matchingPolicy: .nextTime) {
                 let names = overdue.prefix(3).map { "\($0.vehicle) \($0.due.name.lowercasedFirst)" }
                 let more = overdue.count > 3 ? " and \(overdue.count - 3) more" : ""
-                planned.append(Planned(
-                    id: "weekend-overdue",
-                    title: overdue.count == 1 ? "One job is overdue" : "\(overdue.count) jobs are overdue",
-                    body: names.joined(separator: ", ") + more + ".",
-                    fireDate: saturday
-                ))
+                // The note comes back each Saturday for a month, so a job
+                // isn't forgotten just because the app wasn't opened.
+                for week in 0..<overdueWeeks {
+                    guard let date = calendar.date(byAdding: .day, value: 7 * week, to: saturday) else { continue }
+                    planned.append(Planned(
+                        id: week == 0 ? "weekend-overdue" : "weekend-overdue-\(week + 1)",
+                        title: overdue.count == 1 ? "One job is overdue" : "\(overdue.count) jobs are overdue",
+                        body: names.joined(separator: ", ") + more + ".",
+                        fireDate: date
+                    ))
+                }
             }
         }
         // iOS keeps 64 pending; the soonest matter most.

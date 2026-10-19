@@ -21,6 +21,8 @@ struct CatalogItem: Identifiable, Hashable, Sendable {
     var auxHours: Double? = nil
     /// Due at the end of the calendar month, the way the FAA counts.
     var calendarMonths = false
+    /// An event that also brings it due, such as a track day.
+    var trigger: UsageEvent? = nil
     /// Core items are switched on for a new vehicle; the rest wait in "Add from
     /// the catalog" so a new garage starts calm.
     var isCore = true
@@ -76,14 +78,30 @@ enum MaintenanceCatalog {
 
     static func items(
         for kind: VehicleKind, powertrain: Powertrain, year: Int = 0,
+        traits: Set<VehicleTrait> = [], drive: FinalDrive? = nil,
         region: String? = Locale.current.region?.identifier
     ) -> [CatalogItem] {
         var list = baseItems(for: kind, powertrain: powertrain)
-        if [.car, .suv, .van, .truck].contains(kind) {
+        let road = [.car, .suv, .van, .truck].contains(kind)
+        if road {
             list.append(winterTires(core: winterTireRegions.contains(region ?? "")))
+        }
+        if kind == .motorcycle, powertrain != .electric {
+            list = motorcycleDrive(list, drive: drive)
         }
         if isClassic(kind: kind, year: year), powertrain.burnsFuel {
             list = list.map(classicTuned) + classicExtras
+        }
+        if traits.contains(.fourByFour), road || kind == .atv {
+            list = list.map(dustTuned) + fourByFour
+        } else if kind == .truck || kind == .suv, powertrain != .electric {
+            list.append(rearDiff)
+        }
+        if traits.contains(.track), road || kind == .motorcycle {
+            list = list.map(trackTuned) + trackExtras
+        }
+        if traits.contains(.collector), road || kind == .motorcycle {
+            list = list.map(collectorTuned) + collectorExtras(powertrain: powertrain)
         }
         var seen = Set<String>()
         let unique = list.filter { seen.insert($0.key).inserted }
@@ -181,6 +199,158 @@ enum MaintenanceCatalog {
             symbol: "slider.horizontal.3", miles: 12_000, months: 12, isCore: false, difficulty: .moderate
         ),
     ]
+
+    // MARK: - Traits
+
+    /// The chain job for a chain, a belt or final-drive job otherwise. With
+    /// no answer yet it stays a chain, the common case.
+    private static func motorcycleDrive(_ list: [CatalogItem], drive: FinalDrive?) -> [CatalogItem] {
+        switch drive {
+        case .belt:
+            return list.filter { $0.key != "chain" } + [CatalogItem(
+                key: "driveBelt", name: "Drive belt inspection", detail: "Check tension, cracks and stone damage. Most belts go 5,000 miles between checks and many tens of thousands between replacements.",
+                symbol: "circle.dashed", miles: 5_000, months: 12, difficulty: .moderate
+            )]
+        case .shaft:
+            return list.filter { $0.key != "chain" } + [CatalogItem(
+                key: "finalDrive", name: "Final drive oil", detail: "Shaft drives carry their own gear oil. Most call for it every 12,000 to 24,000 miles or two years.",
+                symbol: "gearshape.2", miles: 18_000, months: 24, difficulty: .moderate
+            )]
+        default:
+            return list
+        }
+    }
+
+    private static let rearDiff = CatalogItem(
+        key: "rearDiff", name: "Rear differential fluid", detail: "Often skipped and often called lifetime. Every 30,000 to 60,000 miles, sooner if you tow.",
+        symbol: "gearshape.2", miles: 50_000, months: 60, isCore: false, difficulty: .moderate
+    )
+
+    private static let fourByFour: [CatalogItem] = [
+        CatalogItem(
+            key: "frontDiff", name: "Front differential fluid", detail: "Every 30,000 miles, and after any crossing deep enough to reach the axle. Milky fluid means water got in.",
+            symbol: "gearshape.2", miles: 30_000, months: 36, trigger: .waterCrossing, difficulty: .moderate,
+            gear: [.init(title: "Gear oil", query: "75w90 gear oil")]
+        ),
+        CatalogItem(
+            key: "rearDiff", name: "Rear differential fluid", detail: "Every 30,000 miles, sooner if you tow or wheel hard, and after deep water. Lockers may want a friction additive or not; check yours.",
+            symbol: "gearshape.2", miles: 30_000, months: 36, trigger: .waterCrossing, difficulty: .moderate,
+            gear: [.init(title: "Gear oil", query: "75w90 gear oil"), .init(title: "Fluid pump", query: "gear oil transfer pump")]
+        ),
+        CatalogItem(
+            key: "transferCase", name: "Transfer case fluid", detail: "Every 30,000 to 60,000 miles, and after water crossings that cover it.",
+            symbol: "arrow.triangle.branch", miles: 30_000, months: 48, trigger: .waterCrossing, difficulty: .moderate
+        ),
+        CatalogItem(
+            key: "driveline", name: "Driveline grease", detail: "U-joints, slip yoke and any zerks on the suspension. Water and mud push the old grease out.",
+            symbol: "drop.triangle", miles: 5_000, months: 6, trigger: .waterCrossing, difficulty: .moderate,
+            gear: [.init(title: "Grease gun", query: "grease gun chassis")]
+        ),
+        CatalogItem(
+            key: "cvBoots", name: "CV boots, ball joints and tie rods", detail: "Lifts and big tires work the front end hard. A torn boot is cheap; a dry CV joint isn't.",
+            symbol: "wrench.adjustable", miles: 10_000, months: 12, isCore: false, difficulty: .moderate
+        ),
+        CatalogItem(
+            key: "spareTire", name: "Spare tire check", detail: "Pressure and age on the spare, and work it into the rotation if it's a full-size match.",
+            symbol: "circle.circle", months: 6, isCore: false
+        ),
+    ]
+
+    /// Off road, the air filter is a dusty-ride job, not a mileage one.
+    private static func dustTuned(_ item: CatalogItem) -> CatalogItem {
+        guard item.key == "airFilter" else { return item }
+        var item = item
+        item.trigger = .dust
+        item.detail = "Check it after every dusty trail; replace sooner than the book says."
+        return item
+    }
+
+    /// Brakes and fluids around every event, not every few years.
+    private static func trackTuned(_ item: CatalogItem) -> CatalogItem {
+        var item = item
+        switch item.key {
+        case "brakeFluid":
+            item.months = 6
+            item.trigger = .trackDay
+            item.isCore = true
+            item.detail = "Bleed before each event with high-temp fluid; a full flush at least twice a season. Boiled fluid is a long pedal on lap three."
+        case "brakes":
+            item.trigger = .trackDay
+            item.detail = "Pads, rotors and lines before every event. Swap to track pads and back again if you run two sets."
+        case "oil":
+            item.miles = 3_000
+            item.months = 6
+            item.detail = "Track heat shears oil fast. Many change it every two or three events or 3,000 miles, and send a sample for analysis."
+        case "alignment":
+            item.months = 12
+            item.isCore = true
+        default:
+            break
+        }
+        return item
+    }
+
+    private static let trackExtras: [CatalogItem] = [
+        CatalogItem(
+            key: "trackPrep", name: "Torque wheels and nut-and-bolt", detail: "Lug nuts to spec, suspension and caliper bolts checked, nothing loose in the cabin. Before the first session and after the last.",
+            symbol: "checklist", trigger: .trackDay,
+            gear: [.init(title: "Torque wrench", query: "1/2 inch torque wrench")]
+        ),
+        CatalogItem(
+            key: "trackTires", name: "Tire pressures and wear", detail: "Cold pressures before, hot pressures after each session, and a look for cording. Note heat cycles on track tires.",
+            symbol: "gauge.with.dots.needle.33percent", trigger: .trackDay,
+            gear: [.init(title: "Tire pyrometer", query: "tire pyrometer")]
+        ),
+        CatalogItem(
+            key: "oilAnalysis", name: "Oil analysis", detail: "A sample at each change shows bearing and ring wear before it's a noise. Log the numbers to watch the trend.",
+            symbol: "testtube.2", months: 6, isCore: false
+        ),
+    ]
+
+    /// A car that sits ages faster than it wears: time decides, not miles.
+    private static func collectorTuned(_ item: CatalogItem) -> CatalogItem {
+        var item = item
+        switch item.key {
+        case "oil":
+            item.months = 12
+            item.detail = "Change it once a year even at a few hundred miles. Acids and moisture build up in oil that sits."
+        case "brakeFluid":
+            item.isCore = true
+            item.months = 24
+        case "tires", "trailerTires":
+            item.isCore = true
+            item.months = 72
+            item.detail = "Replace by the date code, around six years, whatever the tread says. Old rubber looks fine until it lets go."
+        case "coolant":
+            item.isCore = true
+            item.months = 36
+        default:
+            break
+        }
+        return item
+    }
+
+    private static func collectorExtras(powertrain: Powertrain) -> [CatalogItem] {
+        var items = [
+            CatalogItem(
+                key: "exercise", name: "Drive it", detail: "Twenty minutes to full temperature keeps seals wet, brakes free and the battery up.",
+                symbol: "steeringwheel", months: 1
+            ),
+            CatalogItem(
+                key: "tender", name: "Battery tender check", detail: "On a maintainer between drives, and the water checked on a flooded battery.",
+                symbol: "minus.plus.batteryblock", months: 3,
+                gear: [.init(title: "Battery maintainer", query: "smart battery maintainer")]
+            ),
+        ]
+        if powertrain.burnsFuel {
+            items.append(CatalogItem(
+                key: "layup", name: "Layup for winter", detail: "Fuel stabilized and topped up, fresh oil, tires up a few psi, mice kept out.",
+                symbol: "moon.zzz", months: 12,
+                gear: [.init(title: "Fuel stabilizer", query: "fuel stabilizer")]
+            ))
+        }
+        return items
+    }
 
     static func usesCalendarMonths(key: String?, kind: VehicleKind) -> Bool {
         guard let key, kind == .aircraft else { return false }
@@ -392,6 +562,14 @@ enum MaintenanceCatalog {
             symbol: "arrow.up.and.down", miles: 20_000, months: 36, isCore: false, difficulty: .shop
         ),
         CatalogItem(
+            key: "primary", name: "Primary and transmission oil", detail: "V-twins like Harleys keep separate primary and gearbox oil. Usually every 10,000 miles or so.",
+            symbol: "gearshape.2", miles: 10_000, months: 24, isCore: false, difficulty: .moderate
+        ),
+        CatalogItem(
+            key: "timingBelts", name: "Timing belts", detail: "Belt-driven cams (most older Ducatis) want new belts every two years or so, whatever the miles. A snapped belt bends valves.",
+            symbol: "circle.dashed", miles: 15_000, months: 24, isCore: false, difficulty: .shop
+        ),
+        CatalogItem(
             key: "battery", name: "Battery tender over winter", detail: "A smart charger through the off season saves a dead battery in spring.",
             symbol: "minus.plus.batteryblock", months: 12, isCore: false,
             gear: [.init(title: "Battery tender", query: "motorcycle battery tender")]
@@ -512,6 +690,10 @@ enum MaintenanceCatalog {
                 gear: [.init(title: "Fuel stabilizer", query: "marine fuel stabilizer"),
                        .init(title: "Fogging oil", query: "engine fogging oil")]
             ),
+            CatalogItem(
+                key: "commission", name: "Spring commissioning", detail: "Batteries charged and connected, hoses and clamps checked, bilge and blower tested, engine run on the hose before launch.",
+                symbol: "sun.max", months: 12
+            ),
         ]
         if powertrain == .outboard || powertrain == .sterndrive {
             items.insert(CatalogItem(
@@ -572,7 +754,7 @@ enum MaintenanceCatalog {
     static let personalWatercraft: [CatalogItem] = [
         CatalogItem(key: "oil", name: "Oil and filter", detail: "About every 50 hours or each season.", symbol: "drop.fill", hours: 50, months: 12,
                     gear: [.init(title: "PWC oil change kit", query: "{make} pwc oil change kit")]),
-        CatalogItem(key: "flush", name: "Freshwater flush", detail: "After every saltwater ride.", symbol: "drop", hours: 3, isCore: false),
+        CatalogItem(key: "flush", name: "Freshwater flush", detail: "After every saltwater ride.", symbol: "drop", trigger: .saltwater, isCore: false),
         CatalogItem(key: "wearRing", name: "Wear ring and impeller", detail: "Check for nicks and wear.", symbol: "circle.dashed", hours: 100, months: 24, difficulty: .shop),
         CatalogItem(key: "plugs", name: "Spark plugs", detail: "Every 100 hours or two seasons.", symbol: "bolt.fill", hours: 100, months: 24),
         CatalogItem(key: "winterize", name: "Winterize", detail: "Stabilize fuel, fog, drain the exhaust, and pull the battery.", symbol: "snowflake", months: 12,
@@ -628,7 +810,7 @@ enum MaintenanceCatalog {
     static let atv: [CatalogItem] = [
         CatalogItem(key: "oil", name: "Oil and filter", detail: "Dust and heat are hard on small engines. Every 100 hours, 1,000 miles or once a season.", symbol: "drop.fill", miles: 1_000, hours: 100, months: 12,
                     gear: [.init(title: "Oil change kit", query: "{vehicle} oil change kit")]),
-        CatalogItem(key: "airFilter", name: "Air filter clean", detail: "After every dusty ride. A dirty filter is how ATV engines die.", symbol: "aqi.medium", miles: 250, hours: 25, months: 6,
+        CatalogItem(key: "airFilter", name: "Air filter clean", detail: "After every dusty ride. A dirty filter is how ATV engines die.", symbol: "aqi.medium", miles: 250, hours: 25, months: 6, trigger: .dust,
                     gear: [.init(title: "Air filter", query: "{vehicle} air filter")]),
         CatalogItem(key: "cvt", name: "CVT belt inspection", detail: "Glazing or cracks mean replace it before it lets go on the trail.", symbol: "circle.dashed", miles: 1_000, hours: 50, months: 12, difficulty: .moderate,
                     gear: [.init(title: "Spare drive belt", query: "{vehicle} drive belt")]),
@@ -659,7 +841,7 @@ enum MaintenanceCatalog {
         CatalogItem(key: "plugs", name: "Spark plug", detail: "Once a season.", symbol: "bolt.fill", hours: 100, months: 12),
         CatalogItem(key: "grease", name: "Grease fittings", detail: "Spindles and pivots.", symbol: "drop.triangle", hours: 25, months: 6, isCore: false),
         CatalogItem(key: "hydraulic", name: "Hydraulic and transmission fluid", detail: "Compact tractors usually every 300 to 400 hours.", symbol: "gearshape.2", hours: 300, months: 24, isCore: false, difficulty: .moderate),
-        CatalogItem(key: "storage", name: "Off-season storage", detail: "Stabilize or drain the fuel and keep the battery charged.", symbol: "snowflake", months: 12, isCore: false),
+        CatalogItem(key: "storage", name: "Off-season storage", detail: "Stabilize or drain the fuel and keep the battery charged.", symbol: "snowflake", months: 12),
     ]
 
     static let electricMower: [CatalogItem] = [
@@ -724,6 +906,18 @@ enum MaintenanceCatalog {
             items.append(CatalogItem(key: "inspection", name: name, detail: detail, symbol: "checkmark.seal", months: 12, isCore: false))
         }
         return items
+    }
+}
+
+extension Vehicle {
+    /// Every catalog job for this vehicle as it's set up.
+    var catalogItems: [CatalogItem] {
+        let profile = profile
+        return MaintenanceCatalog.items(for: kind, powertrain: powertrain, year: Int(year), traits: profile.traits, drive: profile.drive)
+    }
+
+    func catalogItem(key: String) -> CatalogItem? {
+        catalogItems.first { $0.key == key }
     }
 }
 

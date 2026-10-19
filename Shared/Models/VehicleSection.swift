@@ -3,7 +3,7 @@ import Foundation
 /// The reorderable blocks on a vehicle's page. Fuel and the Service Record ride
 /// with History.
 enum VehicleSection: String, CaseIterable, Identifiable {
-    case explore, maintenance, history, facts, details
+    case explore, maintenance, history, records, facts, details
 
     var id: String { rawValue }
 
@@ -12,6 +12,7 @@ enum VehicleSection: String, CaseIterable, Identifiable {
         case .explore: "Explore"
         case .maintenance: "Maintenance"
         case .history: "History"
+        case .records: "Records"
         case .facts: "Quick facts"
         case .details: "Details"
         }
@@ -22,6 +23,7 @@ enum VehicleSection: String, CaseIterable, Identifiable {
         case .explore: "square.grid.2x2"
         case .maintenance: "wrench.and.screwdriver"
         case .history: "book.closed"
+        case .records: "folder"
         case .facts: "list.bullet.rectangle"
         case .details: "info.circle"
         }

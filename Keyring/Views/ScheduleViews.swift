@@ -10,7 +10,7 @@ struct ScheduleView: View {
     var body: some View {
         let dues = garage.dues(for: vehicle)
         let enabledKeys = Set(vehicle.enabledTasks.compactMap(\.catalogKey))
-        let available = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)).filter { !enabledKeys.contains($0.key) }
+        let available = vehicle.catalogItems.filter { !enabledKeys.contains($0.key) }
         List {
             Section {
                 ForEach(dues) { due in
@@ -22,7 +22,7 @@ struct ScheduleView: View {
                                 StatusDot(status: due.result.status)
                                 Text(due.name).font(.body.weight(.medium))
                             }
-                            Text(Format.interval(distance: due.intervalDistance, months: due.intervalMonths, meter: due.meter, auxName: due.usesAuxMeter ? vehicle.auxMeterName : nil))
+                            Text(due.intervalText(auxName: vehicle.auxMeterName))
                                 .font(.footnote)
                                 .foregroundStyle(Theme.secondaryInk)
                         }
@@ -52,12 +52,7 @@ struct ScheduleView: View {
                                     .frame(width: 28)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.name).foregroundStyle(Theme.ink)
-                                    Text(Format.interval(
-                                        distance: (vehicle.hasAuxMeter ? item.auxHours : nil) ?? item.distanceInterval(for: vehicle.meter) ?? 0,
-                                        months: item.months ?? 0,
-                                        meter: vehicle.hasAuxMeter && item.auxHours != nil ? .hours : vehicle.meter,
-                                        auxName: vehicle.hasAuxMeter && item.auxHours != nil ? vehicle.auxMeterName : nil
-                                    ))
+                                    Text(item.intervalText(on: vehicle))
                                         .font(.footnote)
                                         .foregroundStyle(Theme.secondaryInk)
                                 }
@@ -95,7 +90,7 @@ struct TaskDetailView: View {
     @State private var settingLast = false
 
     private var task: MaintenanceTask? { (vehicle.tasks ?? []).first { $0.id == taskID } }
-    private var item: CatalogItem? { task?.catalogKey.flatMap { MaintenanceCatalog.item(key: $0, kind: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)) } }
+    private var item: CatalogItem? { task?.catalogKey.flatMap { vehicle.catalogItem(key: $0) } }
     private var due: TaskDue? { garage.dues(for: vehicle).first { $0.taskID == taskID } }
 
     var body: some View {
@@ -164,7 +159,7 @@ struct TaskDetailView: View {
                 Text(detail).font(.body).foregroundStyle(Theme.secondaryInk)
             }
             HStack(spacing: Theme.xs) {
-                Label(Format.interval(distance: task.intervalDistance, months: Int(task.intervalMonths), meter: task.countingMeter, auxName: task.countsOnAuxMeter ? vehicle.auxMeterName : nil), systemImage: "arrow.clockwise")
+                Label(task.intervalText, systemImage: "arrow.clockwise")
                 if let difficulty = item?.difficulty {
                     Text("·")
                     Text(difficulty.title)

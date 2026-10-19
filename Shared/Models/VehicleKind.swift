@@ -103,12 +103,25 @@ enum VehicleKind: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
-    /// Kinds that often carry a second hour meter: an RV or boat generator, or
-    /// a boat's second engine.
+    /// Kinds where a second meter is common enough to offer at setup: an RV
+    /// or boat generator, a boat's second engine. Any vehicle can add one
+    /// later (track hours, a UTV's miles beside its hours).
     var offersAuxMeter: Bool {
         switch self {
-        case .rv, .camper, .boat, .sailboat: true
+        case .rv, .camper, .boat, .sailboat, .atv: true
         default: false
+        }
+    }
+
+    /// Names to suggest for a second meter, the first being the default.
+    var auxMeterSuggestions: [(name: String, unit: MeterUnit)] {
+        switch self {
+        case .rv, .camper: [("Generator", .hours)]
+        case .boat, .sailboat: [("Generator", .hours), ("Second engine", .hours)]
+        case .atv: [("Odometer", .miles)]
+        case .car, .truck, .suv, .van, .motorcycle: [("Track", .hours), ("Engine", .hours)]
+        case .tractor, .personalWatercraft, .snowmobile: [("Odometer", .miles)]
+        default: [("Engine", .hours)]
         }
     }
 
@@ -305,9 +318,14 @@ extension VehicleTint {
 
 /// What a logged visit was. Maintenance is planned and restarts schedule
 /// countdowns; a repair is the unplanned kind; a recall visit closes an NHTSA
-/// campaign. Kept apart so the real cost of owning something shows.
+/// campaign; a mod is money spent making it better, not keeping it running;
+/// an event is a track day or a water crossing that brings jobs due. Kept
+/// apart so the real cost of owning something shows.
 enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
-    case service, repair, recall, fuel
+    case service, repair, recall, fuel, mod, event
+
+    /// Counted in what it costs to keep running.
+    var isUpkeep: Bool { self == .service || self == .repair || self == .recall }
 
     var id: String { rawValue }
 
@@ -317,6 +335,8 @@ enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
         case .repair: "Repair"
         case .recall: "Recall"
         case .fuel: "Fill-up"
+        case .mod: "Mod"
+        case .event: "Event"
         }
     }
 
@@ -326,6 +346,8 @@ enum EntryKind: String, CaseIterable, Identifiable, Codable, Sendable {
         case .repair: "hammer.fill"
         case .recall: "exclamationmark.shield.fill"
         case .fuel: "fuelpump.fill"
+        case .mod: "sparkles"
+        case .event: "flag.checkered"
         }
     }
 }

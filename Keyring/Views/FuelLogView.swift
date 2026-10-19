@@ -89,7 +89,7 @@ struct FuelLogView: View {
                 Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))", action: save)
                 Button("Fix it", role: .cancel) {}
             } message: {
-                Text("That's \(Format.reading((reading ?? 0) - vehicle.reading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
+                Text("That's \(Format.reading((reading ?? 0) - vehicle.shownReading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
             }
         }
     }
@@ -314,7 +314,7 @@ struct FuelLogView: View {
     private var meterFooter: String? {
         var parts: [String] = []
         if vehicle.reading > 0 {
-            parts.append("Last reading \(Format.reading(vehicle.reading, vehicle.meter))\(vehicle.readingDate.map { " on \(Format.shortDate($0))" } ?? "").")
+            parts.append("Last reading \(Format.reading(vehicle.shownReading, vehicle.meter))\(vehicle.readingDate.map { " on \(Format.shortDate($0))" } ?? "").")
         }
         if let economy = previewEconomy { parts.append("That's \(economy) since the last full tank.") }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
@@ -325,7 +325,7 @@ struct FuelLogView: View {
         guard editing == nil, !draft.partial, let reading, let volume, volume > 0 else { return nil }
         let economy = FuelEconomy(meter: vehicle.meter, unit: unit)
         let id = UUID()
-        let fills = FuelEconomy.fills(for: vehicle) + [FuelEconomy.Fill(id: id, date: draft.date, reading: reading, liters: unit.liters(volume), partial: false)]
+        let fills = FuelEconomy.fills(for: vehicle) + [FuelEconomy.Fill(id: id, date: draft.date, reading: vehicle.trueReading(shown: reading, on: draft.date), liters: unit.liters(volume), partial: false)]
         return economy.values(fills)[id].map(economy.format)
     }
 
@@ -351,7 +351,7 @@ struct FuelLogView: View {
         case .dash:
             draft.meterPhotos.append(data)
             readingDash = true
-            let value = await OdometerReader.read(data, last: vehicle.reading, meter: vehicle.meter)
+            let value = await OdometerReader.read(data, last: vehicle.shownReading, meter: vehicle.meter)
             readingDash = false
             if let value {
                 reading = value
@@ -402,7 +402,7 @@ struct FuelLogView: View {
         draft.grade = editing.grade ?? draft.grade
         draft.partial = editing.fuelPartial
         draft.station = editing.shop ?? ""
-        reading = editing.hasReading ? editing.reading : nil
+        reading = editing.hasReading ? vehicle.shownReading(true: editing.reading, on: editing.date ?? .now) : nil
         if editing.fuelVolume > 0 { volume = (unit.fromLiters(editing.fuelVolume) * 1_000).rounded() / 1_000 }
         if editing.fuelUnitPrice > 0 { price = (unit.fromPerLiter(editing.fuelUnitPrice) * 1_000).rounded() / 1_000 }
         if editing.cost > 0 { total = editing.cost }

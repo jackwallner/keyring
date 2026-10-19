@@ -60,6 +60,8 @@ enum KeyringModel {
             attr("storedSince", .dateAttributeType),
             attr("storedUntil", .dateAttributeType),
             attr("yearlyUse", .doubleAttributeType, default: 0.0),
+            attr("auxMeterRaw", .stringAttributeType),
+            attr("profileJSON", .stringAttributeType),
         ] : [])
         task.properties = [
             attr("id", .UUIDAttributeType),
@@ -73,7 +75,11 @@ enum KeyringModel {
             attr("baselineReading", .doubleAttributeType, default: -1.0),
             attr("isEnabled", .booleanAttributeType, default: true),
             attr("notes", .stringAttributeType),
-        ] + (current ? [attr("usesAuxMeter", .booleanAttributeType, default: false)] : [])
+        ] + (current ? [
+            attr("usesAuxMeter", .booleanAttributeType, default: false),
+            attr("auxInterval", .doubleAttributeType, default: 0.0),
+            attr("triggerRaw", .stringAttributeType),
+        ] : [])
         entry.properties = [
             attr("id", .UUIDAttributeType),
             attr("createdAt", .dateAttributeType),
@@ -94,13 +100,14 @@ enum KeyringModel {
             attr("fuelUnitPrice", .doubleAttributeType, default: 0.0),
             attr("fuelGrade", .stringAttributeType),
             attr("fuelPartial", .booleanAttributeType, default: false),
+            attr("detailsJSON", .stringAttributeType),
         ] : [])
         attachment.properties = [
             attr("id", .UUIDAttributeType),
             attr("createdAt", .dateAttributeType),
             attr("kindRaw", .stringAttributeType, default: "photo"),
             binary("data"),
-        ]
+        ] + (current ? [attr("name", .stringAttributeType)] : [])
         reading.properties = [
             attr("id", .UUIDAttributeType),
             attr("date", .dateAttributeType),
@@ -112,7 +119,7 @@ enum KeyringModel {
             attr("date", .dateAttributeType),
             attr("amount", .doubleAttributeType, default: 0.0),
             attr("source", .stringAttributeType),
-        ]
+        ] + (current ? [attr("kindRaw", .stringAttributeType)] : [])
 
         relate(garage, "vehicles", toMany: true, deleteRule: .cascadeDeleteRule,
                vehicle, "garage", toMany: false, inverseRule: .nullifyDeleteRule)
@@ -126,6 +133,10 @@ enum KeyringModel {
                valuation, "vehicle", toMany: false, inverseRule: .nullifyDeleteRule)
         relate(entry, "attachments", toMany: true, deleteRule: .cascadeDeleteRule,
                attachment, "entry", toMany: false, inverseRule: .nullifyDeleteRule)
+        if current {
+            relate(vehicle, "documents", toMany: true, deleteRule: .cascadeDeleteRule,
+                   attachment, "vehicle", toMany: false, inverseRule: .nullifyDeleteRule)
+        }
 
         let model = NSManagedObjectModel()
         model.entities = [garage, vehicle, task, entry, attachment, reading, valuation]
@@ -245,11 +256,19 @@ final class Vehicle: NSManagedObject, Identifiable {
     /// How far it usually goes a year, in its own unit, as the owner put it.
     /// Stands in for a measured pace until there are readings. 0 = not given.
     @NSManaged var yearlyUse: Double
+    /// The second meter's unit. Nil means hours, which is all it was before
+    /// a second meter could read distance.
+    @NSManaged var auxMeterRaw: String?
+    /// `VehicleProfile` as JSON: setup traits, odometer changes, mileage status.
+    @NSManaged var profileJSON: String?
     @NSManaged var garage: Garage?
     @NSManaged var tasks: Set<MaintenanceTask>?
     @NSManaged var entries: Set<ServiceEntry>?
     @NSManaged var readings: Set<MeterReading>?
     @NSManaged var valuations: Set<Valuation>?
+    /// Papers kept with the vehicle rather than one visit: title, build
+    /// sheet, appraisal, window sticker.
+    @NSManaged var documents: Set<Attachment>?
 
     static func displayOrder(_ lhs: Vehicle, _ rhs: Vehicle) -> Bool {
         if lhs.sortIndex != rhs.sortIndex { return lhs.sortIndex < rhs.sortIndex }
@@ -298,6 +317,27 @@ final class Vehicle: NSManagedObject, Identifiable {
     }
 
     var hasAuxMeter: Bool { auxMeterName?.isEmpty == false }
+
+    var auxMeter: MeterUnit {
+        get { auxMeterRaw.flatMap(MeterUnit.init(rawValue:)).flatMap { $0.hasReading ? $0 : nil } ?? .hours }
+        set { auxMeterRaw = newValue == .hours ? nil : newValue.rawValue }
+    }
+
+    /// "Generator hours", "Track hours", "Trail miles".
+    var auxMeterLabel: String {
+        let name = auxMeterName ?? "Second meter"
+        let unit = auxMeter == .hours ? "hours" : auxMeter.title.lowercased()
+        return name.lowercased().hasSuffix(unit) ? name : "\(name) \(unit)"
+    }
+
+    var profile: VehicleProfile {
+        get { profileJSON.flatMap { VehicleProfile.decode($0) } ?? VehicleProfile() }
+        set { profileJSON = newValue.encoded }
+    }
+
+    var sortedDocuments: [Attachment] {
+        (documents ?? []).sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
 
     /// Main-meter readings only; the second meter keeps its own.
     var mainReadings: [MeterReading] { (readings ?? []).filter { !$0.isAux } }
@@ -350,7 +390,19 @@ final class MaintenanceTask: NSManagedObject, Identifiable {
     @NSManaged var notes: String?
     /// Counted on the vehicle's second hour meter instead of its main one.
     @NSManaged var usesAuxMeter: Bool
+    /// A second interval on the second meter, whichever comes first (a UTV's
+    /// oil at 100 hours or 1,000 miles). 0 = none, and ignored when the job
+    /// already counts on that meter.
+    @NSManaged var auxInterval: Double
+    /// A `UsageEvent` that brings the job due, such as a track day for brake
+    /// fluid or a water crossing for diff fluid.
+    @NSManaged var triggerRaw: String?
     @NSManaged var vehicle: Vehicle?
+
+    var trigger: UsageEvent? {
+        get { triggerRaw.flatMap(UsageEvent.init(rawValue:)) }
+        set { triggerRaw = newValue?.rawValue }
+    }
 
     var displayName: String { name ?? "Maintenance" }
     var displaySymbol: String { symbol ?? "wrench.adjustable" }
@@ -358,11 +410,17 @@ final class MaintenanceTask: NSManagedObject, Identifiable {
     var countsOnAuxMeter: Bool { usesAuxMeter && vehicle?.hasAuxMeter == true }
 
     /// The meter this job is counted on.
-    var countingMeter: MeterUnit { countsOnAuxMeter ? .hours : (vehicle?.meter ?? .none) }
+    var countingMeter: MeterUnit { countsOnAuxMeter ? (vehicle?.auxMeter ?? .hours) : (vehicle?.meter ?? .none) }
 
     /// "Odometer", "Generator hours".
     var meterLabel: String {
-        countsOnAuxMeter ? "\(vehicle?.auxMeterName ?? "Second meter") hours" : countingMeter.meterName
+        countsOnAuxMeter ? (vehicle?.auxMeterLabel ?? "Second meter") : countingMeter.meterName
+    }
+
+    /// The whichever-first interval on the second meter, when it applies.
+    var secondInterval: Double {
+        guard !usesAuxMeter, auxInterval > 0, vehicle?.hasAuxMeter == true else { return 0 }
+        return auxInterval
     }
 }
 
@@ -392,8 +450,16 @@ final class ServiceEntry: NSManagedObject, Identifiable {
     @NSManaged var fuelGrade: String?
     /// A top-up that didn't fill the tank, so economy waits for the next full one.
     @NSManaged var fuelPartial: Bool
+    /// `EntryDetails` as JSON: parts, measurements, the event a usage entry
+    /// records, when a mod came off.
+    @NSManaged var detailsJSON: String?
     @NSManaged var vehicle: Vehicle?
     @NSManaged var attachments: Set<Attachment>?
+
+    var details: EntryDetails {
+        get { detailsJSON.flatMap { EntryDetails.decode($0) } ?? EntryDetails() }
+        set { detailsJSON = newValue.isEmpty ? nil : newValue.encoded }
+    }
 
     var kind: EntryKind {
         get { kindRaw.flatMap(EntryKind.init(rawValue:)) ?? .service }
@@ -419,9 +485,14 @@ final class Attachment: NSManagedObject, Identifiable {
     @NSManaged var createdAt: Date?
     @NSManaged var kindRaw: String?
     @NSManaged var data: Data?
+    /// A document's file name, such as "Marti Report.pdf".
+    @NSManaged var name: String?
     @NSManaged var entry: ServiceEntry?
+    /// Set for a document kept on the vehicle itself rather than a visit.
+    @NSManaged var vehicle: Vehicle?
 
     var isReceipt: Bool { kindRaw == "receipt" }
+    var isPDF: Bool { kindRaw == "pdf" }
 }
 
 @objc(MeterReading)
@@ -441,5 +512,11 @@ final class Valuation: NSManagedObject, Identifiable {
     @NSManaged var date: Date?
     @NSManaged var amount: Double
     @NSManaged var source: String?
+    @NSManaged var kindRaw: String?
     @NSManaged var vehicle: Vehicle?
+
+    var kind: ValuationKind {
+        get { kindRaw.flatMap(ValuationKind.init(rawValue:)) ?? .estimate }
+        set { kindRaw = newValue == .estimate ? nil : newValue.rawValue }
+    }
 }

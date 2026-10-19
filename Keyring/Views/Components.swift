@@ -162,7 +162,17 @@ extension TaskDue {
     func dueLine(now: Date = .now, notingPace: Bool = true) -> String {
         let meter = self.meter
         let current = currentReading
+        if let pendingEvent, let trigger, result.dueDate == pendingEvent {
+            let event = trigger.title.lowercasedFirst
+            return pendingEvent <= now
+                ? "Due after the \(event) \(Format.relative(pendingEvent, now: now))"
+                : "Due before the \(event) \(Format.relative(pendingEvent, now: now))"
+        }
         if !hasInterval {
+            if let trigger {
+                return [trigger.dueRule, lastDate.map { "last done \(Format.relative($0, now: now))" }]
+                    .compactMap { $0 }.joined(separator: ", ")
+            }
             guard let lastDate else { return "Not logged yet" }
             return "Last done \(Format.relative(lastDate, now: now))"
         }

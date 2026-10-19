@@ -23,7 +23,7 @@ UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.
       "(KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1")
 BOT_WALLED = ("edmunds.com", "ebay.", "jdpower.com", "www.nhtsa.gov", "controller.com",
               "productsafety.gov.au", "frva.com", "bimmerfest.com", "rangerforums.net",
-              "allfordmustangs.com", "vehiclerecalls.gov.au")
+              "allfordmustangs.com", "vehiclerecalls.gov.au", "hagerty.com")
 
 # One filled-in example per URL builder in Shared/Utilities/Links.swift and
 # NHTSAClient. Update these when a builder's path changes.

@@ -1,3 +1,4 @@
+import Charts
 import CoreData
 import SwiftUI
 
@@ -192,7 +193,7 @@ private struct EntrySheets: ViewModifier {
         content
             .sheet(item: $editing) { entry in
                 if let vehicle = entry.vehicle {
-                    if entry.kind == .fuel { FuelLogView(vehicle: vehicle, editing: entry) } else { LogServiceView(vehicle: vehicle, editing: entry) }
+                    EntryEditor(vehicle: vehicle, entry: entry)
                 }
             }
             .confirmationDialog("Delete this entry?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
@@ -203,6 +204,65 @@ private struct EntrySheets: ViewModifier {
             } message: {
                 Text("It's removed for everyone the garage is shared with, along with its receipts and photos.")
             }
+    }
+}
+
+/// Fuel economy tank by tank, with the average, best and worst, so a
+/// dragging sensor or a soft tire shows up as a dip.
+struct EconomyTrend: View {
+    let vehicle: Vehicle
+
+    private struct Point: Identifiable {
+        let id: UUID
+        let date: Date
+        let value: Double
+    }
+
+    var body: some View {
+        let economy = FuelEconomy(meter: vehicle.meter, unit: .current)
+        let fills = FuelEconomy.fills(for: vehicle)
+        let values = economy.values(fills)
+        let points = fills.compactMap { fill in values[fill.id].map { Point(id: fill.id, date: fill.date, value: $0) } }
+            .sorted { $0.date < $1.date }
+        if points.count >= 2, let average = economy.average(fills) {
+            // L/100 km reads lower-is-better, so best and worst swap.
+            let lowerIsBetter = economy.label.hasPrefix("L/") || economy.label.hasSuffix("/hr")
+            let best = lowerIsBetter ? points.map(\.value).min() : points.map(\.value).max()
+            let worst = lowerIsBetter ? points.map(\.value).max() : points.map(\.value).min()
+            Section {
+                Chart {
+                    ForEach(points) { point in
+                        LineMark(x: .value("Date", point.date), y: .value(economy.label, point.value))
+                            .foregroundStyle(Theme.brass)
+                        PointMark(x: .value("Date", point.date), y: .value(economy.label, point.value))
+                            .foregroundStyle(Theme.brass)
+                            .symbolSize(18)
+                    }
+                    RuleMark(y: .value("Average", average))
+                        .foregroundStyle(Theme.faintInk)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                }
+                .chartYScale(domain: .automatic(includesZero: false))
+                .frame(height: 150)
+                .padding(.vertical, Theme.xs)
+                HStack {
+                    stat("Average", economy.format(average))
+                    if let best { stat("Best", economy.format(best)) }
+                    if let worst { stat("Worst", economy.format(worst)) }
+                }
+            } header: {
+                Text("Economy")
+            }
+            .listRowBackground(Theme.surface)
+        }
+    }
+
+    private func stat(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Eyebrow(text: label)
+            Text(value).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Theme.ink)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -234,6 +294,9 @@ struct VehicleHistoryView: View {
                     action: addAction
                 )
                 .listRowBackground(Color.clear)
+            }
+            if fuel, search.isEmpty {
+                EconomyTrend(vehicle: vehicle)
             }
             ForEach(groups, id: \.year) { group in
                 Section {
@@ -400,7 +463,8 @@ struct EntryRow: View {
     private var subtitle: String {
         var parts: [String] = []
         if entry.kind == .fuel { return fuelSubtitle }
-        if entry.kind != .service { parts.append(entry.kind.title) }
+        if entry.kind != .service, entry.kind != .event { parts.append(entry.kind.title) }
+        if entry.details.removedOn != nil { parts.append("Removed") }
         if showsVehicle, let vehicle = entry.vehicle { parts.append(vehicle.displayName) }
         if entry.hasReading, let meter = entry.vehicle?.meter, meter.hasReading { parts.append(Format.reading(entry.reading, meter)) }
         if entry.isDIY { parts.append("DIY") } else if let shop = entry.shop { parts.append(shop) }
@@ -438,7 +502,7 @@ struct EntryDetailView: View {
                 VStack(alignment: .leading, spacing: Theme.sectionGap) {
                     VStack(alignment: .leading, spacing: Theme.md) {
                     VStack(alignment: .leading, spacing: Theme.xs) {
-                        Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: [.service, .fuel].contains(entry.kind) ? Theme.brass : Theme.overdue)
+                        Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: [.repair, .recall].contains(entry.kind) ? Theme.overdue : Theme.brass)
                         Text(entry.title ?? "Service")
                             .font(Theme.title(28))
                             .foregroundStyle(Theme.ink)
@@ -448,8 +512,12 @@ struct EntryDetailView: View {
                     }
                     .padding(.top, Theme.sm)
 
-                    if entry.kind == .fuel { fuelFacts(vehicle) } else { facts(vehicle) }
+                    if entry.kind == .fuel { fuelFacts(vehicle) } else if entry.kind != .event { facts(vehicle) }
+                    if entry.kind == .mod { modState }
                     }
+
+                    if entry.kind == .event, let event = entry.details.event { eventCard(event, vehicle: vehicle) }
+                    EntryDetailsCards(details: entry.details)
 
                     let covered = (vehicle.tasks ?? []).filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
                     if !covered.isEmpty {
@@ -493,7 +561,15 @@ struct EntryDetailView: View {
                                 ForEach(entry.sortedAttachments) { attachment in
                                     Button { viewing = attachment } label: {
                                         Group {
-                                            if let image = ImageTools.thumbnail(attachment.data, maxDimension: 400) {
+                                            if attachment.isPDF {
+                                                VStack(spacing: Theme.xs) {
+                                                    Image(systemName: "doc.richtext.fill").font(.title2).foregroundStyle(Theme.brass)
+                                                    Text(attachment.name ?? "PDF").font(.caption).foregroundStyle(Theme.ink).lineLimit(2)
+                                                }
+                                                .padding(Theme.xs)
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                .background(Theme.raised)
+                                            } else if let image = ImageTools.thumbnail(attachment.data, maxDimension: 400) {
                                                 Image(uiImage: image).resizable().scaledToFill()
                                             } else {
                                                 Theme.raised
@@ -513,7 +589,7 @@ struct EntryDetailView: View {
                                         }
                                     }
                                     .buttonStyle(PressableStyle())
-                                    .accessibilityLabel(attachment.isReceipt ? "Receipt" : "Photo")
+                                    .accessibilityLabel(attachment.isPDF ? (attachment.name ?? "PDF") : attachment.isReceipt ? "Receipt" : "Photo")
                                 }
                             }
                         }
@@ -534,7 +610,7 @@ struct EntryDetailView: View {
         }
         .sheet(isPresented: $editing) {
             if let vehicle = entry.vehicle {
-                if entry.kind == .fuel { FuelLogView(vehicle: vehicle, editing: entry) } else { LogServiceView(vehicle: vehicle, editing: entry) }
+                EntryEditor(vehicle: vehicle, entry: entry)
             }
         }
         .fullScreenCover(item: $viewing) { attachment in
@@ -547,6 +623,39 @@ struct EntryDetailView: View {
             }
         } message: {
             Text("It's removed for everyone the garage is shared with, along with its receipts and photos.")
+        }
+    }
+
+    private var modState: some View {
+        HStack {
+            Text(entry.details.removedOn.map { "Came off \(Format.shortDate($0))" } ?? "On the vehicle")
+                .font(.subheadline)
+                .foregroundStyle(Theme.secondaryInk)
+            Spacer()
+            Button(entry.details.removedOn == nil ? "Mark as removed" : "Back on") {
+                garage.setRemoved(entry, on: entry.details.removedOn == nil ? .now : nil)
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .card()
+    }
+
+    private func eventCard(_ event: UsageEvent, vehicle: Vehicle) -> some View {
+        let jobs = garage.jobs(triggeredBy: event, on: vehicle)
+        return VStack(alignment: .leading, spacing: Theme.stackGap) {
+            SectionHeader(title: "Brings due")
+            VStack(alignment: .leading, spacing: Theme.sm) {
+                if jobs.isEmpty {
+                    Text("No jobs follow a \(event.title.lowercased()). Set one in a job's schedule.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                ForEach(jobs) { task in
+                    Label(task.displayName, systemImage: task.displaySymbol).font(.subheadline).foregroundStyle(Theme.ink)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .card()
         }
     }
 
@@ -578,7 +687,7 @@ struct EntryDetailView: View {
         let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
         var items: [(String, String)] = []
         if entry.hasReading, vehicle.meter.hasReading { items.append((vehicle.meter.meterName, Format.reading(entry.reading, vehicle.meter))) }
-        if entry.hasAuxReading, vehicle.hasAuxMeter { items.append(("\(vehicle.auxMeterName ?? "Second meter") hours", Format.reading(entry.auxReading, .hours))) }
+        if entry.hasAuxReading, vehicle.hasAuxMeter { items.append((vehicle.auxMeterLabel, Format.reading(entry.auxReading, vehicle.auxMeter))) }
         if entry.cost > 0, !hideCosts { items.append(("Cost", Format.money(entry.cost))) }
         items.append(("Done by", entry.isDIY ? (entry.loggedBy.map { "\($0), DIY" } ?? "DIY") : (entry.shop ?? "A shop")))
         if let by = entry.loggedBy { items.append(("Logged by", by)) }
@@ -594,7 +703,21 @@ struct EntryDetailView: View {
     }
 }
 
-/// A receipt or photo, full screen, with share and delete.
+/// The right editor for an entry: fill-ups and events have their own.
+struct EntryEditor: View {
+    let vehicle: Vehicle
+    let entry: ServiceEntry
+
+    var body: some View {
+        switch entry.kind {
+        case .fuel: FuelLogView(vehicle: vehicle, editing: entry)
+        case .event: LogEventSheet(vehicle: vehicle, editing: entry)
+        default: LogServiceView(vehicle: vehicle, editing: entry)
+        }
+    }
+}
+
+/// A receipt, photo or document, full screen, with share and delete.
 struct AttachmentViewer: View {
     @EnvironmentObject private var garage: GarageStore
     let attachment: Attachment
@@ -606,8 +729,12 @@ struct AttachmentViewer: View {
         NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
-                if let data = attachment.data, let image = UIImage(data: data) {
-                    Image(uiImage: image).resizable().scaledToFit()
+                if let data = attachment.data {
+                    if attachment.isPDF {
+                        PDFPreview(data: data)
+                    } else if let image = UIImage(data: data) {
+                        Image(uiImage: image).resizable().scaledToFit()
+                    }
                 }
             }
             .toolbar {
@@ -622,7 +749,7 @@ struct AttachmentViewer: View {
                         .accessibilityLabel("Delete")
                 }
             }
-            .confirmationDialog(attachment.isReceipt ? "Delete this receipt?" : "Delete this photo?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            .confirmationDialog(attachment.isPDF ? "Delete this document?" : attachment.isReceipt ? "Delete this receipt?" : "Delete this photo?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     garage.delete(attachment)
                     close()
@@ -633,8 +760,20 @@ struct AttachmentViewer: View {
             .toolbarBackground(.black, for: .navigationBar, .bottomBar)
             .toolbarColorScheme(.dark, for: .navigationBar, .bottomBar)
             .sheet(isPresented: $sharing) {
-                if let data = attachment.data, let image = UIImage(data: data) { ShareSheet(items: [image]) }
+                if let data = attachment.data {
+                    if attachment.isPDF, let url = shareURL(data) {
+                        ShareSheet(items: [url])
+                    } else if let image = UIImage(data: data) {
+                        ShareSheet(items: [image])
+                    }
+                }
             }
         }
     }
-}
+
+
+    private func shareURL(_ data: Data) -> URL? {
+        let name = (attachment.name ?? "Document").replacingOccurrences(of: "/", with: "-")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).pdf")
+        return (try? data.write(to: url)) != nil ? url : nil
+    }}

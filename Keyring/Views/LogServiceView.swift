@@ -16,6 +16,8 @@ struct LogServiceView: View {
     var editing: ServiceEntry?
     /// Logging the dealer visit that closed this recall.
     var recall: Recall?
+    /// Opens on Mod (from the build list) rather than Maintenance.
+    var startingKind: EntryKind?
 
     @State private var draft = GarageStore.ServiceDraft()
     @State private var reading: Double?
@@ -40,6 +42,7 @@ struct LogServiceView: View {
     @State private var savedInRow = 0
     @State private var baseline: Snapshot?
     @State private var confirmingDiscard = false
+    @State private var importingFile = false
 
     /// Everything the owner can type or pick, compared against the form as it opened.
     private struct Snapshot: Equatable {
@@ -66,19 +69,23 @@ struct LogServiceView: View {
                     recallSection
                 } else {
                     if editing == nil || editing?.kind != .recall { kindPicker }
-                    if draft.kind == .repair {
+                    switch draft.kind {
+                    case .repair:
                         repairSection
                         scheduledSection
-                    } else {
+                    case .mod:
+                        modSection
+                    default:
                         jobsSection
                     }
                 }
                 whenSection
                 whoSection
+                PartsSection(parts: $draft.details.parts, specs: $draft.details.specs, cost: $cost)
                 receiptSection
                 Section("Notes") {
                     HStack(alignment: .top) {
-                        TextField(draft.kind == .repair ? "What went wrong, what the shop found, warranty" : "Parts used, what the shop said, anything to remember", text: $draft.notes, axis: .vertical)
+                        TextField(notesPrompt, text: $draft.notes, axis: .vertical)
                             .lineLimit(2...6)
                         ScanFieldButton(kind: .text) { draft.notes = draft.notes.trimmed.isEmpty ? $0 : draft.notes + "\n" + $0 }
                     }
@@ -115,7 +122,7 @@ struct LogServiceView: View {
                 Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))") { save() }
                 Button("Fix it", role: .cancel) {}
             } message: {
-                Text("That's \(Format.reading((reading ?? 0) - vehicle.reading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
+                Text("That's \(Format.reading((reading ?? 0) - vehicle.shownReading, vehicle.meter)) more than the last reading, which is a lot. Check for an extra digit.")
             }
             .sheet(isPresented: $showingScanner) {
                 ReceiptScanner { images in
@@ -125,6 +132,10 @@ struct LogServiceView: View {
                 .ignoresSafeArea()
             }
             .sheet(isPresented: $showingPaywall) { PaywallView(focus: .receiptScan) }
+            .fileImporter(isPresented: $importingFile, allowedContentTypes: [.pdf, .image], allowsMultipleSelection: true) { result in
+                guard case let .success(urls) = result else { return }
+                draft.files += urls.compactMap(PickedFile.read)
+            }
             .onChange(of: photoItems) { _, items in Task { await loadPhotos(items) } }
             .onChange(of: receiptItems) { _, items in
                 Task {
@@ -160,12 +171,23 @@ struct LogServiceView: View {
         case .repair: return "Log a repair"
         case .recall: return "Log the recall fix"
         case .fuel: return "Fill-up"
+        case .mod: return "Log a mod"
+        case .event: return "Log an event"
+        }
+    }
+
+    private var notesPrompt: String {
+        switch draft.kind {
+        case .repair: "What went wrong, what the shop found, warranty"
+        case .mod: "Why, how it went on, what to know next time"
+        default: "What the shop said, anything to remember"
         }
     }
 
     private var canSave: Bool {
         if draft.kind == .recall { return true }
         if draft.kind == .repair { return !draft.title.trimmed.isEmpty }
+        if draft.kind == .mod { return !draft.title.trimmed.isEmpty || draft.details.parts.contains { !$0.isBlank } }
         return !selected.isEmpty || !customJobs.isEmpty || !draft.title.trimmed.isEmpty || !draft.notes.trimmed.isEmpty || (cost ?? 0) > 0
     }
 
@@ -176,6 +198,7 @@ struct LogServiceView: View {
             Picker("Kind", selection: $draft.kind.animation(.snappy)) {
                 Text("Maintenance").tag(EntryKind.service)
                 Text("Repair").tag(EntryKind.repair)
+                Text("Mod").tag(EntryKind.mod)
             }
             .pickerStyle(.segmented)
             .listRowBackground(Color.clear)
@@ -195,6 +218,20 @@ struct LogServiceView: View {
             Text("What was fixed")
         } footer: {
             Text("Repairs are kept apart from maintenance, so you can see what unplanned work really costs.")
+        }
+    }
+
+    private var modSection: some View {
+        Section {
+            HStack {
+                TextField("Coilovers, intake, tune, lift kit", text: $draft.title)
+                    .accessibilityIdentifier("log.modTitle")
+                ScanFieldButton(kind: .text) { draft.title = $0 }
+            }
+        } header: {
+            Text("What went on")
+        } footer: {
+            Text("Mods make the build list and stay out of what it costs to keep running.")
         }
     }
 
@@ -256,6 +293,13 @@ struct LogServiceView: View {
                                     .font(.caption)
                                     .foregroundStyle(due.result.status.color)
                             }
+                            // The owner's own spec for the job, right where they log it.
+                            if selected.contains(due.taskID), let notes = taskNotes(due.taskID) {
+                                Text(notes)
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.secondaryInk)
+                                    .lineLimit(3)
+                            }
                         }
                         Spacer()
                     }
@@ -264,6 +308,10 @@ struct LogServiceView: View {
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected.contains(due.taskID) ? .isSelected : [])
         }
+    }
+
+    private func taskNotes(_ id: UUID) -> String? {
+        (vehicle.tasks ?? []).first { $0.id == id }?.notes?.trimmed.nilIfEmpty
     }
 
     private var jobsSection: some View {
@@ -313,16 +361,16 @@ struct LogServiceView: View {
                     HStack(spacing: Theme.xs) {
                         NumberField(title: "Optional", value: $reading, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
                             .multilineTextAlignment(.trailing)
-                        ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { reading = Double($0) }
+                        ScanFieldButton(kind: .reading(last: vehicle.shownReading, meter: vehicle.meter)) { reading = Double($0) }
                     }
                 }
             }
             if vehicle.hasAuxMeter {
-                LabeledContent("\(vehicle.auxMeterName ?? "Second meter") hours") {
+                LabeledContent(vehicle.auxMeterLabel) {
                     HStack(spacing: Theme.xs) {
-                        NumberField(title: "Optional", value: $auxReading, suffix: "hrs", allowsDecimal: true)
+                        NumberField(title: "Optional", value: $auxReading, suffix: vehicle.auxMeter.short, allowsDecimal: vehicle.auxMeter == .hours)
                             .multilineTextAlignment(.trailing)
-                        ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: .hours)) { auxReading = Double($0) }
+                        ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: vehicle.auxMeter)) { auxReading = Double($0) }
                     }
                 }
             }
@@ -336,7 +384,7 @@ struct LogServiceView: View {
     private var lastReadingText: String? {
         guard vehicle.meter.hasReading, vehicle.reading > 0 else { return nil }
         let when = vehicle.readingDate.map { " on \(Format.shortDate($0))" } ?? ""
-        return "Last reading \(Format.reading(vehicle.reading, vehicle.meter))\(when)."
+        return "Last reading \(Format.reading(vehicle.shownReading, vehicle.meter))\(when)."
     }
 
     private var whoSection: some View {
@@ -419,6 +467,21 @@ struct LogServiceView: View {
             PhotosPicker(selection: $photoItems, maxSelectionCount: 8, matching: .images) {
                 Label("Add photos of the work", systemImage: "photo.on.rectangle")
             }
+            ForEach(Array(draft.files.enumerated()), id: \.offset) { index, file in
+                HStack {
+                    Label(file.name, systemImage: "doc.fill").foregroundStyle(Theme.ink).lineLimit(1)
+                    Spacer()
+                    Button { draft.files.remove(at: index) } label: {
+                        Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove \(file.name)")
+                }
+            }
+            Button { importingFile = true } label: {
+                Label("Attach a file (PDF or image)", systemImage: "paperclip")
+            }
         } header: {
             Text("Receipt and photos")
         } footer: {
@@ -486,7 +549,8 @@ struct LogServiceView: View {
             draft.shop = editing.shop ?? ""
             draft.isDIY = editing.isDIY
             draft.notes = editing.notes ?? ""
-            reading = editing.hasReading ? editing.reading : nil
+            reading = editing.hasReading ? vehicle.shownReading(true: editing.reading, on: editing.date ?? .now) : nil
+            draft.details = editing.details
             auxReading = editing.hasAuxReading ? editing.auxReading : nil
             cost = editing.cost > 0 ? editing.cost : nil
             selected = Set(editing.coveredTaskIDs)
@@ -497,11 +561,12 @@ struct LogServiceView: View {
             draft.recallCampaign = recall.campaign
             draft.title = "Recall: \(recall.componentTitle.lowercased())"
         } else {
+            draft.kind = startingKind ?? .service
             selected = Set(preselected)
             #if DEBUG
-            if ScreenshotConfig.isEnabled, preselected.isEmpty {
+            if ScreenshotConfig.isEnabled, preselected.isEmpty, startingKind == nil {
                 selected = Set(dues.filter { $0.result.status <= .dueSoon }.prefix(2).map(\.taskID))
-                reading = vehicle.reading
+                reading = vehicle.shownReading
                 cost = 94.50
                 draft.shop = "Lithia Toyota"
             }
@@ -532,7 +597,7 @@ struct LogServiceView: View {
         var filled: [String] = []
         if (cost ?? 0) == 0, let total = fields.total { cost = total; filled.append("total") }
         if let date = fields.date, Calendar.current.isDateInToday(draft.date) { draft.date = date; filled.append("date") }
-        if reading == nil, let value = fields.reading, vehicle.meter.hasReading, value <= vehicle.reading * 1.5 + 1_000 {
+        if reading == nil, let value = fields.reading, vehicle.meter.hasReading, value <= vehicle.shownReading * 1.5 + 1_000 {
             reading = value
             filled.append(vehicle.meter.meterName.lowercased())
         }
@@ -560,10 +625,13 @@ struct LogServiceView: View {
 
     private func save() {
         if draft.kind == .service, draft.title.trimmed.isEmpty, !customJobs.isEmpty { draft.title = generatedTitle }
+        if draft.kind == .mod { draft.taskIDs = [] }
         draft.reading = reading
         draft.auxReading = auxReading
         draft.cost = cost ?? 0
-        draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }
+        if draft.kind != .mod {
+            draft.taskIDs = dues.map(\.taskID).filter(selected.contains) + selected.filter { id in !dues.contains { $0.taskID == id } }
+        }
         garage.log(draft, for: vehicle, editing: editing)
         Haptics.success()
         if addingAnother {

@@ -140,9 +140,10 @@ struct ImportView: View {
             } header: {
                 Text("From \(result.source.rawValue)")
             } footer: {
-                if result.skippedExpenses > 0 {
-                    Text("Insurance, parking, tolls and other non-maintenance costs stay out of the service log.")
-                }
+                let folded = result.foldedHeaders
+                let notes = folded.isEmpty ? nil : "\(ListFormatter.localizedString(byJoining: folded.prefix(6).map { "\"\($0)\"" }))\(folded.count > 6 ? " and \(folded.count - 6) more" : "") \(folded.count == 1 ? "goes" : "go") into each entry's notes."
+                let expenses = result.skippedExpenses > 0 ? "Insurance, parking, tolls and other non-maintenance costs stay out of the service log." : nil
+                if let text = [expenses, notes].compactMap({ $0 }).joined(separator: " ").nilIfEmpty { Text(text) }
             }
 
             ForEach(result.vehicleNames, id: \.self) { name in

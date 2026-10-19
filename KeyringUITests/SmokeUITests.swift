@@ -178,7 +178,10 @@ final class SmokeUITests: XCTestCase {
         app.navigationBars.buttons["Cancel"].tap()
         expectTitle("Brake inspection")
         goBack()
-        tapButton("All 8 jobs")
+        let all = app.buttons.matching(NSPredicate(format: "label MATCHES %@", "All [0-9]+ jobs")).firstMatch
+        scrollTo(all)
+        XCTAssertTrue(all.waitForExistence(timeout: 5), "No All jobs button")
+        all.tap()
         expectTitle("Schedule")
     }
 

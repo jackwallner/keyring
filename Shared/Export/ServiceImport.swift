@@ -90,7 +90,21 @@ enum ServiceImport {
         var rows: [[String]]
         var mapping: [Field: Int]
         var role: Role
+
+        /// Columns no field reads, such as "Part #" or "Oil weight". On a
+        /// service table they're kept in the notes rather than dropped.
+        var extraColumns: [Int] {
+            guard role == .service else { return [] }
+            let used = Set(mapping.values)
+            return headers.indices.filter { column in
+                let name = ServiceImport.normalize(headers[column])
+                return !used.contains(column) && !name.isEmpty && !ServiceImport.ignoredHeaders.contains(name)
+            }
+        }
     }
+
+    /// Columns a Keyring backup writes that the log already rebuilds.
+    static let ignoredHeaders: Set<String> = ["coveredjobs", "fuel", "fuelunit", "priceperunit", "grade", "partialfill", "secondmeter"]
 
     struct Row: Identifiable, Hashable, Sendable {
         var id: Int
@@ -126,6 +140,17 @@ enum ServiceImport {
         var skippedExpenses: Int
         /// Rows with no date Keyring could read.
         var unreadable: Int
+
+        /// Headers of the extra columns kept in notes.
+        var foldedHeaders: [String] {
+            var seen: [String] = []
+            for table in tables {
+                for column in table.extraColumns where !seen.contains(table.headers[column].trimmed) {
+                    seen.append(table.headers[column].trimmed)
+                }
+            }
+            return seen
+        }
 
         var isEmpty: Bool { services.isEmpty && fillUps.isEmpty }
 
@@ -203,7 +228,10 @@ enum ServiceImport {
                     work: work,
                     cost: max(0, number(value(.cost)) ?? 0),
                     shop: value(.shop).nilIfEmpty,
-                    notes: value(.notes).nilIfEmpty,
+                    notes: notes(value(.notes), extras: table.extraColumns.compactMap { column in
+                        let text = cell(raw, column).trimmed
+                        return text.isEmpty ? nil : "\(table.headers[column].trimmed): \(text)"
+                    }),
                     kind: isFillUp ? .fuel : rowKind,
                     isDIY: ["yes", "y", "true", "1", "x"].contains(value(.diy).lowercased()),
                     loggedBy: value(.loggedBy).nilIfEmpty,
@@ -225,6 +253,11 @@ enum ServiceImport {
             skippedExpenses: skipped,
             unreadable: unreadable
         )
+    }
+
+    /// The notes column, then any extra columns, one per line.
+    private static func notes(_ notes: String, extras: [String]) -> String? {
+        ([notes].filter { !$0.isEmpty } + extras).joined(separator: "\n").nilIfEmpty
     }
 
     // MARK: - Tables

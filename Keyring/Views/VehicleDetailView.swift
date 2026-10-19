@@ -27,6 +27,10 @@ struct VehicleDetailView: View {
     @State private var routed = false
     @State private var importing = false
     @State private var storing = false
+    @State private var loggingEvent = false
+    @State private var loggingMod = false
+    @State private var changingOdometer = false
+    @State private var checkingTrip = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var sectionOrder = ""
 
@@ -37,6 +41,7 @@ struct VehicleDetailView: View {
         case .history:
             fuelSection.id("fuel")
             historySection
+        case .records: recordsSection
         case .facts: factsSection
         case .details: detailsSection
         }
@@ -64,7 +69,12 @@ struct VehicleDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit") { editing = true }
             }
+            ToolbarItem(placement: .topBarTrailing) { moreMenu }
         }
+        .navigationDestination(isPresented: $checkingTrip) { TripCheckView(vehicle: vehicle) }
+        .sheet(isPresented: $loggingEvent) { LogEventSheet(vehicle: vehicle) }
+        .sheet(isPresented: $loggingMod) { LogServiceView(vehicle: vehicle, startingKind: .mod) }
+        .sheet(isPresented: $changingOdometer) { OdometerChangeSheet(vehicle: vehicle) }
         .sheet(isPresented: $logging) { LogServiceView(vehicle: vehicle, preselected: logPreset) }
         .sheet(isPresented: $updatingReading) { UpdateReadingSheet(vehicle: vehicle) }
         .sheet(isPresented: $fueling) { FuelLogView(vehicle: vehicle) }
@@ -101,6 +111,28 @@ struct VehicleDetailView: View {
         }
         }
         .onChange(of: vehicle.isDeleted) { _, deleted in if deleted { dismiss() } }
+    }
+
+    @ViewBuilder private var moreMenu: some View {
+        if !vehicle.isRetired {
+            Menu {
+                Button { loggingMod = true } label: { Label("Log a mod", systemImage: EntryKind.mod.symbol) }
+                if !UsageEvent.choices(for: vehicle.kind).isEmpty {
+                    Button { loggingEvent = true } label: { Label("Log an event", systemImage: "flag.checkered") }
+                }
+                Button { checkingTrip = true } label: { Label("Trip check", systemImage: "map") }
+                if vehicle.meter.hasReading, vehicle.meter != .hours {
+                    Button { changingOdometer = true } label: { Label("Odometer rolled over or replaced", systemImage: "gauge.with.needle") }
+                }
+                if vehicle.storedSince == nil {
+                    Button { storing = true } label: { Label("Put in storage", systemImage: "moon.zzz") }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .accessibilityLabel("More")
+            .accessibilityIdentifier("vehicle.more")
+        }
     }
 
     private var retiredText: String {
@@ -525,6 +557,54 @@ struct VehicleDetailView: View {
         }
     }
 
+    // MARK: - Records
+
+    private var recordsSection: some View {
+        let mods = vehicle.sortedEntries.filter { $0.kind == .mod }
+        let installed = mods.filter { $0.details.removedOn == nil }
+        let series = MeasurementsView.series(for: vehicle).count
+        let documents = vehicle.documents?.count ?? 0
+        return VStack(alignment: .leading, spacing: Theme.sm) {
+            SectionHeader(title: "Records")
+            VStack(spacing: 0) {
+                recordRow("Build", symbol: EntryKind.mod.symbol,
+                          detail: mods.isEmpty ? "Mods, parts and what they cost" : Format.count(installed.count, "mod on it", "mods on it")) {
+                    BuildListView(vehicle: vehicle)
+                }
+                Divider().overlay(Theme.hairline).padding(.leading, 44)
+                recordRow("Measurements", symbol: "ruler",
+                          detail: series == 0 ? "Torque, pressures, oil analysis trends" : Format.count(series, "figure tracked", "figures tracked")) {
+                    MeasurementsView(vehicle: vehicle)
+                }
+                Divider().overlay(Theme.hairline).padding(.leading, 44)
+                recordRow("Documents", symbol: "doc.text",
+                          detail: documents == 0 ? "Title, build sheet, appraisals" : Format.count(documents, "document", "documents")) {
+                    DocumentsView(vehicle: vehicle)
+                }
+            }
+            .listCard()
+        }
+    }
+
+    private func recordRow<Destination: View>(_ title: String, symbol: String, detail: String, @ViewBuilder destination: @escaping () -> Destination) -> some View {
+        NavigationLink(destination: destination) {
+            HStack(spacing: Theme.sm) {
+                Image(systemName: symbol)
+                    .font(.body)
+                    .foregroundStyle(Theme.brass)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                    Text(detail).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                }
+                Spacer(minLength: Theme.sm)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Theme.faintInk)
+            }
+            .cardRow()
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Facts
 
     private var factsSection: some View {
@@ -614,10 +694,23 @@ struct VehicleDetailView: View {
                 Divider().overlay(Theme.hairline)
                 if vehicle.hasAuxMeter {
                     Button { updatingReading = true } label: {
-                        detailRow("\(vehicle.auxMeterName ?? "Second meter") hours", Format.reading(vehicle.auxReading, .hours))
+                        detailRow(vehicle.auxMeterLabel, Format.reading(vehicle.auxReading, vehicle.auxMeter))
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Update")
+                    Divider().overlay(Theme.hairline)
+                }
+                if !vehicle.traits.isEmpty {
+                    detailRow("Setup", VehicleTrait.allCases.filter(vehicle.traits.contains).map(\.title).joined(separator: ", "))
+                    Divider().overlay(Theme.hairline)
+                }
+                if let mileage = mileageText {
+                    Button { changingOdometer = true } label: { detailRow("Mileage", mileage) }
+                        .buttonStyle(.plain)
+                    Divider().overlay(Theme.hairline)
+                }
+                if vehicle.purchaseDate != nil || vehicle.purchasePrice > 0 {
+                    detailRow("Bought", purchaseText)
                     Divider().overlay(Theme.hairline)
                 }
                 if let garageName = vehicle.garage?.displayName {
@@ -670,6 +763,21 @@ struct VehicleDetailView: View {
             } message: {
                 Text("Its whole history, photos and receipts are deleted for everyone it's shared with. To keep the history, mark it sold or retired instead.")
             }
+    }
+
+    /// "Rolled over once · true 112,400 mi", only when it isn't plain.
+    private var mileageText: String? {
+        let profile = vehicle.profile
+        guard !profile.odometerChanges.isEmpty || profile.mileageStatus != .actual else { return nil }
+        if profile.mileageStatus != .actual { return profile.mileageStatus.title }
+        let count = profile.odometerChanges.count
+        return "\(count == 1 ? "1 odometer change" : "\(count) odometer changes"), gauge \(Format.reading(vehicle.shownReading, vehicle.meter))"
+    }
+
+    private var purchaseText: String {
+        let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
+        return [vehicle.purchaseDate.map(Format.shortDate), vehicle.purchasePrice > 0 && !hideCosts ? Format.money(vehicle.purchasePrice) : nil]
+            .compactMap { $0 }.joined(separator: " · ")
     }
 
     private func restore() {
@@ -783,15 +891,15 @@ struct UpdateReadingSheet: View {
             Form {
                 Section {
                     HStack {
-                        NumberField(title: NumberField.display(vehicle.reading, allowsDecimal: vehicle.meter == .hours), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
+                        NumberField(title: NumberField.display(vehicle.shownReading, allowsDecimal: vehicle.meter == .hours), value: $value, suffix: vehicle.meter.short, allowsDecimal: vehicle.meter == .hours)
                             .font(Theme.figure(28))
-                        ScanFieldButton(kind: .reading(last: vehicle.reading, meter: vehicle.meter)) { value = Double($0) }
+                        ScanFieldButton(kind: .reading(last: vehicle.shownReading, meter: vehicle.meter)) { value = Double($0) }
                     }
                 } header: {
                     Text(vehicle.meter.meterName)
                 } footer: {
-                    if let value, value < vehicle.reading {
-                        Text("That's lower than the last reading of \(Format.reading(vehicle.reading, vehicle.meter)). It will be saved as a past reading. To fix a typo, delete the wrong reading below.")
+                    if let value, value < vehicle.shownReading {
+                        Text("That's lower than the last reading of \(Format.reading(vehicle.shownReading, vehicle.meter)). It will be saved as a past reading. To fix a typo, delete the wrong reading below.")
                     } else {
                         Text("Last updated \(vehicle.readingDate.map { Format.relative($0) } ?? "never"). The app learns your pace from these and estimates when things come due.")
                     }
@@ -799,12 +907,12 @@ struct UpdateReadingSheet: View {
                 if vehicle.hasAuxMeter {
                     Section {
                         HStack {
-                            NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: true), value: $auxValue, suffix: "hrs", allowsDecimal: true)
+                            NumberField(title: NumberField.display(vehicle.auxReading, allowsDecimal: vehicle.auxMeter == .hours), value: $auxValue, suffix: vehicle.auxMeter.short, allowsDecimal: vehicle.auxMeter == .hours)
                                 .font(Theme.figure(28))
-                            ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: .hours)) { auxValue = Double($0) }
+                            ScanFieldButton(kind: .reading(last: vehicle.auxReading, meter: vehicle.auxMeter)) { auxValue = Double($0) }
                         }
                     } header: {
-                        Text("\(auxName) hours")
+                        Text(vehicle.auxMeterLabel)
                     } footer: {
                         Text("Last updated \(vehicle.auxReadingDate.map { Format.relative($0) } ?? "never").")
                     }
@@ -813,7 +921,7 @@ struct UpdateReadingSheet: View {
                     Section {
                         ForEach(readings.prefix(12)) { reading in
                             HStack {
-                                Text(reading.isAux ? "\(auxName) \(Format.reading(reading.value, .hours))" : Format.reading(reading.value, vehicle.meter))
+                                Text(reading.isAux ? "\(auxName) \(Format.reading(reading.value, vehicle.auxMeter))" : Format.reading(reading.value, vehicle.meter))
                                     .font(Theme.figure(15, weight: .medium))
                                     .foregroundStyle(Theme.ink)
                                 Spacer()
@@ -859,7 +967,7 @@ struct UpdateReadingSheet: View {
                 Button("Save \(Format.reading(value ?? 0, vehicle.meter))") { commit(value ?? 0) }
                 Button("Fix it", role: .cancel) {}
             } message: {
-                Text("That's \(Format.reading((value ?? 0) - vehicle.reading, vehicle.meter)) more than last time, which is a lot. Check for an extra digit.")
+                Text("That's \(Format.reading((value ?? 0) - vehicle.shownReading, vehicle.meter)) more than last time, which is a lot. Check for an extra digit.")
             }
         }
     }

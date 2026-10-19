@@ -55,9 +55,17 @@ struct AddVehicleFlow: View {
         .interactiveDismissDisabled(step != .kind)
     }
 
+    /// The first few core jobs, plus any seasonal one (winterize, layup),
+    /// which would otherwise never get a first reminder.
     private var coreItems: [CatalogItem] {
-        MaintenanceCatalog.items(for: draft.kind, powertrain: draft.powertrain, year: draft.year).filter(\.isCore).prefix(4).map { $0 }
+        let core = MaintenanceCatalog.items(for: draft.kind, powertrain: draft.powertrain, year: draft.year, traits: draft.traits, drive: draft.drive)
+            .filter { $0.isCore && (($0.months ?? 0) > 0 || $0.miles != nil || $0.hours != nil) }
+        let first = Array(core.prefix(4))
+        let seasonal = core.filter { Self.seasonalKeys.contains($0.key) && !first.contains($0) }
+        return first + seasonal
     }
+
+    static let seasonalKeys: Set<String> = ["winterize", "layup", "storage", "commission"]
 
     private var destinations: [Garage] {
         let joined = garage.joinedGarages
@@ -175,6 +183,8 @@ struct VehicleDetailsForm: View {
     var infersPowertrain = true
     var destination: Binding<Garage?>?
     var destinations: [Garage] = []
+    /// Purchase date and price, for an edit.
+    var showsOwnership = false
     let next: () -> Void
 
     @State private var powertrainPicked = false
@@ -333,16 +343,23 @@ struct VehicleDetailsForm: View {
                         }
                     }
                 }
-                if draft.kind.offersAuxMeter {
-                    Toggle("Second hour meter", isOn: Binding(
+                if draft.meter.hasReading || draft.kind.offersAuxMeter {
+                    Toggle(draft.kind.offersAuxMeter ? "Second meter" : "Second meter (track hours)", isOn: Binding(
                         get: { !draft.auxMeterName.isEmpty },
-                        set: { draft.auxMeterName = $0 ? "Generator" : "" }
+                        set: { on in
+                            let suggestion = draft.kind.auxMeterSuggestions.first
+                            draft.auxMeterName = on ? (suggestion?.name ?? "Engine") : ""
+                            if on { draft.auxMeter = suggestion?.unit ?? .hours }
+                        }
                     ))
                     if !draft.auxMeterName.isEmpty {
                         LabeledContent("Name") {
-                            TextField("Generator", text: $draft.auxMeterName)
+                            TextField(draft.kind.auxMeterSuggestions.first?.name ?? "Engine", text: $draft.auxMeterName)
                                 .multilineTextAlignment(.trailing)
                                 .textInputAutocapitalization(.words)
+                        }
+                        Picker("Counts", selection: $draft.auxMeter) {
+                            ForEach([MeterUnit.hours, .miles, .kilometers]) { Text($0.title).tag($0) }
                         }
                     }
                 }
@@ -350,6 +367,56 @@ struct VehicleDetailsForm: View {
                 Text("Engine and meter")
             } footer: {
                 Text(meterFooter)
+            }
+
+            if !VehicleTrait.choices(for: draft.kind).isEmpty {
+                Section {
+                    if draft.kind == .motorcycle, draft.powertrain != .electric {
+                        Picker("Final drive", selection: Binding(
+                            get: { draft.drive ?? .chain },
+                            set: { draft.drive = $0 }
+                        )) {
+                            ForEach(FinalDrive.allCases) { Text($0.title).tag($0) }
+                        }
+                    }
+                    ForEach(VehicleTrait.choices(for: draft.kind)) { trait in
+                        Toggle(isOn: Binding(
+                            get: { draft.traits.contains(trait) },
+                            set: { on in if on { draft.traits.insert(trait) } else { draft.traits.remove(trait) } }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(trait.title)
+                                Text(trait.detail).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                            }
+                        }
+                        .accessibilityIdentifier("trait.\(trait.rawValue)")
+                    }
+                } header: {
+                    Text("How it's used")
+                } footer: {
+                    Text("Adds the jobs that go with it. Change it any time.")
+                }
+            }
+
+            if showsOwnership {
+                Section {
+                    Toggle("Purchase date", isOn: Binding(
+                        get: { draft.purchaseDate != nil },
+                        set: { draft.purchaseDate = $0 ? (draft.purchaseDate ?? .now) : nil }
+                    ))
+                    if let date = draft.purchaseDate {
+                        DatePicker("Bought on", selection: Binding(get: { date }, set: { draft.purchaseDate = $0 }), in: ...Date.now, displayedComponents: .date)
+                    }
+                    LabeledContent("Price paid") {
+                        NumberField(title: "Optional", value: Binding(
+                            get: { draft.purchasePrice > 0 ? draft.purchasePrice : nil },
+                            set: { draft.purchasePrice = max(0, $0 ?? 0) }
+                        ), isCurrency: true)
+                        .multilineTextAlignment(.trailing)
+                    }
+                } header: {
+                    Text("Ownership")
+                }
             }
 
             Section {
@@ -633,7 +700,7 @@ struct LastDoneStep: View {
                         Label(item.name, systemImage: item.symbol)
                             .font(.headline)
                             .foregroundStyle(Theme.ink)
-                        Text(Format.interval(distance: item.distanceInterval(for: draft.meter) ?? 0, months: item.months ?? 0, meter: draft.meter))
+                        Text(Format.interval(distance: item.distanceInterval(for: draft.meter) ?? 0, months: item.months ?? 0, meter: draft.meter, trigger: item.trigger))
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
                         // One row, then two, then one chip per line at the
@@ -694,8 +761,10 @@ struct EditVehicleView: View {
             kind: vehicle.kind, powertrain: vehicle.powertrain, meter: vehicle.meter,
             year: Int(vehicle.year), make: vehicle.make ?? "", model: vehicle.model ?? "", trim: vehicle.trim ?? "",
             nickname: vehicle.nickname ?? "", vin: vehicle.vin ?? "", plate: vehicle.plate ?? "",
-            reading: vehicle.reading, auxMeterName: vehicle.auxMeterName ?? "", yearlyUse: vehicle.yearlyUse,
-            photo: vehicle.photo, tint: vehicle.tint
+            reading: vehicle.shownReading, auxMeterName: vehicle.auxMeterName ?? "", auxMeter: vehicle.auxMeter,
+            traits: vehicle.traits, drive: vehicle.profile.drive, yearlyUse: vehicle.yearlyUse,
+            photo: vehicle.photo, tint: vehicle.tint,
+            purchaseDate: vehicle.purchaseDate, purchasePrice: vehicle.purchasePrice
         )
         _draft = State(initialValue: draft)
         original = draft
@@ -708,7 +777,7 @@ struct EditVehicleView: View {
         NavigationStack {
             VehicleDetailsForm(
                 draft: $draft, buttonTitle: "Save", title: "Edit \(vehicle.displayName)",
-                meterLocked: garage.isShared(vehicle), infersPowertrain: false, next: attemptSave
+                meterLocked: garage.isShared(vehicle), infersPowertrain: false, showsOwnership: true, next: attemptSave
             )
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -750,7 +819,7 @@ struct EditVehicleView: View {
 
     private func save() {
         let powertrainChanged = vehicle.powertrain != draft.powertrain
-        let readingTyped = draft.reading != vehicle.reading
+        let readingTyped = draft.reading != vehicle.shownReading
         if !garage.isShared(vehicle) { garage.changeMeter(vehicle, to: draft.meter) }
         vehicle.powertrain = draft.powertrain
         vehicle.year = Int16(clamping: draft.year)
@@ -763,16 +832,21 @@ struct EditVehicleView: View {
         vehicle.photo = draft.photo
         vehicle.tint = draft.tint ?? vehicle.tint
         vehicle.yearlyUse = vehicle.meter.hasReading ? draft.yearlyUse : 0
+        vehicle.purchaseDate = draft.purchaseDate
+        vehicle.purchasePrice = draft.purchasePrice
         garage.saveVehicleEdits()
-        let auxName = vehicle.kind.offersAuxMeter ? draft.auxMeterName.trimmed.nilIfEmpty : nil
-        if auxName != vehicle.auxMeterName { garage.setAuxMeter(vehicle, name: auxName) }
+        let auxName = draft.auxMeterName.trimmed.nilIfEmpty
+        if auxName != vehicle.auxMeterName || (auxName != nil && draft.auxMeter != vehicle.auxMeter) {
+            garage.setAuxMeter(vehicle, name: auxName, unit: draft.auxMeter)
+        }
+        garage.setProfile(vehicle, traits: draft.traits, drive: draft.kind == .motorcycle ? draft.drive : nil)
         // Edit sets the meter exactly, so a typo can be walked back.
         if draft.meter.hasReading, readingTyped, draft.reading > 0 {
             garage.correctReading(vehicle, to: draft.reading)
         }
         if powertrainChanged {
             // New powertrain, new core jobs; the old ones stay with their history.
-            let core = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year)).filter(\.isCore)
+            let core = vehicle.catalogItems.filter(\.isCore)
             garage.addCatalogItems(core, to: vehicle)
             garage.switchOffInapplicableTasks(on: vehicle)
         }

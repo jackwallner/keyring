@@ -95,7 +95,7 @@ final class CatalogTests: XCTestCase {
                 XCTAssertFalse(items.filter(\.isCore).isEmpty, "\(kind) \(powertrain) has no core jobs")
                 XCTAssertEqual(Set(items.map(\.key)).count, items.count, "\(kind) \(powertrain) repeats a key")
                 for item in items where item.key != "wash" {
-                    XCTAssertTrue(item.miles != nil || item.hours != nil || item.months != nil, "\(item.key) has no interval")
+                    XCTAssertTrue(item.miles != nil || item.hours != nil || item.months != nil || item.trigger != nil, "\(item.key) has no interval")
                 }
             }
         }
@@ -1096,7 +1096,7 @@ final class VehicleSectionOrderTests: XCTestCase {
 
     func testRoundTripsAndFillsMissing() {
         let order = VehicleSection.order(from: "details,bogus,history,details")
-        XCTAssertEqual(order, [.details, .history, .explore, .maintenance, .facts])
+        XCTAssertEqual(order, [.details, .history, .explore, .maintenance, .records, .facts])
         XCTAssertEqual(VehicleSection.order(from: VehicleSection.stored(order)), order)
     }
 }
