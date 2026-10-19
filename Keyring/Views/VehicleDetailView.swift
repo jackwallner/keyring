@@ -28,6 +28,21 @@ struct VehicleDetailView: View {
     @State private var importing = false
     @State private var storing = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var sectionOrder = ""
+
+    @ViewBuilder private func section(_ section: VehicleSection) -> some View {
+        switch section {
+        case .explore: exploreSection.id("explore")
+        case .maintenance: dueSection
+        case .history:
+            fuelSection.id("fuel")
+            historySection
+        case .facts: factsSection
+        case .details:
+            recordSection
+            detailsSection
+        }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -37,13 +52,7 @@ struct VehicleDetailView: View {
                 actions
                 if vehicle.isRetired { retiredNote } else if vehicle.storedSince != nil { storedNote }
                 recallBanner
-                exploreSection.id("explore")
-                dueSection
-                fuelSection.id("fuel")
-                historySection
-                factsSection
-                recordSection
-                detailsSection
+                ForEach(VehicleSection.order(from: sectionOrder)) { section($0) }
             }
             .padding(.horizontal, Theme.margin)
             .padding(.bottom, Theme.xxl)

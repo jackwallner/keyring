@@ -103,6 +103,8 @@ struct SettingsView: View {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(Appearance.allCases) { Text($0.title).tag($0.rawValue) }
                 }
+                NavigationLink { SectionOrderView() } label: { Text("Vehicle page order") }
+                    .accessibilityIdentifier("settings.sectionOrder")
             } header: {
                 Text("This iPhone")
             } footer: {
@@ -216,5 +218,39 @@ struct SettingsView: View {
 
     private func refreshNotifications() async {
         notificationStatus = await ReminderScheduler.shared.authorizationStatus()
+    }
+}
+
+/// Drag to set the order of the blocks on every vehicle's page.
+struct SectionOrderView: View {
+    @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var stored = ""
+
+    private var order: [VehicleSection] { VehicleSection.order(from: stored) }
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(order) { section in
+                    Label(section.title, systemImage: section.symbol)
+                        .foregroundStyle(Theme.ink)
+                }
+                .onMove { from, to in
+                    var next = order
+                    next.move(fromOffsets: from, toOffset: to)
+                    stored = VehicleSection.stored(next)
+                }
+            } footer: {
+                Text("Drag to reorder. Fuel shows with History, and the Service Record with Details.")
+            }
+            if order != VehicleSection.defaultOrder {
+                Section {
+                    Button("Reset to default") { stored = "" }
+                }
+            }
+        }
+        .environment(\.editMode, .constant(.active))
+        .paperBackground()
+        .navigationTitle("Vehicle page order")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

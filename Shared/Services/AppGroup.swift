@@ -38,5 +38,6 @@ enum AppGroup {
         static let recallCache = "recallCache"
         static let lastRecallCheck = "lastRecallCheck"
         static let vinRecallChecks = "vinRecallChecks"
+        static let vehicleSectionOrder = "vehicleSectionOrder"
     }
 }

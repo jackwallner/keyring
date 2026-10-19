@@ -1088,3 +1088,15 @@ final class VINRecallCheckTests: XCTestCase {
         XCTAssertEqual(clear.map { [recall("25V455000")].filter($0.shows).count }, 0)
     }
 }
+
+final class VehicleSectionOrderTests: XCTestCase {
+    func testEmptyIsDefault() {
+        XCTAssertEqual(VehicleSection.order(from: ""), VehicleSection.defaultOrder)
+    }
+
+    func testRoundTripsAndFillsMissing() {
+        let order = VehicleSection.order(from: "details,bogus,history,details")
+        XCTAssertEqual(order, [.details, .history, .explore, .maintenance, .facts])
+        XCTAssertEqual(VehicleSection.order(from: VehicleSection.stored(order)), order)
+    }
+}
