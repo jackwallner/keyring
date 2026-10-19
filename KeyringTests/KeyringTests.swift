@@ -195,6 +195,40 @@ final class GarageStoreTests: XCTestCase {
         XCTAssertEqual(store.ownedVehicleCount, 1)
     }
 
+    func testWashIsAddedOnceToVehiclesSetUpBeforeIt() {
+        let store = makeStore()
+        let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2020, make: "Ford", model: "Escape", reading: 30_000))
+        let washes = { Array(vehicle.tasks ?? []).filter { $0.catalogKey == "wash" && !$0.isDeleted } }
+        // A vehicle from an older build has no wash task.
+        washes().forEach { store.context.delete($0) }
+        store.save()
+        XCTAssertTrue(washes().isEmpty)
+
+        store.backfillCatalogJobs()
+        XCTAssertEqual(washes().count, 1)
+        store.backfillCatalogJobs()
+        XCTAssertEqual(washes().count, 1)
+
+        // A copy from the owner's second device: the newer, unlogged one goes.
+        let original = washes()[0]
+        store.makeTask(from: MaintenanceCatalog.wash, for: vehicle, createdAt: .now.addingTimeInterval(60))
+        store.save()
+        XCTAssertEqual(washes().count, 2)
+        store.backfillCatalogJobs()
+        XCTAssertEqual(washes().map(\.objectID), [original.objectID])
+
+        // Switched off stays off.
+        store.remove(original)
+        store.backfillCatalogJobs()
+        XCTAssertEqual(washes().count, 1)
+        XCTAssertFalse(washes()[0].isEnabled)
+
+        // Planes don't get one.
+        let plane = store.addVehicle(NewVehicle(kind: .aircraft, powertrain: .piston, meter: .hours, year: 1978, make: "Cessna", model: "172", reading: 4_000))
+        store.backfillCatalogJobs()
+        XCTAssertFalse((plane.tasks ?? []).contains { $0.catalogKey == "wash" })
+    }
+
     func testLoggingRestartsTheCountdown() {
         let store = makeStore()
         let vehicle = store.addVehicle(NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, make: "Honda", model: "Civic", reading: 50_000))

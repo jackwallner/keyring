@@ -93,15 +93,75 @@ final class GarageStore: ObservableObject {
     init(persistence: Persistence) {
         self.persistence = persistence
         reload()
+        backfillCatalogJobs()
         let center = NotificationCenter.default
         observers.append(center.addObserver(
             forName: .NSPersistentStoreRemoteChange, object: persistence.container.persistentStoreCoordinator, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.reload() }
+            Task { @MainActor in
+                self?.reload()
+                self?.backfillCatalogJobs()
+            }
         })
         observers.append(center.addObserver(forName: Persistence.storesDidReopen, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.reload() }
+            Task { @MainActor in
+                self?.reload()
+                self?.backfillCatalogJobs()
+            }
         })
+    }
+
+    // MARK: - Catalog backfill
+
+    /// Core jobs added to the catalog after people had set up their vehicles.
+    static let backfilledKeys: Set<String> = ["wash"]
+
+    /// Adds each backfilled job once to vehicles in a garage this person owns,
+    /// so the owner's device does it for everyone sharing the garage. A job
+    /// switched off later keeps its task, so it is never added back.
+    func backfillCatalogJobs() {
+        var changed = false
+        for vehicle in vehicles where !persistence.isShared(vehicle) {
+            let existing = Set((vehicle.tasks ?? []).compactMap(\.catalogKey))
+            let missing = Self.backfilledKeys.subtracting(existing)
+            guard !missing.isEmpty else { continue }
+            let items = MaintenanceCatalog.items(for: vehicle.kind, powertrain: vehicle.powertrain, year: Int(vehicle.year))
+            for item in items where missing.contains(item.key) && item.isCore {
+                makeTask(from: item, for: vehicle)
+                changed = true
+            }
+        }
+        if removeDuplicateBackfills() { changed = true }
+        if changed { save() }
+    }
+
+    /// Two of the owner's devices can each add a job before they sync. Every
+    /// device keeps the same one (the oldest, or the one with history) and
+    /// deletes copies that were never logged.
+    private func removeDuplicateBackfills() -> Bool {
+        var removed = false
+        for vehicle in vehicles {
+            for key in Self.backfilledKeys {
+                let copies = (vehicle.tasks ?? []).filter { $0.catalogKey == key && !$0.isDeleted }
+                guard copies.count > 1 else { continue }
+                let hasHistory = { (task: MaintenanceTask) in
+                    let last = self.lastDone(for: task)
+                    return last.date != nil || last.reading != nil
+                }
+                let ordered = copies.sorted {
+                    let (l, r) = (hasHistory($0), hasHistory($1))
+                    if l != r { return l }
+                    let (ld, rd) = ($0.createdAt ?? .distantPast, $1.createdAt ?? .distantPast)
+                    if ld != rd { return ld < rd }
+                    return ($0.id?.uuidString ?? "") < ($1.id?.uuidString ?? "")
+                }
+                for extra in ordered.dropFirst() where !hasHistory(extra) {
+                    context.delete(extra)
+                    removed = true
+                }
+            }
+        }
+        return removed
     }
 
     // MARK: - Reading
