@@ -38,20 +38,20 @@ struct VehicleDetailView: View {
             fuelSection.id("fuel")
             historySection
         case .facts: factsSection
-        case .details:
-            recordSection
-            detailsSection
+        case .details: detailsSection
         }
     }
 
     var body: some View {
         ScrollViewReader { proxy in
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
-                hero
-                actions
-                if vehicle.isRetired { retiredNote } else if vehicle.storedSince != nil { storedNote }
-                recallBanner
+            VStack(alignment: .leading, spacing: Theme.sectionGap) {
+                VStack(alignment: .leading, spacing: Theme.md) {
+                    hero
+                    actions
+                    if vehicle.isRetired { retiredNote } else if vehicle.storedSince != nil { storedNote }
+                    recallBanner
+                }
                 ForEach(VehicleSection.order(from: sectionOrder)) { section($0) }
             }
             .padding(.horizontal, Theme.margin)
@@ -303,21 +303,9 @@ struct VehicleDetailView: View {
     private var dueSection: some View {
         let dues = garage.dues(for: vehicle)
         return VStack(alignment: .leading, spacing: Theme.sm) {
-            NavigationLink {
-                ScheduleView(vehicle: vehicle)
-            } label: {
-                let title = Text("Maintenance").font(Theme.title(20)).foregroundStyle(Theme.ink)
-                let link = Text("Schedule").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.brass)
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline) {
-                        title.lineLimit(1)
-                        Spacer()
-                        link.lineLimit(1)
-                    }
-                    VStack(alignment: .leading, spacing: Theme.xs) { title; link }
-                }
+            SectionHeader(title: "Maintenance") {
+                NavigationLink("Schedule") { ScheduleView(vehicle: vehicle) }
             }
-            .buttonStyle(.plain)
             if dues.isEmpty {
                 Text("No jobs on the schedule. Add some from the catalog for this \(vehicle.kind.title.lowercased()).")
                     .font(.subheadline)
@@ -330,7 +318,7 @@ struct VehicleDetailView: View {
                         NavigationLink {
                             TaskDetailView(vehicle: vehicle, taskID: due.taskID)
                         } label: {
-                            TaskRow(due: due, vehicle: vehicle)
+                            TaskRow(due: due, vehicle: vehicle).cardRow()
                         }
                         .buttonStyle(.plain)
                     }
@@ -343,10 +331,11 @@ struct VehicleDetailView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Theme.brass)
                                 .frame(maxWidth: .infinity, minHeight: 44)
+                                .padding(.vertical, Theme.xxs)
                         }
                     }
                 }
-                .card(padding: Theme.xs)
+                .listCard()
             }
         }
     }
@@ -358,7 +347,7 @@ struct VehicleDetailView: View {
             SectionHeader(title: "Explore")
             LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize
                       ? [GridItem(.flexible())]
-                      : [GridItem(.flexible(), spacing: Theme.sm), GridItem(.flexible(), spacing: Theme.sm)], spacing: Theme.sm) {
+                      : [GridItem(.flexible(), spacing: Theme.stackGap), GridItem(.flexible(), spacing: Theme.stackGap)], spacing: Theme.stackGap) {
                 tile("What it's worth", detail: valueDetail, symbol: "dollarsign.circle.fill") { ValueView(vehicle: vehicle) }
                 tile("Parts and tools", detail: "For what's due next", symbol: "wrench.and.screwdriver.fill") { GearView(vehicle: vehicle) }
                 tile("Upgrades", detail: "Popular add-ons", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
@@ -414,8 +403,8 @@ struct VehicleDetailView: View {
                     .foregroundStyle(Theme.secondaryInk)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
             }
-            .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
-            .card(padding: Theme.sm)
+            .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+            .card()
         }
         .buttonStyle(PressableStyle())
     }
@@ -441,7 +430,7 @@ struct VehicleDetailView: View {
                     .foregroundStyle(Theme.faintInk)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .card(padding: Theme.sm)
+            .card()
         }
         .buttonStyle(PressableStyle())
     }
@@ -460,16 +449,8 @@ struct VehicleDetailView: View {
             let month = fills.filter { ($0.date ?? .distantPast) >= monthAgo }.reduce(0) { $0 + $1.cost }
             let hideCosts = AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts)
             VStack(alignment: .leading, spacing: Theme.sm) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Fuel").font(Theme.title(20)).foregroundStyle(Theme.ink).lineLimit(1)
-                        Spacer()
-                        fuelLink(fills.count).lineLimit(1)
-                    }
-                    VStack(alignment: .leading, spacing: Theme.xs) {
-                        Text("Fuel").font(Theme.title(20)).foregroundStyle(Theme.ink)
-                        fuelLink(fills.count)
-                    }
+                SectionHeader(title: "Fuel") {
+                    NavigationLink(fills.count == 1 ? "1 fill-up" : "All \(fills.count)") { VehicleHistoryView(vehicle: vehicle, fuel: true) }
                 }
                 NavigationLink { VehicleHistoryView(vehicle: vehicle, fuel: true) } label: {
                     let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.sm)) : AnyLayout(HStackLayout(alignment: .top, spacing: Theme.sm))
@@ -504,23 +485,12 @@ struct VehicleDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    @ViewBuilder private func fuelLink(_ count: Int) -> some View {
-        NavigationLink(count == 1 ? "1 fill-up" : "All \(count)") { VehicleHistoryView(vehicle: vehicle, fuel: true) }
-            .font(.subheadline.weight(.semibold))
-    }
-
     private var historySection: some View {
         let entries = vehicle.serviceEntries
         return VStack(alignment: .leading, spacing: Theme.sm) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("History").font(Theme.title(20)).foregroundStyle(Theme.ink).lineLimit(1)
-                    Spacer()
-                    allHistoryLink(entries.count).lineLimit(1)
-                }
-                VStack(alignment: .leading, spacing: Theme.xs) {
-                    Text("History").font(Theme.title(20)).foregroundStyle(Theme.ink)
-                    allHistoryLink(entries.count)
+            SectionHeader(title: "History") {
+                if entries.count > 3 {
+                    NavigationLink("All \(entries.count)") { VehicleHistoryView(vehicle: vehicle) }
                 }
             }
             if entries.isEmpty {
@@ -544,20 +514,14 @@ struct VehicleDetailView: View {
                         NavigationLink {
                             EntryDetailView(entry: entry)
                         } label: {
-                            EntryRow(entry: entry, showsVehicle: false)
+                            EntryRow(entry: entry, showsVehicle: false).cardRow()
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .card(padding: Theme.sm)
+                .listCard()
             }
-        }
-    }
-
-    @ViewBuilder private func allHistoryLink(_ count: Int) -> some View {
-        if count > 3 {
-            NavigationLink("All \(count)") { VehicleHistoryView(vehicle: vehicle) }
-                .font(.subheadline.weight(.semibold))
+            recordSection
         }
     }
 
@@ -590,10 +554,10 @@ struct VehicleDetailView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .textSelection(.enabled)
                         }
-                        .padding(.vertical, 10)
+                        .cardRow()
                     }
                 }
-                .card(padding: Theme.md)
+                .listCard()
             }
         }
     }
@@ -666,9 +630,9 @@ struct VehicleDetailView: View {
                 )) {
                     Text("Reminders on this iPhone").font(.subheadline)
                 }
-                .padding(.vertical, 6)
+                .padding(.vertical, Theme.xs)
             }
-            .card(padding: Theme.md)
+            .listCard()
 
             if !vehicle.isRetired, vehicle.storedSince == nil {
                 Button {
@@ -740,10 +704,13 @@ struct VehicleDetailView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
+                // Full tap target without making copyable rows taller than the rest.
+                .padding(.vertical, -Theme.sm)
+                .padding(.trailing, -Theme.sm)
                 .accessibilityLabel("Copy \(label)")
             }
         }
-        .padding(.vertical, 10)
+        .cardRow()
     }
 }
 
@@ -789,8 +756,6 @@ struct TaskRow: View {
                 }
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, Theme.xs)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }

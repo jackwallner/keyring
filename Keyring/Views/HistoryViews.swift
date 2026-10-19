@@ -60,7 +60,7 @@ struct HistoryView: View {
                 ForEach(groups(entries), id: \.title) { group in
                     Section {
                         ForEach(group.entries) { entry in
-                            NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: filter == nil, economy: entry.id.flatMap { economy[$0] }) }
+                            NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: filter == nil, economy: entry.id.flatMap { economy[$0] }).padding(.vertical, Theme.xxs) }
                                 .listRowBackground(Theme.surface)
                                 .entrySwipeActions(entry, edit: $editingEntry, delete: $deletingEntry)
                         }
@@ -238,7 +238,7 @@ struct VehicleHistoryView: View {
             ForEach(groups, id: \.year) { group in
                 Section {
                     ForEach(group.entries) { entry in
-                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false, economy: entry.id.flatMap { economy[$0] }) }
+                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false, economy: entry.id.flatMap { economy[$0] }).padding(.vertical, Theme.xxs) }
                             .listRowBackground(Theme.surface)
                             .entrySwipeActions(entry, edit: $editingEntry, delete: $deletingEntry)
                     }
@@ -354,7 +354,6 @@ struct EntryRow: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .lineLimit(3)
         }
-        .padding(.vertical, 6)
         .contentShape(Rectangle())
     }
 
@@ -395,7 +394,6 @@ struct EntryRow: View {
                     .lineLimit(1)
             }
         }
-        .padding(.vertical, 6)
         .contentShape(Rectangle())
     }
 
@@ -437,7 +435,8 @@ struct EntryDetailView: View {
     var body: some View {
         ScrollView {
             if let vehicle = entry.vehicle, !entry.isDeleted {
-                VStack(alignment: .leading, spacing: Theme.lg) {
+                VStack(alignment: .leading, spacing: Theme.sectionGap) {
+                    VStack(alignment: .leading, spacing: Theme.md) {
                     VStack(alignment: .leading, spacing: Theme.xs) {
                         Eyebrow(text: entry.kind == .service ? vehicle.displayName : "\(vehicle.displayName) · \(entry.kind.title)", color: [.service, .fuel].contains(entry.kind) ? Theme.brass : Theme.overdue)
                         Text(entry.title ?? "Service")
@@ -450,10 +449,11 @@ struct EntryDetailView: View {
                     .padding(.top, Theme.sm)
 
                     if entry.kind == .fuel { fuelFacts(vehicle) } else { facts(vehicle) }
+                    }
 
                     let covered = (vehicle.tasks ?? []).filter { task in task.id.map(entry.coveredTaskIDs.contains) ?? false }.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
                     if !covered.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.xs) {
+                        VStack(alignment: .leading, spacing: Theme.stackGap) {
                             SectionHeader(title: "Jobs covered")
                             VStack(alignment: .leading, spacing: Theme.sm) {
                                 ForEach(covered) { task in
@@ -480,16 +480,16 @@ struct EntryDetailView: View {
                     }
 
                     if let notes = entry.notes, !notes.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.xs) {
+                        VStack(alignment: .leading, spacing: Theme.stackGap) {
                             SectionHeader(title: "Notes")
                             Text(notes).font(.body).foregroundStyle(Theme.ink).textSelection(.enabled).card()
                         }
                     }
 
                     if !entry.sortedAttachments.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.xs) {
+                        VStack(alignment: .leading, spacing: Theme.stackGap) {
                             SectionHeader(title: "Receipts and photos")
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: Theme.xs)], spacing: Theme.xs) {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: Theme.stackGap)], spacing: Theme.stackGap) {
                                 ForEach(entry.sortedAttachments) { attachment in
                                     Button { viewing = attachment } label: {
                                         Group {
@@ -501,7 +501,7 @@ struct EntryDetailView: View {
                                         }
                                         .frame(height: 110)
                                         .frame(maxWidth: .infinity)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        .clipShape(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
                                         .overlay(alignment: .bottomLeading) {
                                             if attachment.isReceipt {
                                                 Text(entry.kind == .fuel ? "Pump" : "Receipt")

@@ -19,6 +19,17 @@ enum Theme {
     static let smallRadius: CGFloat = 12
     static let cardHeight: CGFloat = 212
 
+    // MARK: Rhythm
+
+    /// Between the top-level sections of a scrolling screen.
+    static let sectionGap: CGFloat = xl
+    /// Between a section's header and its content, and between cards or buttons in one group.
+    static let stackGap: CGFloat = sm
+    /// Inside a card, around its content.
+    static let cardPadding: CGFloat = md
+    /// Above and below each row of a list card.
+    static let rowPadding: CGFloat = sm
+
     // MARK: Color
 
     static let paper = Color(light: 0xF4F1EA, dark: 0x12110F)

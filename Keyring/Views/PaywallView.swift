@@ -144,7 +144,7 @@ struct PaywallView: View {
                 }
                 .card()
 
-                VStack(spacing: Theme.xs) {
+                VStack(spacing: Theme.stackGap) {
                     ForEach(store.packages, id: \.identifier) { package in
                         PlanCard(
                             package: package,

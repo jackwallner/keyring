@@ -103,7 +103,7 @@ struct OnboardingView: View {
                 Divider().overlay(Theme.hairline)
                 sampleRow("airplane", "Annual inspection", "Due in 5 months", .ok)
             }
-            .card(padding: Theme.xs)
+            .listCard()
             Text("It knows\nwhat's due")
                 .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
@@ -217,8 +217,7 @@ struct OnboardingView: View {
             }
             Spacer()
         }
-        .padding(.vertical, compact ? 6 : 10)
-        .padding(.horizontal, Theme.xs)
+        .padding(.vertical, compact ? Theme.xs : Theme.rowPadding)
         .accessibilityElement(children: .combine)
     }
 

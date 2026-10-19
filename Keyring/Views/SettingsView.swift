@@ -240,7 +240,7 @@ struct SectionOrderView: View {
                     stored = VehicleSection.stored(next)
                 }
             } footer: {
-                Text("Drag to reorder. Fuel shows with History, and the Service Record with Details.")
+                Text("Drag to reorder. Fuel and the Service Record show with History.")
             }
             if order != VehicleSection.defaultOrder {
                 Section {

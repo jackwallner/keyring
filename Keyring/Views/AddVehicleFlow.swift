@@ -107,12 +107,12 @@ struct KindPicker: View {
     private var columns: [GridItem] {
         dynamicTypeSize.isAccessibilitySize
             ? [GridItem(.flexible())]
-            : [GridItem(.adaptive(minimum: 100), spacing: Theme.xs)]
+            : [GridItem(.adaptive(minimum: 100), spacing: Theme.stackGap)]
     }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
+            VStack(alignment: .leading, spacing: Theme.sectionGap) {
                 Text("What are you adding?")
                     .font(Theme.title(28))
                     .foregroundStyle(Theme.ink)
@@ -120,7 +120,7 @@ struct KindPicker: View {
                 ForEach(VehicleKind.pickerSections, id: \.title) { section in
                     VStack(alignment: .leading, spacing: Theme.sm) {
                         Eyebrow(text: section.title)
-                        LazyVGrid(columns: columns, spacing: Theme.xs) {
+                        LazyVGrid(columns: columns, spacing: Theme.stackGap) {
                             ForEach(section.kinds) { kind in
                                 Button {
                                     Haptics.selected()
@@ -617,7 +617,7 @@ struct LastDoneStep: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
+            VStack(alignment: .leading, spacing: Theme.stackGap) {
                 VStack(alignment: .leading, spacing: Theme.xs) {
                     Text("When were these last done?")
                         .font(Theme.title(28))
@@ -627,6 +627,7 @@ struct LastDoneStep: View {
                         .foregroundStyle(Theme.secondaryInk)
                 }
                 .padding(.top, Theme.xs)
+                .padding(.bottom, Theme.xxs)
                 ForEach(items) { item in
                     VStack(alignment: .leading, spacing: Theme.sm) {
                         Label(item.name, systemImage: item.symbol)
@@ -666,6 +667,7 @@ struct LastDoneStep: View {
                     finish()
                 }
                 .buttonStyle(PrimaryButtonStyle())
+                .padding(.top, Theme.md)
                 .accessibilityIdentifier("vehicle.finish")
             }
             .padding(.horizontal, Theme.margin)

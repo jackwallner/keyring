@@ -101,23 +101,27 @@ struct TaskDetailView: View {
     var body: some View {
         ScrollView {
             if let task {
-                VStack(alignment: .leading, spacing: Theme.lg) {
-                    header(task)
-                    status
-                    Button {
-                        logging = true
-                    } label: {
-                        Label("Log \(task.displayName.lowercasedFirst)", systemImage: "plus")
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                    if !hasLoggedEntry {
-                        Button(task.baselineDate == nil ? "Set when it was last done" : "Change when it was last done") { settingLast = true }
-                            .buttonStyle(SecondaryButtonStyle())
+                VStack(alignment: .leading, spacing: Theme.sectionGap) {
+                    VStack(alignment: .leading, spacing: Theme.md) {
+                        header(task)
+                        status
+                        VStack(spacing: Theme.stackGap) {
+                            Button {
+                                logging = true
+                            } label: {
+                                Label("Log \(task.displayName.lowercasedFirst)", systemImage: "plus")
+                            }
+                            .buttonStyle(PrimaryButtonStyle())
+                            if !hasLoggedEntry {
+                                Button(task.baselineDate == nil ? "Set when it was last done" : "Change when it was last done") { settingLast = true }
+                                    .buttonStyle(SecondaryButtonStyle())
+                            }
+                        }
                     }
                     if let gear = item?.gear, !gear.isEmpty { gearSection(gear) }
                     pastSection
                     if let notes = task.notes, !notes.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.xs) {
+                        VStack(alignment: .leading, spacing: Theme.stackGap) {
                             SectionHeader(title: "Notes")
                             Text(notes).font(.subheadline).foregroundStyle(Theme.ink).card()
                         }
@@ -242,10 +246,10 @@ struct TaskDetailView: View {
                         symbol: "cart",
                         url: AmazonLinks.search(AmazonLinks.resolve(suggestion.query, vehicle: vehicle))
                     )
-                    .padding(.vertical, 10)
+                    .cardRow()
                 }
             }
-            .card(padding: Theme.md)
+            .listCard()
             if AmazonLinks.isAffiliate {
                 Text(AmazonLinks.disclosure).font(.caption2).foregroundStyle(Theme.faintInk)
             }
@@ -261,11 +265,11 @@ struct TaskDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(entries.enumerated()), id: \.element.objectID) { index, entry in
                         if index > 0 { Divider().overlay(Theme.hairline) }
-                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false) }
+                        NavigationLink { EntryDetailView(entry: entry) } label: { EntryRow(entry: entry, showsVehicle: false).cardRow() }
                             .buttonStyle(.plain)
                     }
                 }
-                .card(padding: Theme.sm)
+                .listCard()
             }
         }
     }

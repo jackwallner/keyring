@@ -45,12 +45,25 @@ struct PressableStyle: ButtonStyle {
 
 extension View {
     /// The standard white card on paper.
-    func card(padding: CGFloat = Theme.md) -> some View {
+    func card(padding: CGFloat = Theme.cardPadding) -> some View {
         self
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+    }
+
+    /// A card holding rows split by hairlines. Each row brings its own
+    /// `cardRow()` padding, so the edges match the gaps between rows.
+    func listCard() -> some View {
+        padding(.horizontal, Theme.cardPadding).card(padding: 0)
+    }
+
+    /// One row of a list card.
+    func cardRow() -> some View {
+        padding(.vertical, Theme.rowPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
     }
 
     /// Paper behind a whole screen, including under lists.
@@ -62,25 +75,24 @@ extension View {
     }
 }
 
-struct SectionHeader: View {
+/// A section's title, with an optional link or button on the trailing edge.
+struct SectionHeader<Trailing: View>: View {
     let title: String
-    var trailing: String?
-    var action: (() -> Void)?
+    @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        // The action drops under the title when both won't fit on one line.
+        // The trailing control drops under the title when both won't fit on one line.
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline) {
                 heading.lineLimit(1)
-                Spacer()
-                button.lineLimit(1)
+                Spacer(minLength: Theme.sm)
+                styledTrailing.lineLimit(1)
             }
-            VStack(alignment: .leading, spacing: Theme.xs) {
+            VStack(alignment: .leading, spacing: Theme.xxs) {
                 heading
-                button
+                styledTrailing
             }
         }
-        .padding(.top, Theme.xs)
     }
 
     private var heading: some View {
@@ -90,12 +102,22 @@ struct SectionHeader: View {
             .accessibilityAddTraits(.isHeader)
     }
 
-    @ViewBuilder private var button: some View {
-        if let trailing, let action {
-            Button(trailing, action: action)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Theme.brass)
-        }
+    private var styledTrailing: some View {
+        trailing
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.brass)
+    }
+}
+
+extension SectionHeader where Trailing == EmptyView {
+    init(title: String) {
+        self.init(title: title) { EmptyView() }
+    }
+}
+
+extension SectionHeader where Trailing == Button<Text> {
+    init(title: String, trailing: String, action: @escaping () -> Void) {
+        self.init(title: title) { Button(trailing, action: action) }
     }
 }
 

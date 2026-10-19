@@ -1,7 +1,7 @@
 import Foundation
 
-/// The reorderable blocks on a vehicle's page. Fuel rides with History and the
-/// Service Record leads Details, so the default order matches the original page.
+/// The reorderable blocks on a vehicle's page. Fuel and the Service Record ride
+/// with History.
 enum VehicleSection: String, CaseIterable, Identifiable {
     case explore, maintenance, history, facts, details
 

@@ -76,13 +76,16 @@ struct ImportView: View {
     private var intro: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.lg) {
-                Image(systemName: "tray.and.arrow.down.fill")
-                    .font(.system(size: 34))
-                    .foregroundStyle(Theme.brass)
-                    .padding(.top, Theme.lg)
-                Text("Bring your history").font(Theme.title(28)).foregroundStyle(Theme.ink)
-                Text("Export a spreadsheet (CSV) from Fuelly, Drivvo, Simply Auto, aCar, a backup from this app or your own sheet, then choose it here.")
-                    .foregroundStyle(Theme.secondaryInk)
+                VStack(alignment: .leading, spacing: Theme.xs) {
+                    Image(systemName: "tray.and.arrow.down.fill")
+                        .font(.system(size: 34))
+                        .foregroundStyle(Theme.brass)
+                        .padding(.bottom, Theme.xs)
+                    Text("Bring your history").font(Theme.title(28)).foregroundStyle(Theme.ink)
+                    Text("Export a spreadsheet (CSV) from Fuelly, Drivvo, Simply Auto, aCar, a backup from this app or your own sheet, then choose it here.")
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                .padding(.top, Theme.lg)
                 VStack(alignment: .leading, spacing: Theme.sm) {
                     bullet("calendar", "Dates, odometer, work, cost, shop and notes come across.")
                     bullet("checklist", "Jobs like oil changes and tire rotations restart their countdowns.")

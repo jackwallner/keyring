@@ -19,7 +19,7 @@ struct FamilyView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
+            VStack(alignment: .leading, spacing: Theme.sectionGap) {
                 VStack(alignment: .leading, spacing: Theme.xs) {
                     Text("Share the garage")
                         .font(Theme.title(30))
@@ -30,6 +30,7 @@ struct FamilyView: View {
                 }
                 .padding(.top, Theme.sm)
 
+                VStack(alignment: .leading, spacing: Theme.stackGap) {
                 if let url = inviteURL {
                     inviteCard(url)
                     joinedCard
@@ -54,11 +55,14 @@ struct FamilyView: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .accessibilityIdentifier("family.invite")
                 }
+                }
 
                 if !garage.joinedGarages.isEmpty {
                     VStack(alignment: .leading, spacing: Theme.sm) {
                         SectionHeader(title: "Shared with you")
-                        ForEach(garage.joinedGarages) { joined in
+                        VStack(spacing: 0) {
+                        ForEach(Array(garage.joinedGarages.enumerated()), id: \.element.objectID) { index, joined in
+                            if index > 0 { Divider().overlay(Theme.hairline) }
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(joined.displayName).font(.subheadline.weight(.semibold))
@@ -70,8 +74,10 @@ struct FamilyView: View {
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.overdue)
                             }
-                            .card()
+                            .cardRow()
                         }
+                        }
+                        .listCard()
                     }
                 }
 
@@ -92,7 +98,7 @@ struct FamilyView: View {
                 }
             }
             .padding(.horizontal, Theme.margin)
-            .padding(.bottom, Theme.xl)
+            .padding(.bottom, Theme.xxl)
         }
         .paperBackground()
         .navigationBarTitleDisplayMode(.inline)

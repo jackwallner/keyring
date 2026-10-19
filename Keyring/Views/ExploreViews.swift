@@ -591,7 +591,7 @@ struct InsightsView: View {
         let list = vehicles ?? garage.vehicles
         let insights = CostInsights.compute(vehicles: list)
         return ScrollView {
-            VStack(alignment: .leading, spacing: Theme.lg) {
+            VStack(alignment: .leading, spacing: Theme.stackGap) {
                 VStack(alignment: .leading, spacing: 2) {
                     Eyebrow(text: "Last 12 months")
                     Text(Format.money(insights.lastTwelveMonths)).font(Theme.figure(40, weight: .bold)).foregroundStyle(Theme.ink)
@@ -600,6 +600,7 @@ struct InsightsView: View {
                         .foregroundStyle(Theme.secondaryInk)
                 }
                 .padding(.top, Theme.sm)
+                .padding(.bottom, Theme.xxs)
 
                 VStack(alignment: .leading, spacing: Theme.sm) {
                     Eyebrow(text: "By month")
