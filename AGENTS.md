@@ -28,12 +28,13 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 - Amazon links open in Safari, never an in-app webview or the PDF. `AmazonLinks.associateTag` is empty; the disclosure only shows once a tag is set.
 - `StoreService` never configures the `appl_` key on the simulator.
 - Before a release: `xcodebuild test -scheme KeyringUITests` walks every main screen and taps the value, club, parts, recall and settings links (expects Safari to open); `scripts/check-links.py` fetches every outside URL. Bot-walled sites (Edmunds, eBay, J.D. Power, nhtsa.gov) need a real browser check.
-- Debug launch args: `-SeedDemo`, `-DemoPro`, `-EmptyLog`, `-ScreenshotRoute vehicle|explore|record|log|fuel|fuelcard|build|family|add|history|settings`, `-PaywallSnapshot monthly|yearly|lifetime`.
+- Debug launch args: `-SeedDemo`, `-DemoPro`, `-EmptyLog`, `-ScreenshotRoute vehicle|explore|record|log|fuel|fuelcard|build|pace|recalls|family|add|history|settings`, `-RecordZoom <factor>` (record preview zoomed to the top of the page), `-PaywallSnapshot monthly|yearly|lifetime`.
 
 ## Deep notes (load on demand)
 | File | Covers | Read when |
 |---|---|---|
 | `.claude/rules/cloudkit.md` | schema tool, sharing, public DB, Production deploy | touching Persistence, sharing, the model |
+| `.claude/rules/release.md` | screenshot sets (iPhone, Duo), ASC upload, submission draft | screenshots, ASC, release |
 
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.

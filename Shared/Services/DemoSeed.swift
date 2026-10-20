@@ -121,6 +121,8 @@ enum DemoSeed {
             (330, ["annual", "elt"], "Annual inspection", 2_840.00, "Pearson Field Aviation", false, "Jack"),
             (70, ["oil"], "", 164.20, "", true, "Jack"),
         ])
+        // The garage leads with one of each kind, so the first screen shows the range.
+        for (index, vehicle) in [truck, bike, boat, plane, rav].enumerated() { vehicle.sortIndex = Int16(index) }
         store.save()
     }
 

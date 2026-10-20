@@ -104,5 +104,17 @@ struct PDFPreview: UIViewRepresentable {
 
     func updateUIView(_ view: PDFView, context: Context) {
         view.document = PDFDocument(data: data)
+        // Screenshots zoom into the top of the page so the record reads at store size.
+        guard let zoom = ScreenshotConfig.value(after: "-RecordZoom").flatMap(Double.init) else { return }
+        DispatchQueue.main.async {
+            view.autoScales = false
+            view.scaleFactor = view.scaleFactorForSizeToFit * zoom
+            if let page = view.document?.page(at: 0) {
+                // Centre the zoomed page so equal margin is trimmed from each side.
+                let bounds = page.bounds(for: .mediaBox)
+                let left = (bounds.width - bounds.width / zoom) / 2
+                view.go(to: PDFDestination(page: page, at: CGPoint(x: left, y: bounds.height)))
+            }
+        }
     }
 }

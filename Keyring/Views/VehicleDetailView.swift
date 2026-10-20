@@ -32,13 +32,14 @@ struct VehicleDetailView: View {
     @State private var changingOdometer = false
     @State private var checkingTrip = false
     @State private var showingBuild = false
+    @State private var showingRecalls = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var sectionOrder = ""
 
     @ViewBuilder private func section(_ section: VehicleSection) -> some View {
         switch section {
         case .explore: exploreSection.id("explore")
-        case .maintenance: dueSection
+        case .maintenance: dueSection.id("maintenance")
         case .history:
             fuelSection.id("fuel")
             historySection
@@ -74,6 +75,7 @@ struct VehicleDetailView: View {
         }
         .navigationDestination(isPresented: $checkingTrip) { TripCheckView(vehicle: vehicle) }
         .navigationDestination(isPresented: $showingBuild) { BuildListView(vehicle: vehicle) }
+        .navigationDestination(isPresented: $showingRecalls) { RecallsView(vehicle: vehicle, recalls: recalls) }
         .sheet(isPresented: $loggingEvent) { LogEventSheet(vehicle: vehicle) }
         .sheet(isPresented: $loggingMod) { LogServiceView(vehicle: vehicle, startingKind: .mod) }
         .sheet(isPresented: $changingOdometer) { OdometerChangeSheet(vehicle: vehicle) }
@@ -107,9 +109,17 @@ struct VehicleDetailView: View {
             await loadRecalls()
             loadedRecallKey = recallKey
             // The recall banner can land above Explore once it loads.
-            if ScreenshotConfig.value(after: "-ScreenshotRoute") == "explore" {
+            switch ScreenshotConfig.value(after: "-ScreenshotRoute") {
+            case "explore":
                 try? await Task.sleep(for: .milliseconds(300))
                 proxy.scrollTo("explore", anchor: .top)
+            case "pace":
+                try? await Task.sleep(for: .milliseconds(300))
+                proxy.scrollTo("maintenance", anchor: .top)
+            case "recalls":
+                showingRecalls = true
+            default:
+                break
             }
         }
         }
