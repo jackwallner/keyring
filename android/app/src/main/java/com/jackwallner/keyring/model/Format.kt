@@ -118,8 +118,8 @@ enum class ProFeature(val title: String, val detail: String, val headline: Strin
 
 /** Outside links. Amazon and values open in the browser, never inside the app. */
 object AppLinks {
-    const val PRIVACY = "https://jackwallner.github.io/keyring/privacy-policy.html"
-    const val TERMS = "https://jackwallner.github.io/keyring/terms.html"
+    const val PRIVACY = "https://jackwallner.github.io/keyring/android-privacy.html"
+    const val TERMS = "https://jackwallner.github.io/keyring/android-terms.html"
     const val SUPPORT = "https://jackwallner.github.io/keyring/support.html"
     const val SUPPORT_EMAIL = "jackwallner@gmail.com"
     const val PACKAGE = "com.jackwallner.keyring"

@@ -35,6 +35,7 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 |---|---|---|
 | `.claude/rules/cloudkit.md` | schema tool, sharing, public DB, Production deploy | touching Persistence, sharing, the model |
 | `.claude/rules/release.md` | screenshot sets (iPhone, Duo), ASC upload, submission draft | screenshots, ASC, release |
+| `.claude/rules/android.md` | Kotlin/Compose port in `android/`, catalog parity, platform gaps, Play state | touching `android/` or the Swift catalog |
 
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.
