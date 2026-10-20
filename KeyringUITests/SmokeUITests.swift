@@ -23,11 +23,15 @@ final class SmokeUITests: XCTestCase {
         button.tap()
     }
 
+    // Back from a deeper screen the list keeps its scroll position, so the
+    // element can sit above the viewport: look down first, then back up.
     private func scrollTo(_ element: XCUIElement) {
-        var swipes = 0
-        while !(element.exists && element.isHittable), swipes < 8 {
-            app.swipeUp()
-            swipes += 1
+        for down in [true, false] {
+            var swipes = 0
+            while !(element.exists && element.isHittable), swipes < 8 {
+                if down { app.swipeUp() } else { app.swipeDown() }
+                swipes += 1
+            }
         }
     }
 
@@ -50,8 +54,12 @@ final class SmokeUITests: XCTestCase {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
     }
 
+    // By identifier: after Safari the "Safari" breadcrumb shifts the nav bar's
+    // button order, and the first button no longer pops.
     private func goBack() {
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        let back = app.navigationBars.buttons["BackButton"]
+        XCTAssertTrue(back.waitForExistence(timeout: 5), "No back button")
+        back.tap()
     }
 
     func testExploreScreensOpen() {
