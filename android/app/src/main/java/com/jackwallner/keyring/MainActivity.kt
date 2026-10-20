@@ -1,7 +1,9 @@
 package com.jackwallner.keyring
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,7 +31,12 @@ class MainActivity : ComponentActivity() {
             graph.review.recordLaunch()
             DebugLaunchOptions.apply(graph, intent)
         }
-        enableEdgeToEdge()
+        // A forced appearance (debug captures) needs matching bar icons; otherwise follow the system.
+        when (DebugLaunchOptions.forceDark) {
+            true -> enableEdgeToEdge(SystemBarStyle.dark(Color.TRANSPARENT), SystemBarStyle.dark(Color.TRANSPARENT))
+            false -> enableEdgeToEdge(SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT), SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT))
+            null -> enableEdgeToEdge()
+        }
         openVehicle = intent?.getStringExtra(EXTRA_VEHICLE)
         lifecycleScope.launch { graph.store.start() }
         graph.reminders.refresh(graph.garage)

@@ -106,7 +106,7 @@ object Format {
 /** What Pro adds, ported from `ProFeature` in `PaywallView.swift`. */
 enum class ProFeature(val title: String, val detail: String, val headline: String) {
     unlimitedVehicles("Every vehicle you own", "Your first two are free forever. Pro adds the boat, the bikes, the RV and the mower.", "Room for the\nwhole garage"),
-    serviceRecord("Service Record PDF", "Every job, receipt and reading on clean pages. Print it for the glovebox or send it to a buyer.", "A service record\nthat sells the car"),
+    serviceRecord("Service Record PDF", "Every job and reading on clean pages. Print it for the glovebox or send it to a buyer.", "A service record\nthat sells the car"),
     insights("Where the money goes", "Spending by vehicle and by kind of work, and your real cost per mile.", "See where the\nmoney goes");
 
     companion object {

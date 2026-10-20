@@ -73,10 +73,10 @@ fun VehicleScreen(vehicleId: String) {
     val nav = LocalNavigator.current
     val context = LocalContext.current
     val colors = Keyring.colors
-    @Suppress("UNUSED_VARIABLE") val data = graph.data
+    val data = graph.data
     val vehicle = graph.garage.vehicle(vehicleId) ?: return
-    val dues = graph.garage.dues(vehicle)
-    val entries = graph.garage.entries(vehicle)
+    val dues = remember(vehicle, data) { graph.garage.dues(vehicle) }
+    val entries = remember(vehicle, data) { graph.garage.entries(vehicle) }
     var updatingMeter by remember { mutableStateOf(false) }
     var confirmingDelete by remember { mutableStateOf(false) }
     val isPro = graph.store.isPro

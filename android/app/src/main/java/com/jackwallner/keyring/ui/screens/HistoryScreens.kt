@@ -42,7 +42,8 @@ fun HistoryScreen() {
     val colors = Keyring.colors
     @Suppress("UNUSED_VARIABLE") val data = graph.data
     val zone = ZoneId.systemDefault()
-    val month = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    val month = androidx.compose.runtime.remember(locale) { DateTimeFormatter.ofPattern("MMMM yyyy", locale) }
     val groups = graph.garage.allEntries().groupBy { it.date.atZone(zone).toLocalDate().withDayOfMonth(1) }
     Column(Modifier.fillMaxSize()) {
         TopBar("History", { nav.pop() })

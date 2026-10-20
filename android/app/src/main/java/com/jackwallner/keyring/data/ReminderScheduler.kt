@@ -147,9 +147,14 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 }
 
+private val RESCHEDULE_ACTIONS = setOf(
+    Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED, Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_TIME_CHANGED,
+)
+
 /** Alarms don't survive a reboot or an update; this puts them back. */
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action !in RESCHEDULE_ACTIONS) return
         val graph = (context.applicationContext as KeyringApplication).graph
         graph.reminders.refresh(graph.garage)
     }

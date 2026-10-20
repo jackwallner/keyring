@@ -63,8 +63,8 @@ fun GarageScreen() {
     val graph = LocalGraph.current
     val nav = LocalNavigator.current
     val colors = Keyring.colors
-    @Suppress("UNUSED_VARIABLE") val data = graph.data
-    val vehicles = graph.garage.activeVehicles
+    val data = graph.data
+    val vehicles = androidx.compose.runtime.remember(data) { graph.garage.activeVehicles }
     val addVehicle = {
         if (ProFeature.canAddVehicle(vehicles.size, graph.store.isPro)) nav.push(Route.AddVehicle)
         else nav.push(Route.Paywall(ProFeature.unlimitedVehicles))
@@ -86,7 +86,7 @@ fun GarageScreen() {
             EmptyGarage(addVehicle)
             return@Column
         }
-        val attention = vehicles.flatMap { v -> graph.garage.dues(v).filter { it.result.status <= DueStatus.DUE_SOON }.map { v to it } }
+        val attention = androidx.compose.runtime.remember(data) { vehicles.flatMap { v -> graph.garage.dues(v).filter { it.result.status <= DueStatus.DUE_SOON }.map { v to it } } }
         LazyColumn(
             contentPadding = PaddingValues(start = Space.margin, end = Space.margin, top = Space.sm, bottom = Space.xxl),
             verticalArrangement = Arrangement.spacedBy(Space.stackGap),
@@ -146,9 +146,11 @@ private fun EmptyGarage(add: () -> Unit) {
 @Composable
 fun KeyTag(vehicle: Vehicle, onClick: () -> Unit) {
     val graph = LocalGraph.current
-    val dues = graph.garage.dues(vehicle)
-    val headline = graph.garage.headline(vehicle)
-    val status = DueCopy.cardStatus(dues, headline)
+    val data = graph.data
+    // One schedule pass per change to the log, not one per frame.
+    val dues = androidx.compose.runtime.remember(vehicle, data) { graph.garage.dues(vehicle) }
+    val headline = androidx.compose.runtime.remember(dues) { graph.garage.headline(dues) }
+    val status = androidx.compose.runtime.remember(dues, headline) { DueCopy.cardStatus(dues, headline) }
     val tint = vehicle.tint
     val fg = tint.foreground()
     val shape = RoundedCornerShape(Space.radius)

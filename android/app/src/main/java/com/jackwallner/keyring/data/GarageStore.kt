@@ -128,8 +128,9 @@ class GarageStore(
     data class Headline(val status: DueStatus, val urgentCount: Int, val next: TaskDue?)
 
     /** The worst known status on a vehicle and the next job, for its card. */
-    fun headline(vehicle: Vehicle, now: Instant = Instant.now()): Headline {
-        val dues = dues(vehicle, now)
+    fun headline(vehicle: Vehicle, now: Instant = Instant.now()): Headline = headline(dues(vehicle, now))
+
+    fun headline(dues: List<TaskDue>): Headline {
         val known = dues.filter { it.result.status != DueStatus.NO_RECORD }
         val status = known.firstOrNull()?.result?.status ?: if (dues.isEmpty()) DueStatus.OK else DueStatus.NO_RECORD
         return Headline(status, known.count { it.result.status <= DueStatus.DUE_SOON }, known.firstOrNull())
