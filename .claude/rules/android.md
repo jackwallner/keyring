@@ -54,5 +54,6 @@ files, not a template.
   Pages deploys).
 
 ## Play state
-- Not created in Play Console as of 2026-10-20. No upload key, no RevenueCat Play app, no products. See the run
-  report for the remaining Console steps.
+- 2026-10-20 (jmbp run): port verified, 51 JVM + 7 connected tests, lint clean, debug and QA APKs. Not created in
+  Play Console; no upload key, RevenueCat Play app or Play products yet. Remaining steps are in
+  `~/fleet-evidence/shift-android-keyring-1-1792531430/REPORT.md` (release preparation section).
