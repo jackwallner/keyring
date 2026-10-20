@@ -1,0 +1,23 @@
+Vehicle Maintenance Log emmagatzema un historial de servei compartit per a cada vehicle que posseeix la teva família: cotxes, camions, motocicletes, vaixells, avions, vehicles recreatius, remolcs i segadores. Els membres de la família es poden unir mitjançant un enllaç o un codi QR. No cal cap compte. Cada telèfon té els seus propis recordatoris de servei.
+
+HORARIS DE MANTENIMENT
+Cada vehicle rep un treball suggerit en funció del seu tipus i tren motriu. Els propers treballs estan llistats per data, milles, quilòmetres o hores de motor. Les tasques inclouen oli, pneumàtics, frens, filtres, líquids, inspeccions, emmagatzematge d'embarcacions d'hivern, servei de bombes d'aigua d'embarcacions i inspeccions anuals d'avions. Els horaris s'adapten a l'ús del vehicle.
+
+SERVEI I COMBUSTIBLE
+El manteniment i les reparacions es registren amb comptaquilòmetres, cost i taller de reparació. Es poden emmagatzemar fotos del rebut. La lectura de fotos del comptequilòmetres i l'ompliment dels camps de text de les fotos són gratuïts. Amb Pro, les fotos del rebut omplen els detalls del servei i les fotos de la bomba de combustible omplen els detalls del combustible. L'ompliment de combustible i l'economia de combustible de tanc a dipòsit en mpg o L/100 km són gratuïts. L'historial existent es pot importar des de CSV.
+
+HISTÒRIA PER COMPARTIR
+L'historial es pot cercar i exportar a CSV. Pro pot crear un PDF de registre de servei per a un comprador o taller de reparació. Els recordatoris de servei d'embarcacions es pausen durant l'emmagatzematge d'hivern. Es poden registrar les hores del generador de vehicles recreatius, les modificacions del vehicle, els costos de les peces, els esdeveniments de la pista de curses i els viatges fora de carretera. Es poden emmagatzemar el títol del vehicle i els documents de l'assegurança. Comproveu les retirades de seguretat de la NHTSA i trobeu tallers de reparació a Apple Maps. Els enllaços condueixen a eines, peces, especificacions de vehicles, actualitzacions, clubs de propietaris i guies de valor de tercers als seus propis llocs web.
+
+COTXES, BARQUES, AVIONS I MÉS
+Els tipus compatibles inclouen cotxes, camions, furgonetes, motocicletes, vaixells, avions, vehicles recreatius, vehicles tot terreny, remolcs, tractors, segadores i molt més.
+
+GRATUÏT I Pro
+El nivell gratuït inclou dos vehicles, registres de servei il·limitats, recordatoris de servei, recordatoris de seguretat, compartició familiar, farciment de combustible, lectura de fotos del comptaquilòmetres, ompliment de fotos per als camps de text i CSV. Pro afegeix vehicles il·limitats, PDF de registre de servei, emplenament automàtic de rebuts i fotografies de bomba i informació sobre despeses.
+
+Les subscripcions mensuals i anuals inclouen cadascuna una setmana de prova gratuïta per als nous subscriptors aptes. Pro també està disponible com a compra única. El pagament es carrega al vostre ID d'Apple quan confirmeu. Les subscripcions es renoven automàticament tret que es cancel·lin almenys 24 hores abans que finalitzi el període actual. El període següent es carrega dins de les 24 hores abans que comenci. Gestioneu o cancel·leu les subscripcions a la configuració del vostre compte de l'App Store.
+
+Els horaris són orientacions generals. Seguiu el manual del vostre propietari i consulteu un mecànic qualificat. Aquest no és un quadern oficial d'avió o vaixell.
+
+Política de privadesa: https://jackwallner.github.io/keyring/privacy-policy.html
+Condicions d'ús: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

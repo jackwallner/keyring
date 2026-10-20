@@ -1,0 +1,23 @@
+Vehicle Maintenance Log gemmer én delt servicehistorik for hvert køretøj, din familie ejer: biler, lastbiler, motorcykler, både, fly, autocampere, trailere og plæneklippere. Familiemedlemmer kan deltage via link eller QR-kode. Ingen konto er nødvendig. Hver telefon har sine egne servicepåmindelser.
+
+VEDLIGEHOLDELSESPLAN
+Hvert køretøj får foreslået arbejde baseret på dets type og drivlinje. Kommende arbejde er opført efter dato, miles, kilometer eller motortimer. Opgaverne omfatter olie, dæk, bremser, filtre, væsker, inspektioner, vinterbådopbevaring, bådvandpumpeservice og årlige flyinspektioner. Tidsplaner tilpasses køretøjets brug.
+
+SERVICE OG BRÆNDSTOF
+Vedligeholdelse og reparationer registreres med kilometertæller, omkostninger og værksted. Kvitteringsbilleder kan gemmes. Kilometertæller fotolæsning og udfyldning af tekstfelter fra fotos er gratis. Med Pro udfylder kvitteringsbilleder servicedetaljer og brændstofpumpebilleder fylder brændstofdetaljer. Brændstofpåfyldning og tank-til-tank brændstoføkonomi i mpg eller L/100 km er gratis. Eksisterende historie kan importeres fra CSV.
+
+HISTORIE TIL AT DELE
+Historik kan søges og eksporteres til CSV. Pro kan oprette en Service Record PDF for en køber eller et værksted. Påmindelser om bådservice holder pause under vinteropbevaring. RV-generatortimer, køretøjsmodifikationer, deleomkostninger, racerbanebegivenheder og terrænture kan registreres. Køretøjets titel og forsikringsdokumenter kan gemmes. Tjek NHTSA sikkerhedstilbagekaldelser og find reparationsværksteder i Apple Maps. Links fører til værktøjer, dele, køretøjsspecifikationer, opgraderinger, ejerklubber og tredjepartsværdiguider på deres egne websteder.
+
+BILER, BÅDE, FLY OG MERE
+Understøttede typer omfatter biler, lastbiler, varevogne, motorcykler, både, fly, autocampere, ATV'er, trailere, traktorer, plæneklippere og mere.
+
+FREE TIER OG Pro
+Det gratis niveau inkluderer to køretøjer, ubegrænsede serviceregistreringer, servicepåmindelser, sikkerhedstilbagekaldelser, familiedeling, brændstofpåfyldning, kilometertæller fotoaflæsning, fotoudfyldning til tekstfelter og CSV. Pro tilføjer ubegrænset antal køretøjer, Service Record PDF, kvittering og pumpe-foto autofyld og forbrugsindsigt.
+
+Månedlige og årlige abonnementer inkluderer hver en uges gratis prøveperiode for kvalificerede nye abonnenter. Pro er også tilgængelig som engangskøb. Betalingen debiteres dit Apple ID, når du bekræfter. Abonnementer fornyes automatisk, medmindre de opsiges mindst 24 timer før den nuværende periode slutter. Den næste periode oplades inden for 24 timer før den begynder. Administrer eller annuller abonnementer i dine App Store-kontoindstillinger.
+
+Tidsplaner er generel vejledning. Følg din instruktionsbog og kontakt en kvalificeret mekaniker. Dette er ikke en officiel fly- eller fartøjslogbog.
+
+Privatlivspolitik: https://jackwallner.github.io/keyring/privacy-policy.html
+Betingelser for brug: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

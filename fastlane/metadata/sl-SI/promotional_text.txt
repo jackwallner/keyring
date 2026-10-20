@@ -1,0 +1,1 @@
+En skupni dnevnik storitev in goriva za vsako vozilo. Pro doda samodejno izpolnjevanje s fotografijami.

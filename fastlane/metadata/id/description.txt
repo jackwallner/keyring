@@ -1,0 +1,23 @@
+Vehicle Maintenance Log menyimpan satu riwayat layanan bersama untuk setiap kendaraan yang dimiliki keluarga Anda: mobil, truk, sepeda motor, kapal, pesawat terbang, RV, trailer, dan mesin pemotong rumput. Anggota keluarga dapat bergabung melalui tautan atau kode QR. Tidak diperlukan akun. Setiap telepon memiliki pengingat layanannya sendiri.
+
+JADWAL PEMELIHARAAN
+Setiap kendaraan mendapat saran pekerjaan berdasarkan jenis dan powertrainnya. Pekerjaan yang akan datang dicantumkan berdasarkan tanggal, mil, kilometer, atau jam mesin. Tugasnya meliputi oli, ban, rem, filter, cairan, inspeksi, penyimpanan kapal musim dingin, layanan pompa air kapal, dan inspeksi pesawat tahunan. Jadwal menyesuaikan dengan penggunaan kendaraan.
+
+LAYANAN DAN BAHAN BAKAR
+Pemeliharaan dan perbaikan dicatat dengan odometer, biaya dan bengkel. Foto kwitansi dapat disimpan. Pembacaan foto odometer dan pengisian kolom teks dari foto gratis. Dengan Pro, foto tanda terima mengisi detail layanan dan foto pompa bahan bakar mengisi detail bahan bakar. Pengisian bahan bakar dan penghematan bahan bakar antar tangki dalam mpg atau L/100 km gratis. Riwayat yang ada dapat diimpor dari CSV.
+
+SEJARAH UNTUK DIBAGIKAN
+Riwayat dapat dicari dan diekspor ke CSV. Pro dapat membuat PDF Catatan Layanan untuk pembeli atau bengkel. Pengingat layanan kapal berhenti selama penyimpanan musim dingin. Jam generator RV, modifikasi kendaraan, biaya suku cadang, acara trek balap, dan perjalanan off-road dapat dicatat. Hak milik kendaraan dan dokumen asuransi dapat disimpan. Periksa penarikan keselamatan NHTSA dan temukan bengkel di Apple Maps. Tautan mengarah ke alat, suku cadang, spesifikasi kendaraan, peningkatan, klub pemilik, dan panduan nilai pihak ketiga di situs web mereka sendiri.
+
+MOBIL, PERAHU, PESAWAT DAN LAINNYA
+Jenis yang didukung meliputi mobil, truk, van, sepeda motor, perahu, pesawat terbang, RV, ATV, trailer, traktor, mesin pemotong rumput, dan banyak lagi.
+
+TINGKAT GRATIS DAN Pro
+Tingkat gratis mencakup dua kendaraan, catatan layanan tak terbatas, pengingat layanan, penarikan keselamatan, berbagi keluarga, pengisian bahan bakar, pembacaan foto odometer, pengisian foto untuk kolom teks, dan CSV. Pro menambahkan kendaraan tanpa batas, PDF Catatan Layanan, pengisian otomatis tanda terima dan foto pompa, serta wawasan pengeluaran.
+
+Langganan bulanan dan tahunan masing-masing mencakup uji coba gratis selama satu minggu untuk pelanggan baru yang memenuhi syarat. Pro juga tersedia sebagai pembelian satu kali. Pembayaran dibebankan ke ID Apple Anda saat Anda mengonfirmasi. Langganan diperpanjang secara otomatis kecuali dibatalkan setidaknya 24 jam sebelum periode berjalan berakhir. Periode berikutnya dibebankan dalam waktu 24 jam sebelum dimulai. Kelola atau batalkan langganan di pengaturan akun App Store Anda.
+
+Jadwal adalah panduan umum. Ikuti manual pemilik Anda dan konsultasikan dengan mekanik yang berkualifikasi. Ini bukan buku catatan resmi pesawat atau kapal.
+
+Kebijakan Privasi: https://jackwallner.github.io/keyring/privacy-policy.html
+Ketentuan Penggunaan: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

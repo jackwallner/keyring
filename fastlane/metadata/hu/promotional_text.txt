@@ -1,0 +1,1 @@
+Minden járműhöz egy közös szerviz- és üzemanyagnapló. A Pro hozzáadja a pumpás fotó automatikus kitöltését.

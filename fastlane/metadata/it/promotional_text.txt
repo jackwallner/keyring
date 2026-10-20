@@ -1,0 +1,1 @@
+Un servizio condiviso e un registro del carburante per ogni veicolo. Pro aggiunge il riempimento automatico delle foto della pompa.

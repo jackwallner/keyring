@@ -1,0 +1,23 @@
+Vehicle Maintenance Log shranjuje eno skupno servisno zgodovino za vsako vozilo, ki ga ima vaša družina: avtomobile, tovornjake, motorna kolesa, čolne, letala, avtodome, prikolice in kosilnice. Družinski člani se lahko pridružijo s povezavo ali kodo QR. Račun ni potreben. Vsak telefon ima svoje servisne opomnike.
+
+URNIKI VZDRŽEVANJA
+Vsako vozilo dobi predlagano delo glede na vrsto in pogonski sklop. Prihajajoče delo je navedeno po datumu, kilometrih, kilometrih ali urah motorja. Naloge vključujejo olje, pnevmatike, zavore, filtre, tekočine, preglede, zimsko shranjevanje čolnov, servis vodnih črpalk za čolne in letne preglede letal. Urniki se prilagajajo uporabi vozila.
+
+SERVIS IN GORIVO
+Vzdrževanje in popravila se beležijo s števcem kilometrov, stroški in servisno delavnico. Fotografije računov je mogoče shraniti. Branje fotografij števca kilometrov in polnjenje besedilnih polj iz fotografij je brezplačno. Z Pro fotografije računa izpolnjujejo podatke o servisu, fotografije črpalke za gorivo pa podatke o gorivu. Polnjenje goriva in poraba goriva od rezervoarja do rezervoarja v mpg ali L/100 km so brezplačni. Obstoječo zgodovino je mogoče uvoziti iz CSV.
+
+ZGODOVINA ZA DELITE
+Zgodovino lahko iščete in izvozite v CSV. Pro lahko za kupca ali servisno delavnico ustvari zapisnik storitev PDF. Opomniki za servis čolna se med zimskim skladiščenjem ustavijo. Zabeležijo se lahko ure generatorja avtodomov, modifikacije vozila, stroški delov, dogodki na dirkalnih stezah in izleti izven cest. Dokumente o lastništvu vozila in zavarovanju je mogoče shraniti. Preverite varnostne odpoklice NHTSA in poiščite servisne delavnice v Apple Maps. Povezave vodijo do orodij, delov, specifikacij vozil, nadgradenj, klubov lastnikov in vodnikov o vrednosti tretjih oseb na njihovih spletnih mestih.
+
+AVTOMOBILI, ČOLNI, LETALA IN VEČ
+Podprte vrste vključujejo avtomobile, tovornjake, kombije, motorna kolesa, čolne, letala, avtodome, štirikolesnike, prikolice, traktorje, kosilnice in drugo.
+
+BREZPLAČNA STOPNJA IN Pro
+Brezplačna stopnja vključuje dve vozili, neomejeno servisno evidenco, servisne opomnike, varnostne vpoklice, družinsko skupno rabo, dolivanje goriva, branje fotografij števca kilometrov, izpolnjevanje fotografij za besedilna polja in CSV. Pro dodaja neomejeno število vozil, servisno evidenco PDF, samodejno izpolnjevanje računov in fotografij črpalke ter vpoglede v porabo.
+
+Vsaka mesečna in letna naročnina vključujeta enotedensko brezplačno preskusno obdobje za ustrezne nove naročnike. Pro je na voljo tudi kot enkraten nakup. Ob potrditvi se plačilo zaračuna na vaš Apple ID. Naročnine se samodejno obnovijo, razen če jih prekličete vsaj 24 ur pred koncem trenutnega obdobja. Naslednje obdobje se zaračuna 24 ur pred začetkom. Upravljajte ali prekličite naročnine v nastavitvah računa App Store.
+
+Urniki so splošne smernice. Sledite navodilom za uporabo in se posvetujte s kvalificiranim mehanikom. To ni uradni ladijski dnevnik zrakoplova ali plovila.
+
+Politika zasebnosti: https://jackwallner.github.io/keyring/privacy-policy.html
+Pogoji uporabe: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

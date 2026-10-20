@@ -1,0 +1,23 @@
+Vehicle Maintenance Log przechowuje jedną wspólną historię usług dla każdego pojazdu posiadanego przez Twoją rodzinę: samochodów osobowych, ciężarówek, motocykli, łodzi, samolotów, pojazdów kempingowych, przyczep i kosiarek. Członkowie rodziny mogą dołączyć za pomocą linku lub kodu QR. Żadne konto nie jest potrzebne. Każdy telefon ma własne przypomnienia serwisowe.
+
+HARMONOGRAM KONSERWACJI
+Każdy pojazd otrzymuje sugerowane prace w oparciu o jego typ i układ napędowy. Nadchodzące prace są wymienione według daty, mil, kilometrów lub godzin pracy silnika. Zadania obejmują olej, opony, hamulce, filtry, płyny, inspekcje, zimowe przechowywanie łodzi, serwis pomp wodnych łodzi i coroczne inspekcje samolotów. Rozkłady jazdy dostosowują się do wykorzystania pojazdu.
+
+SERWIS I PALIWO
+Konserwacje i naprawy są rejestrowane za pomocą licznika kilometrów, kosztów i warsztatu naprawczego. Można przechowywać zdjęcia paragonów. Odczyt zdjęć licznika kilometrów i wypełnianie pól tekstowych ze zdjęć jest bezpłatne. Dzięki Pro zdjęcia paragonów wypełniają dane serwisowe, a zdjęcia pomp paliwowych wypełniają szczegóły paliwa. Tankowanie paliwa i zużycie paliwa od zbiornika do zbiornika w mpg lub l/100 km są bezpłatne. Istniejącą historię można zaimportować z pliku CSV.
+
+HISTORIA DO PODZIELENIA SIĘ
+Historię można przeszukiwać i eksportować do pliku CSV. Pro może utworzyć plik PDF z zapisem usługi dla kupującego lub warsztatu. Przypomnienia o serwisie łodzi zostaną wstrzymane podczas zimowego przechowywania. Można rejestrować godziny pracy generatora kampera, modyfikacje pojazdu, koszty części, wydarzenia na torze wyścigowym i wycieczki terenowe. Można przechowywać tytuł pojazdu i dokumenty ubezpieczeniowe. Sprawdź wycofania produktów NHTSA z zakresu bezpieczeństwa i znajdź warsztaty naprawcze w Mapach Apple. Linki prowadzą do narzędzi, części, specyfikacji pojazdów, ulepszeń, klubów właścicieli i przewodników wartości stron trzecich na ich własnych stronach internetowych.
+
+SAMOCHODY, ŁODZIE, SAMOLOTY I WIĘCEJ
+Obsługiwane typy obejmują samochody osobowe, ciężarówki, samochody dostawcze, motocykle, łodzie, samoloty, pojazdy kempingowe, quady, przyczepy, traktory, kosiarki i inne.
+
+DARMOWY POZIOM I Pro
+Poziom bezpłatny obejmuje dwa pojazdy, nieograniczoną liczbę zapisów serwisowych, przypomnienia serwisowe, wycofania pojazdów ze względów bezpieczeństwa, dzielenie się pojazdami w rodzinie, tankowanie paliwa, odczyt zdjęć licznika kilometrów, wypełnianie pól tekstowych zdjęciami i plik CSV. Pro dodaje nieograniczoną liczbę pojazdów, plik PDF z dokumentacją serwisową, automatyczne uzupełnianie paragonów i zdjęć pomp oraz statystyki wydatków.
+
+Każda subskrypcja miesięczna i roczna obejmuje tygodniowy bezpłatny okres próbny dla kwalifikujących się nowych subskrybentów. Pro dostępny jest również w formie jednorazowego zakupu. Płatność zostanie pobrana z Twojego Apple ID po potwierdzeniu. Subskrypcje odnawiają się automatycznie, chyba że zostaną anulowane co najmniej 24 godziny przed końcem bieżącego okresu. Opłata za kolejny okres naliczana jest w ciągu 24 godzin przed jego rozpoczęciem. Zarządzaj subskrypcjami lub anuluj je w ustawieniach konta App Store.
+
+Harmonogramy stanowią ogólne wytyczne. Postępuj zgodnie z instrukcją obsługi i skonsultuj się z wykwalifikowanym mechanikiem. To nie jest oficjalny dziennik pokładowy statku powietrznego ani statku.
+
+Polityka prywatności: https://jackwallner.github.io/keyring/privacy-policy.html
+Warunki korzystania: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

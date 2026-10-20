@@ -1,0 +1,23 @@
+Vehicle Maintenance Log lưu trữ một lịch sử dịch vụ chung cho mọi phương tiện mà gia đình bạn sở hữu: ô tô, xe tải, mô tô, thuyền, máy bay, RV, xe kéo và máy cắt cỏ. Các thành viên trong gia đình có thể tham gia bằng liên kết hoặc mã QR. Không cần tài khoản. Mỗi điện thoại đều có lời nhắc dịch vụ riêng.
+
+LỊCH BẢO TRÌ
+Mỗi chiếc xe đều được đề xuất công việc dựa trên loại và hệ truyền động của nó. Công việc sắp tới được liệt kê theo ngày, dặm, km hoặc giờ động cơ. Các nhiệm vụ bao gồm dầu, lốp xe, phanh, bộ lọc, chất lỏng, kiểm tra, bảo quản thuyền mùa đông, dịch vụ bơm nước cho thuyền và kiểm tra máy bay hàng năm. Lịch trình thích ứng với việc sử dụng xe.
+
+DỊCH VỤ VÀ NHIÊN LIỆU
+Việc bảo trì, sửa chữa được ghi lại bằng đồng hồ đo quãng đường, chi phí và cửa hàng sửa chữa. Hình ảnh biên nhận có thể được lưu trữ. Đọc ảnh đo đường và điền các trường văn bản từ ảnh là miễn phí. Với Pro, ảnh biên nhận điền chi tiết dịch vụ và ảnh bơm nhiên liệu điền chi tiết nhiên liệu. Miễn phí đổ đầy nhiên liệu và tiết kiệm nhiên liệu từ bình này sang bình khác tính bằng mpg hoặc L/100 km. Lịch sử hiện tại có thể được nhập từ CSV.
+
+LỊCH SỬ CHIA SẺ
+Lịch sử có thể được tìm kiếm và xuất sang CSV. Pro có thể tạo Bản ghi dịch vụ PDF cho người mua hoặc cửa hàng sửa chữa. Lời nhắc dịch vụ thuyền tạm dừng trong thời gian lưu trữ vào mùa đông. Giờ của máy phát điện RV, sửa đổi phương tiện, chi phí phụ tùng, sự kiện trên đường đua và các chuyến đi địa hình có thể được ghi lại. Giấy tờ sở hữu xe và bảo hiểm có thể được lưu trữ. Kiểm tra các đợt thu hồi an toàn của NHTSA và tìm các cửa hàng sửa chữa trong Apple Maps. Các liên kết dẫn đến các công cụ, bộ phận, thông số kỹ thuật của xe, bản nâng cấp, câu lạc bộ chủ sở hữu và hướng dẫn giá trị của bên thứ ba trên trang web của riêng họ.
+
+Ô TÔ, TÀU, MÁY BAY VÀ HƠN NỮA
+Các loại được hỗ trợ bao gồm ô tô, xe tải, xe tải, xe máy, thuyền, máy bay, RV, ATV, xe kéo, máy kéo, máy cắt cỏ, v.v.
+
+CẤP MIỄN PHÍ VÀ Pro
+Cấp miễn phí bao gồm hai xe, hồ sơ dịch vụ không giới hạn, lời nhắc dịch vụ, thu hồi an toàn, chia sẻ gia đình, đổ xăng, đọc ảnh đồng hồ đo đường, điền ảnh cho trường văn bản và CSV. Pro bổ sung số lượng phương tiện không giới hạn, Bản ghi dịch vụ PDF, tự động điền biên nhận và ảnh máy bơm cũng như thông tin chi tiết về chi tiêu.
+
+Mỗi đăng ký hàng tháng và hàng năm đều bao gồm bản dùng thử miễn phí một tuần cho những người đăng ký mới đủ điều kiện. Pro cũng có sẵn dưới dạng mua một lần. Khoản thanh toán sẽ được tính vào ID Apple của bạn khi bạn xác nhận. Đăng ký tự động gia hạn trừ khi bị hủy ít nhất 24 giờ trước khi giai đoạn hiện tại kết thúc. Giai đoạn tiếp theo được tính phí trong vòng 24 giờ trước khi bắt đầu. Quản lý hoặc hủy đăng ký trong cài đặt tài khoản App Store của bạn.
+
+Lịch trình là hướng dẫn chung. Làm theo hướng dẫn sử dụng của chủ sở hữu và tham khảo ý kiến ​​​​của thợ cơ khí có trình độ. Đây không phải là nhật ký máy bay hoặc tàu thuyền chính thức.
+
+Chính sách bảo mật: https://jackwallner.github.io/keyring/privacy-policy.html
+Điều khoản sử dụng: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

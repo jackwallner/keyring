@@ -1,0 +1,23 @@
+Vehicle Maintenance Log slaat één gedeelde onderhoudsgeschiedenis op voor elk voertuig dat uw gezin bezit: auto's, vrachtwagens, motorfietsen, boten, vliegtuigen, campers, aanhangwagens en maaiers. Familieleden kunnen lid worden via een link of QR-code. Er is geen account nodig. Elke telefoon heeft zijn eigen serviceherinneringen.
+
+ONDERHOUDSSCHEMA'S
+Voor elk voertuig wordt werk voorgesteld op basis van het type en de aandrijflijn. Aankomende werkzaamheden worden gerangschikt op datum, mijlen, kilometers of motoruren. Taken omvatten olie, banden, remmen, filters, vloeistoffen, inspecties, winterstalling van boten, onderhoud van bootwaterpompen en jaarlijkse vliegtuiginspecties. De dienstregelingen worden aangepast aan het voertuiggebruik.
+
+SERVICE EN BRANDSTOF
+Onderhoud en reparaties worden geregistreerd met kilometerteller, kosten en reparatiewerkplaats. Ontvangstfoto's kunnen worden opgeslagen. Het lezen van kilometertellerfoto's en het invullen van tekstvelden van foto's zijn gratis. Met Pro vullen foto's van de kassabon de servicegegevens en de foto's van de brandstofpomp de brandstofgegevens. Tanken en tank-tot-tank brandstofverbruik in mpg of l/100 km zijn gratis. Bestaande historie kan vanuit CSV worden geïmporteerd.
+
+GESCHIEDENIS OM TE DELEN
+De geschiedenis kan worden doorzocht en geëxporteerd naar CSV. Pro kan een Service Record PDF maken voor een koper of reparatiewerkplaats. Herinneringen voor bootservices pauzeren tijdens de winterstalling. Uren aan campergeneratoren, voertuigaanpassingen, onderdelenkosten, racecircuitevenementen en offroad-ritten kunnen worden geregistreerd. Voertuigtitel en verzekeringsdocumenten kunnen worden opgeslagen. Bekijk NHTSA-veiligheidsterugroepacties en vind reparatiewerkplaatsen in Apple Maps. Links leiden naar tools, onderdelen, voertuigspecificaties, upgrades, eigenarenclubs en waardegidsen van derden op hun eigen websites.
+
+AUTO'S, BOTEN, VLIEGTUIGEN EN MEER
+Ondersteunde typen zijn onder meer auto's, vrachtwagens, bestelwagens, motorfietsen, boten, vliegtuigen, campers, ATV's, aanhangwagens, tractoren, maaiers en meer.
+
+GRATIS TIER EN Pro
+Het gratis niveau omvat twee voertuigen, onbeperkte onderhoudsgegevens, onderhoudsherinneringen, veiligheidsherinneringen, delen met het hele gezin, tanken van brandstof, aflezen van kilometertellerfoto's, het invullen van foto's voor tekstvelden en CSV. Pro voegt een onbeperkt aantal voertuigen, een PDF met servicerecords, automatisch invullen van bonnen en pompfoto's en uitgaveninzichten toe.
+
+Maandelijkse en jaarlijkse abonnementen omvatten elk een gratis proefperiode van één week voor in aanmerking komende nieuwe abonnees. Pro is ook verkrijgbaar als eenmalige aankoop. De betaling wordt in rekening gebracht op uw Apple ID wanneer u bevestigt. Abonnementen worden automatisch verlengd, tenzij ze ten minste 24 uur vóór het einde van de huidige periode worden opgezegd. De volgende periode wordt binnen 24 uur voor aanvang in rekening gebracht. Beheer of annuleer abonnementen in uw App Store-accountinstellingen.
+
+Schema's zijn algemene richtlijnen. Volg uw gebruikershandleiding en raadpleeg een gekwalificeerde monteur. Dit is geen officieel vliegtuig- of vaartuiglogboek.
+
+Privacybeleid: https://jackwallner.github.io/keyring/privacy-policy.html
+Gebruiksvoorwaarden: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

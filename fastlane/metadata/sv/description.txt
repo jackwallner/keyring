@@ -1,0 +1,23 @@
+Vehicle Maintenance Log lagrar en delad servicehistorik för varje fordon som din familj äger: bilar, lastbilar, motorcyklar, båtar, flygplan, husbilar, släpvagnar och gräsklippare. Familjemedlemmar kan gå med via länk eller QR-kod. Inget konto behövs. Varje telefon har sina egna servicepåminnelser.
+
+UNDERHÅLLSSCHEMA
+Varje fordon får förslag på arbete baserat på dess typ och drivlina. Kommande arbete listas efter datum, miles, kilometer eller motortimmar. Arbetsuppgifterna inkluderar olja, däck, bromsar, filter, vätskor, inspektioner, vinterbåtförvaring, båtvattenpumpservice och årliga flygplansinspektioner. Schema anpassas efter fordonsanvändning.
+
+SERVICE OCH BRÄNSLE
+Underhåll och reparationer registreras med vägmätare, kostnad och reparationsverkstad. Kvittofoton kan lagras. Vägmätare fotoläsning och fyllning av textfält från bilder är gratis. Med Pro fyller kvittofoton servicedetaljer och bränslepumpfoton fyller bränsledetaljer. Bränslepåfyllning och bränsleekonomi från tank till tank i mpg eller L/100 km är gratis. Befintlig historik kan importeras från CSV.
+
+HISTORIA ATT DELA
+Historik kan sökas och exporteras till CSV. Pro kan skapa en Service Record PDF för en köpare eller reparationsverkstad. Påminnelser om båtservice pausar under vinterförvaring. Husbilsgeneratortimmar, fordonsmodifieringar, reservdelskostnader, racerbanor och terrängresor kan registreras. Fordonstitel och försäkringshandlingar kan lagras. Kontrollera NHTSA säkerhetsåterkallelser och hitta reparationsverkstäder i Apple Maps. Länkar leder till verktyg, delar, fordonsspecifikationer, uppgraderingar, ägarklubbar och värdeguider från tredje part på deras egna webbplatser.
+
+BILAR, BÅTAR, FLYGPLAN OCH MER
+Typer som stöds inkluderar bilar, lastbilar, skåpbilar, motorcyklar, båtar, flygplan, husbilar, terränghjulingar, släpvagnar, traktorer, gräsklippare och mer.
+
+FREE TIER OCH Pro
+Den kostnadsfria nivån inkluderar två fordon, obegränsade serviceuppgifter, servicepåminnelser, säkerhetsåterkallelser, familjedelning, bränslepåfyllning, avläsning av vägmätare, fotofyllning för textfält och CSV. Pro lägger till obegränsat antal fordon, Service Record PDF, kvitto och pump-foto autofyll, och utgiftsinsikter.
+
+Månatliga och årliga prenumerationer inkluderar var och en en veckas gratis provperiod för berättigade nya prenumeranter. Pro finns även som engångsköp. Betalningen debiteras ditt Apple-ID när du bekräftar. Prenumerationer förnyas automatiskt om de inte avbryts minst 24 timmar innan den aktuella perioden slutar. Nästa period debiteras inom 24 timmar innan den börjar. Hantera eller avbryt prenumerationer i dina kontoinställningar för App Store.
+
+Schema är allmän vägledning. Följ din bruksanvisning och rådfråga en kvalificerad mekaniker. Detta är inte en officiell loggbok för flygplan eller fartyg.
+
+Sekretesspolicy: https://jackwallner.github.io/keyring/privacy-policy.html
+Användarvillkor: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

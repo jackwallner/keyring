@@ -1,0 +1,1 @@
+Um serviço partilhado e registo de combustível para cada veículo. Pro adiciona preenchimento automático de foto de bomba.

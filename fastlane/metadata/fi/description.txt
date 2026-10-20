@@ -1,0 +1,23 @@
+Vehicle Maintenance Log tallentaa yhden jaetun huoltohistorian jokaiselle perheesi ajoneuvolle: autoille, kuorma-autoille, moottoripyörille, veneille, lentokoneille, matkailuautoille, perävaunuille ja niittokoneille. Perheenjäsenet voivat liittyä linkin tai QR-koodin avulla. Tiliä ei tarvita. Jokaisella puhelimella on omat palvelumuistutuksensa.
+
+HUOLTOAIKATAULUJA
+Jokainen ajoneuvo saa ehdotetut työt sen tyypin ja voimansiirron perusteella. Tulevat työt on listattu päivämäärän, mailien, kilometrien tai moottorituntien mukaan. Työtehtäviin kuuluvat öljyt, renkaat, jarrut, suodattimet, nesteet, tarkastukset, talvisäilytys, veneen vesipumppuhuolto ja lentokoneen vuosikatsastukset. Aikataulut mukautuvat ajoneuvon käyttöön.
+
+PALVELU JA POLTTOAINE
+Huolto ja korjaukset kirjataan matkamittariin, kustannuksiin ja korjaamoon. Kuittikuvat voidaan tallentaa. Matkamittarin valokuvien lukeminen ja tekstikenttien täyttäminen valokuvista ovat ilmaisia. Pro:n avulla kuittikuvat täyttävät huoltotiedot ja polttoainepumpun kuvat täyttävät polttoainetiedot. Polttoaineen täyttö ja polttoainetalous polttoainesäiliöstä tankkiin mpg tai L/100 km ovat ilmaisia. Nykyinen historia voidaan tuoda CSV-tiedostosta.
+
+HISTORIA JAETTAVANA
+Historiaa voidaan etsiä ja viedä CSV-muotoon. Pro voi luoda huoltotietueen PDF-tiedoston ostajalle tai korjaamolle. Venehuoltomuistutukset keskeytyvät talvisäilytyksen ajaksi. Matkailuautojen generaattoritunnit, ajoneuvojen muutokset, osakustannukset, kilparatatapahtumat ja off-road-matkat voidaan tallentaa. Ajoneuvon omistusoikeus ja vakuutusasiakirjat voidaan säilyttää. Tarkista NHTSA:n turvallisuusmuistutukset ja etsi korjaamot Apple Mapsista. Linkit johtavat työkaluihin, osiin, ajoneuvojen teknisiin tietoihin, päivityksiin, omistajakerhoihin ja kolmannen osapuolen arvooppaita heidän omilla verkkosivustoillaan.
+
+AUTOT, VENEET, LENTOkoneet JA MUUTA
+Tuetut tyypit sisältävät autot, kuorma-autot, pakettiautot, moottoripyörät, veneet, lentokoneet, matkailuautot, mönkijät, perävaunut, traktorit, niittokoneet ja paljon muuta.
+
+ILMAINEN TASO JA Pro
+Ilmainen taso sisältää kaksi ajoneuvoa, rajoittamattomat huoltotiedot, huoltomuistutukset, turvakutsuja, perheen jakamista, polttoaineen täyttöjä, matkamittarin valokuvien lukemista, kuvien täyttöä tekstikentille ja CSV:tä. Pro lisää rajattomasti ajoneuvoja, huoltotietueen PDF-tiedoston, kuitin ja pumppukuvien automaattisen täytön sekä kulutustietoja.
+
+Kuukausittaiset ja vuosittaiset tilaukset sisältävät kumpikin yhden viikon ilmaisen kokeilujakson ehdot täyttäville uusille tilaajille. Pro on saatavana myös kertaostoksena. Maksu veloitetaan Apple ID:ltäsi, kun vahvistat. Tilaukset uusiutuvat automaattisesti, ellei niitä peruuteta vähintään 24 tuntia ennen nykyisen jakson päättymistä. Seuraava jakso veloitetaan 24 tunnin sisällä ennen sen alkamista. Hallinnoi tai peruuta tilauksia App Store -tilisi asetuksissa.
+
+Aikataulut ovat yleisohjeita. Noudata omistajan käsikirjaasi ja ota yhteyttä pätevään mekaanikkoon. Tämä ei ole virallinen lento- tai aluspäiväkirja.
+
+Tietosuojakäytäntö: https://jackwallner.github.io/keyring/privacy-policy.html
+Käyttöehdot: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

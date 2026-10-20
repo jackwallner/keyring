@@ -1,0 +1,23 @@
+A Vehicle Maintenance Log egy megosztott szervizelőzményt tárol a családja minden járművéhez: autók, teherautók, motorkerékpárok, hajók, repülőgépek, lakóautók, pótkocsik és kaszák. A családtagok linkkel vagy QR-kóddal csatlakozhatnak. Nincs szükség fiókra. Minden telefonnak saját szervizemlékeztetője van.
+
+KARBANTARTÁSI ÜTEMTERVEK
+Minden jármű típusa és hajtáslánca alapján javasolt munkát kap. A közelgő munkák dátum, mérföld, kilométer vagy motoróra szerint vannak felsorolva. A feladatok közé tartozik az olaj, a gumik, a fékek, a szűrők, a folyadékok, az átvizsgálások, a téli hajótárolás, a csónak vízszivattyú szervize és az éves repülőgép átvizsgálás. A menetrend a járműhasználathoz igazodik.
+
+SZERVIZ ÉS ÜZEMANYAG
+A karbantartásokat és javításokat kilométerszámlálóval, költséggel és javítóműhellyel rögzítik. A nyugta fotók tárolhatók. A kilométerszámláló fényképeinek leolvasása és szövegmezők kitöltése a fényképekről ingyenes. A Pro segítségével a nyugtafotók kitöltik a szolgáltatás adatait, az üzemanyag-szivattyú fotók pedig az üzemanyagadatokat. Az üzemanyag-feltöltés és a tankok közötti üzemanyag-fogyasztás mpg-ben vagy l/100 km-ben ingyenes. A meglévő előzmények importálhatók CSV-ből.
+
+MEGOSZTANDÓ TÖRTÉNELEM
+Az előzmények kereshetők és CSV-fájlba exportálhatók. A Pro szolgáltatási rekord PDF-fájlt készíthet a vevő vagy a javítóműhely számára. A téli tárolás alatt szünetelnek a hajó szervizemlékeztetői. Rögzíthető a lakóautó-generátor üzemórái, járműmódosítások, alkatrészköltségek, versenypályás események és off-road utak. A jármű jogcíme és biztosítási okmányai tárolhatók. Tekintse meg az NHTSA biztonsági visszahívásait, és keressen javítóműhelyeket az Apple Maps alkalmazásban. A linkek eszközökre, alkatrészekre, járműspecifikációkra, frissítésekre, tulajdonosi klubokra és harmadik féltől származó értékre vonatkozó útmutatókra vezetnek a saját webhelyeiken.
+
+AUTÓK, HAJÓK, REPÜLŐGÉPEK ÉS TÖBBEK
+A támogatott típusok közé tartoznak az autók, teherautók, kisteherautók, motorkerékpárok, csónakok, repülőgépek, lakóautók, ATV-k, pótkocsik, traktorok, kaszák és egyebek.
+
+INGYENES SZINT ÉS Pro
+Az ingyenes szint két járművet, korlátlan szerviznyilvántartást, szervizemlékeztetőket, biztonsági visszahívásokat, családi megosztást, üzemanyag-feltöltést, kilométer-számláló fényképeinek leolvasását, szövegmezők fotókitöltését és CSV-fájlt tartalmaz. A Pro korlátlan számú járművel, PDF szerviznyilvántartással, nyugta- és szivattyú-fénykép automatikus kitöltésével, valamint a költésekkel kapcsolatos információkkal egészíti ki.
+
+A havi és éves előfizetések egyhetes ingyenes próbaidőszakot tartalmaznak a jogosult új előfizetők számára. A Pro egyszeri vásárlásként is megvásárolható. A fizetés az Apple ID azonosítójára kerül felszámításra, amikor megerősíti. Az előfizetések automatikusan megújulnak, hacsak nem mondják le legalább 24 órával az aktuális időszak vége előtt. A következő időszak töltése a kezdete előtt 24 órán belül megtörténik. Az előfizetéseket az App Store-fiók beállításaiban kezelheti vagy lemondhatja.
+
+A menetrendek általános iránymutatások. Kövesse a használati útmutatót, és forduljon szakképzett szerelőhöz. Ez nem egy hivatalos repülőgép- vagy hajónapló.
+
+Adatvédelmi szabályzat: https://jackwallner.github.io/keyring/privacy-policy.html
+Felhasználási feltételek: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -1,0 +1,23 @@
+Vehicle Maintenance Log, ailenizin sahip olduğu her araç için ortak bir servis geçmişi saklar: arabalar, kamyonlar, motosikletler, tekneler, uçaklar, karavanlar, römorklar ve çim biçme makineleri. Aile üyeleri bağlantı veya QR koduyla katılabilir. Hiçbir hesaba gerek yoktur. Her telefonun kendi servis hatırlatıcıları vardır.
+
+BAKIM PROGRAMLARI
+Her araca, türüne ve güç aktarım mekanizmasına göre önerilen çalışma sunulur. Yaklaşan işler tarihe, millere, kilometrelere veya motor saatlerine göre listelenir. Görevler arasında yağ, lastikler, frenler, filtreler, sıvılar, muayeneler, teknenin kışın depolanması, tekne su pompası servisi ve yıllık uçak muayeneleri yer alır. Programlar araç kullanımına göre uyarlanır.
+
+SERVİS VE YAKIT
+Bakım ve onarımlar kilometre sayacı, maliyet ve tamirhane ile kayıt altına alınır. Makbuz fotoğrafları saklanabilir. Kilometre sayacı fotoğraf okuma ve fotoğraflardan metin alanlarını doldurma ücretsizdir. Pro ile, makbuz fotoğrafları servis ayrıntılarını doldurur ve yakıt pompası fotoğrafları yakıt ayrıntılarını doldurur. Yakıt doldurma ve depodan depoya yakıt ekonomisi mpg veya L/100 km cinsinden ücretsizdir. Mevcut geçmiş CSV'den içe aktarılabilir.
+
+PAYLAŞILACAK TARİH
+Geçmiş aranabilir ve CSV'ye aktarılabilir. Pro, bir alıcı veya tamir atölyesi için bir Servis Kaydı PDF'si oluşturabilir. Tekne servisi hatırlatıcıları kış depolaması sırasında duraklatılır. RV jeneratör saatleri, araç modifikasyonları, parça maliyetleri, yarış pisti etkinlikleri ve arazi gezileri kaydedilebilir. Araç tapu ve sigorta belgeleri saklanabilir. NHTSA güvenlik geri çağırmalarını kontrol edin ve Apple Haritalar'da tamir atölyelerini bulun. Bağlantılar, kendi web sitelerindeki araçlara, parçalara, araç özelliklerine, yükseltmelere, sahip kulüplerine ve üçüncü taraf değer kılavuzlarına yönlendirir.
+
+ARABALAR, TEKNELER, UÇAKLAR VE DAHA FAZLASI
+Desteklenen türler arasında arabalar, kamyonlar, kamyonetler, motosikletler, tekneler, uçaklar, RV'ler, ATV'ler, römorklar, traktörler, çim biçme makineleri ve daha fazlası bulunur.
+
+ÜCRETSİZ KATMAN VE Pro
+Ücretsiz katman, iki araç, sınırsız servis kayıtları, servis hatırlatıcıları, güvenlik geri çağırmaları, aile paylaşımı, yakıt doldurma, kilometre sayacı fotoğraf okuma, metin alanları için fotoğraf doldurma ve CSV'yi içerir. Pro sınırsız araç, Hizmet Kaydı PDF'si, makbuz ve pompa fotoğrafı otomatik doldurma ve harcama bilgileri ekler.
+
+Aylık ve yıllık aboneliklerin her biri, uygun yeni aboneler için bir haftalık ücretsiz deneme içerir. Pro tek seferlik satın alma seçeneğiyle de mevcuttur. Onayladığınızda ödeme Apple Kimliğinizden tahsil edilir. Abonelikler, geçerli dönemin bitiminden en az 24 saat önce iptal edilmediği sürece otomatik olarak yenilenir. Bir sonraki dönem başlamadan 24 saat önce ücretlendirilir. App Store hesap ayarlarınızda abonelikleri yönetin veya iptal edin.
+
+Programlar genel rehberlik niteliğindedir. Kullanım kılavuzunuzu takip edin ve kalifiye bir tamirciye danışın. Bu resmi bir uçak veya gemi kayıt defteri değildir.
+
+Gizlilik Politikası: https://jackwallner.github.io/keyring/privacy-policy.html
+Kullanım Koşulları: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

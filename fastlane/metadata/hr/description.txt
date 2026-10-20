@@ -1,0 +1,23 @@
+Vehicle Maintenance Log pohranjuje jednu zajedničku servisnu povijest za svako vozilo koje vaša obitelj posjeduje: automobile, kamione, motocikle, čamce, zrakoplove, kampere, prikolice i kosilice. Članovi obitelji mogu se pridružiti putem poveznice ili QR koda. Račun nije potreban. Svaki telefon ima vlastite servisne podsjetnike.
+
+RASPORED ODRŽAVANJA
+Svako vozilo dobiva predložene radove na temelju svoje vrste i pogonskog sklopa. Predstojeći posao je naveden prema datumu, miljama, kilometrima ili satima motora. Zadaci uključuju ulje, gume, kočnice, filtere, tekućine, preglede, zimsko skladištenje brodova, servis vodenih pumpi za brodove i godišnje preglede zrakoplova. Rasporedi se prilagođavaju upotrebi vozila.
+
+SERVIS I GORIVO
+Održavanje i popravci bilježe se odometrom, troškovima i servisnom radionicom. Fotografije računa se mogu pohraniti. Očitavanje fotografija brojača kilometara i popunjavanje tekstualnih polja iz fotografija je besplatno. Uz Pro, fotografije računa popunjavaju pojedinosti o servisu, a fotografije pumpe za gorivo popunjavaju pojedinosti o gorivu. Punjenje goriva i potrošnja goriva od spremnika do spremnika u mpg ili L/100 km su besplatni. Postojeća povijest može se uvesti iz CSV-a.
+
+POVIJEST ZA DIJELJENJE
+Povijest se može pretraživati i izvoziti u CSV. Pro može stvoriti PDF evidenciju usluge za kupca ili servisnu radionicu. Podsjetnici za servis broda pauziraju tijekom zimskog skladištenja. Mogu se zabilježiti sati rada generatora za kamp prikolice, modifikacije vozila, troškovi dijelova, događaji na trkaćim stazama i terenska putovanja. Dokumenti o vlasništvu vozila i osiguranju mogu se pohraniti. Provjerite NHTSA sigurnosna opoziva i pronađite radionice za popravak u Apple Maps. Veze vode do alata, dijelova, specifikacija vozila, nadogradnji, klubova vlasnika i vodiča vrijednosti trećih strana na njihovim web stranicama.
+
+AUTOMOBILI, BRODOVI, ZRAKOPLOVI I VIŠE
+Podržane vrste uključuju automobile, kamione, kombije, motocikle, čamce, zrakoplove, kampere, terenska vozila, prikolice, traktore, kosilice i još mnogo toga.
+
+BESPLATNA RAZINA I Pro
+Besplatna razina uključuje dva vozila, neograničen broj servisnih zapisa, servisne podsjetnike, sigurnosna opoziva, dijeljenje s obitelji, dolijevanje goriva, očitavanje fotografija brojača kilometara, ispunjavanje fotografija za tekstna polja i CSV. Pro dodaje neograničen broj vozila, servisnu evidenciju u PDF formatu, automatsko popunjavanje računa i fotografija pumpe te uvide u potrošnju.
+
+Mjesečne i godišnje pretplate uključuju jednotjednu besplatnu probu za nove pretplatnike koji ispunjavaju uvjete. Pro je također dostupan kao jednokratna kupnja. Plaćanje se tereti na vaš Apple ID kada potvrdite. Pretplate se automatski obnavljaju osim ako se ne otkažu najmanje 24 sata prije završetka tekućeg razdoblja. Sljedeće razdoblje naplaćuje se unutar 24 sata prije početka. Upravljajte pretplatama ili ih otkažite u postavkama računa App Store.
+
+Rasporedi su opće smjernice. Slijedite upute za upotrebu i obratite se kvalificiranom mehaničaru. Ovo nije službeni dnevnik zrakoplova ili plovila.
+
+Politika privatnosti: https://jackwallner.github.io/keyring/privacy-policy.html
+Uvjeti korištenja: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -1,0 +1,1 @@
+Én delt servicehistorikk for hvert kjøretøy. Drivstoffpåfylling er gratis. Pro fyller drivstoffdetaljer fra pumpebilder og viser tank-til-tank-økonomi.

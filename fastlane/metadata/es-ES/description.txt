@@ -1,0 +1,23 @@
+Vehicle Maintenance Log almacena un historial de servicio compartido para cada vehículo que posee su familia: automóviles, camiones, motocicletas, botes, aviones, vehículos recreativos, remolques y cortadoras de césped. Los familiares pueden unirse mediante enlace o código QR. No se necesita ninguna cuenta. Cada teléfono tiene sus propios recordatorios de servicio.
+
+HORARIOS DE MANTENIMIENTO
+Cada vehículo recibe sugerencias de trabajo según su tipo y tren motriz. Los próximos trabajos se enumeran por fecha, millas, kilómetros u horas de motor. Las tareas incluyen aceite, neumáticos, frenos, filtros, líquidos, inspecciones, almacenamiento de embarcaciones en invierno, servicio de bombas de agua para embarcaciones e inspecciones anuales de aeronaves. Los horarios se adaptan al uso del vehículo.
+
+SERVICIO Y COMBUSTIBLE
+Los mantenimientos y reparaciones se registran con odómetro, costo y taller de reparación. Se pueden almacenar fotografías de recibos. La lectura de fotografías del odómetro y el llenado de campos de texto a partir de fotografías son gratuitos. Con Pro, las fotografías de los recibos completan los detalles del servicio y las fotografías de la bomba de combustible completan los detalles del combustible. Los repostajes de combustible y el consumo de combustible de tanque a tanque en mpg o L/100 km son gratuitos. El historial existente se puede importar desde CSV.
+
+HISTORIA PARA COMPARTIR
+El historial se puede buscar y exportar a CSV. Pro puede crear un PDF de registro de servicio para un comprador o taller de reparación. Los recordatorios de servicio de embarcaciones se detienen durante el almacenamiento en invierno. Se pueden registrar las horas del generador de vehículos recreativos, modificaciones de vehículos, costos de repuestos, eventos en pistas de carreras y viajes todoterreno. Se pueden almacenar el título del vehículo y los documentos del seguro. Consulta los retiros de seguridad de la NHTSA y encuentra talleres de reparación en Apple Maps. Los enlaces conducen a herramientas, repuestos, especificaciones de vehículos, actualizaciones, clubes de propietarios y guías de valor de terceros en sus propios sitios web.
+
+COCHES, BARCOS, AVIONES Y MÁS
+Los tipos admitidos incluyen automóviles, camiones, furgonetas, motocicletas, barcos, aviones, vehículos recreativos, vehículos todo terreno, remolques, tractores, cortadoras de césped y más.
+
+NIVEL GRATUITO Y Pro
+El nivel gratuito incluye dos vehículos, registros de servicio ilimitados, recordatorios de servicio, retiros de seguridad, uso compartido familiar, repostaje de combustible, lectura de fotografías del odómetro, relleno de fotografías para campos de texto y CSV. Pro agrega vehículos ilimitados, PDF de registro de servicio, autocompletado de recibos y fotografías de bombas e información sobre gastos.
+
+Las suscripciones mensuales y anuales incluyen cada una una prueba gratuita de una semana para nuevos suscriptores elegibles. Pro también está disponible como compra única. El pago se carga a tu ID de Apple cuando confirmas. Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes de que finalice el período actual. El siguiente período se cobra dentro de las 24 horas anteriores a su inicio. Administre o cancele suscripciones en la configuración de su cuenta de App Store.
+
+Los horarios son una guía general. Siga el manual del propietario y consulte a un mecánico calificado. Este no es un cuaderno de bitácora oficial de aeronaves o embarcaciones.
+
+Política de privacidad: https://jackwallner.github.io/keyring/privacy-policy.html
+Condiciones de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

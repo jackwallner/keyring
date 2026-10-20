@@ -1,0 +1,1 @@
+Một lịch sử dịch vụ được chia sẻ cho mỗi chiếc xe. Đổ xăng miễn phí. Pro điền chi tiết nhiên liệu từ ảnh máy bơm và hiển thị tính kinh tế của từng thùng.

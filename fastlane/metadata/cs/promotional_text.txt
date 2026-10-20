@@ -1,0 +1,1 @@
+Jedna sdílená služba a deník paliva pro každé vozidlo. Pro přidává automatické doplňování pump-foto.

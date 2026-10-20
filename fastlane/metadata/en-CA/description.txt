@@ -1,0 +1,23 @@
+Vehicle Maintenance Log stores one shared service history for every vehicle your family owns: cars, trucks, motorcycles, boats, aircraft, RVs, trailers and mowers. Family members can join by link or QR code. No account is needed. Each phone has its own service reminders.
+
+MAINTENANCE SCHEDULES
+Each vehicle gets suggested work based on its type and powertrain. Upcoming work is listed by date, miles, kilometres or engine hours. Tasks include oil, tires, brakes, filters, fluids, inspections, winter boat storage, boat water-pump service and annual aircraft inspections. Schedules adapt to vehicle use.
+
+SERVICE AND FUEL
+Maintenance and repairs are recorded with odometer, cost and repair shop. Receipt photos can be stored. Odometer photo reading and filling text fields from photos are free. With Pro, receipt photos fill service details and fuel-pump photos fill fuel details. Fuel fill-ups and tank-to-tank fuel economy in mpg or L/100 km are free. Existing history can be imported from CSV.
+
+HISTORY TO SHARE
+History can be searched and exported to CSV. Pro can create a Service Record PDF for a buyer or repair shop. Boat service reminders pause during winter storage. RV generator hours, vehicle modifications, parts costs, race-track events and off-road trips can be recorded. Vehicle title and insurance documents can be stored. Check NHTSA safety recalls and find repair shops in Apple Maps. Links lead to tools, parts, vehicle specs, upgrades, owner clubs and third-party value guides on their own websites.
+
+CARS, BOATS, AIRCRAFT AND MORE
+Supported types include cars, trucks, vans, motorcycles, boats, aircraft, RVs, ATVs, trailers, tractors, mowers and more.
+
+FREE TIER AND Pro
+The free tier includes two vehicles, unlimited service records, service reminders, safety recalls, family sharing, fuel fill-ups, odometer photo reading, photo fill for text fields and CSV. Pro adds unlimited vehicles, Service Record PDF, receipt and pump-photo autofill, and spending insights.
+
+Monthly and yearly subscriptions each include a one-week free trial for eligible new subscribers. Pro is also available as a one-time purchase. Payment is charged to your Apple ID when you confirm. Subscriptions renew automatically unless cancelled at least 24 hours before the current period ends. The next period is charged within 24 hours before it begins. Manage or cancel subscriptions in your App Store account settings.
+
+Schedules are general guidance. Follow your owner's manual and consult a qualified mechanic. This is not an official aircraft or vessel logbook.
+
+Privacy Policy: https://jackwallner.github.io/keyring/privacy-policy.html
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

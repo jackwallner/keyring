@@ -1,0 +1,23 @@
+Vehicle Maintenance Log memorizza una cronologia di servizio condivisa per ogni veicolo posseduto dalla tua famiglia: automobili, camion, motociclette, barche, aerei, camper, rimorchi e falciatrici. I membri della famiglia possono iscriversi tramite collegamento o codice QR. Non è necessario alcun account. Ogni telefono ha i propri promemoria di servizio.
+
+PROGRAMMI DI MANUTENZIONE
+Per ogni veicolo viene suggerito il lavoro in base al tipo e al gruppo propulsore. I prossimi lavori sono elencati per data, miglia, chilometri o ore motore. Le attività includono olio, pneumatici, freni, filtri, fluidi, ispezioni, rimessaggio invernale delle imbarcazioni, servizio della pompa dell'acqua delle imbarcazioni e ispezioni annuali degli aeromobili. Gli orari si adattano all'uso del veicolo.
+
+SERVIZIO E CARBURANTE
+Manutenzione e riparazioni vengono registrate con contachilometri, costo e officina riparazioni. Le foto delle ricevute possono essere archiviate. La lettura delle foto del contachilometri e la compilazione dei campi di testo dalle foto sono gratuiti. Con Pro, le foto delle ricevute riempiono i dettagli del servizio e le foto della pompa del carburante riempiono i dettagli del carburante. I rifornimenti di carburante e il risparmio di carburante da serbatoio a serbatoio in mpg o L/100 km sono gratuiti. La cronologia esistente può essere importata da CSV.
+
+STORIA DA CONDIVIDERE
+La cronologia può essere ricercata ed esportata in CSV. Pro può creare un PDF del record di servizio per un acquirente o un'officina di riparazione. I promemoria del servizio barca vengono sospesi durante il rimessaggio invernale. È possibile registrare le ore del generatore del camper, le modifiche al veicolo, i costi delle parti, gli eventi in pista e i viaggi fuoristrada. È possibile archiviare il titolo del veicolo e i documenti assicurativi. Controlla i richiami di sicurezza NHTSA e trova le officine di riparazione in Apple Maps. I collegamenti portano a strumenti, ricambi, specifiche del veicolo, aggiornamenti, club dei proprietari e guide ai valori di terze parti sui rispettivi siti Web.
+
+AUTO, BARCHE, AEREI E ALTRO
+I tipi supportati includono automobili, camion, furgoni, motociclette, barche, aerei, camper, ATV, rimorchi, trattori, falciatrici e altro ancora.
+
+LIVELLO GRATUITO E Pro
+Il livello gratuito include due veicoli, registrazioni di tagliandi illimitate, promemoria di tagliandi, richiami di sicurezza, condivisione con la famiglia, rifornimenti di carburante, lettura di foto del contachilometri, riempimento di foto per campi di testo e CSV. Pro aggiunge veicoli illimitati, PDF del registro di servizio, compilazione automatica di ricevute e foto della pompa e approfondimenti sulla spesa.
+
+Gli abbonamenti mensili e annuali includono ciascuno una prova gratuita di una settimana per i nuovi abbonati idonei. Pro è disponibile anche come acquisto una tantum. Il pagamento viene addebitato sul tuo ID Apple al momento della conferma. Gli abbonamenti si rinnovano automaticamente a meno che non vengano annullati almeno 24 ore prima della fine del periodo corrente. Il periodo successivo viene addebitato entro 24 ore prima dell'inizio. Gestisci o annulla gli abbonamenti nelle impostazioni del tuo account App Store.
+
+Gli orari sono indicazioni generali. Segui il manuale del proprietario e consulta un meccanico qualificato. Questo non è un giornale di bordo ufficiale di un aereo o di una nave.
+
+Informativa sulla privacy: https://jackwallner.github.io/keyring/privacy-policy.html
+Condizioni d'uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

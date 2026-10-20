@@ -1,0 +1,1 @@
+Un registro de servicio y combustible compartido para cada vehículo. Pro agrega autocompletar foto de bomba.

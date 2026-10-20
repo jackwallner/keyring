@@ -1,0 +1,1 @@
+Un servei compartit i registre de combustible per a cada vehicle. Pro afegeix l'emplenament automàtic de fotos de bomba.

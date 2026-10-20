@@ -1,0 +1,1 @@
+kjøretøyvedlikehold,bilservice,oljeskift,servicepåminnelse,kilometermåler,motorsykkel,lastebil,båt

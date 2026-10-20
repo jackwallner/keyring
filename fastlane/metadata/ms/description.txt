@@ -1,0 +1,23 @@
+Vehicle Maintenance Log menyimpan satu sejarah perkhidmatan yang dikongsi untuk setiap kenderaan yang keluarga anda miliki: kereta, trak, motosikal, bot, pesawat, RV, treler dan mesin pemotong. Ahli keluarga boleh menyertai melalui pautan atau kod QR. Tiada akaun diperlukan. Setiap telefon mempunyai peringatan perkhidmatannya sendiri.
+
+JADUAL PENYELENGGARAAN
+Setiap kenderaan mendapat cadangan kerja berdasarkan jenis dan rangkaian kuasanya. Kerja akan datang disenaraikan mengikut tarikh, batu, kilometer atau waktu enjin. Tugas termasuk minyak, tayar, brek, penapis, cecair, pemeriksaan, penyimpanan bot musim sejuk, perkhidmatan pam air bot dan pemeriksaan pesawat tahunan. Jadual disesuaikan dengan penggunaan kenderaan.
+
+PERKHIDMATAN DAN BAHAN api
+Penyelenggaraan dan pembaikan direkodkan dengan odometer, kos dan kedai pembaikan. Gambar resit boleh disimpan. Bacaan foto odometer dan mengisi medan teks daripada foto adalah percuma. Dengan Pro, foto resit mengisi butiran perkhidmatan dan foto pam bahan api mengisi butiran bahan api. Isi bahan api dan penjimatan bahan api tangki ke tangki dalam mpg atau L/100 km adalah percuma. Sejarah sedia ada boleh diimport daripada CSV.
+
+SEJARAH UNTUK DIKONGSI
+Sejarah boleh dicari dan dieksport ke CSV. Pro boleh mencipta PDF Rekod Perkhidmatan untuk pembeli atau kedai pembaikan. Peringatan perkhidmatan bot dijeda semasa penyimpanan musim sejuk. Waktu penjana RV, pengubahsuaian kenderaan, kos alat ganti, acara trek perlumbaan dan perjalanan luar jalan boleh direkodkan. Hakmilik kenderaan dan dokumen insurans boleh disimpan. Semak penarikan balik keselamatan NHTSA dan cari kedai pembaikan dalam Peta Apple. Pautan membawa kepada alatan, alat ganti, spesifikasi kenderaan, naik taraf, kelab pemilik dan panduan nilai pihak ketiga di tapak web mereka sendiri.
+
+KERETA, KAPAL, KAPAL TERBANG DAN LAGI
+Jenis yang disokong termasuk kereta, trak, van, motosikal, bot, pesawat, RV, ATV, treler, traktor, mesin pemotong dan banyak lagi.
+
+PERCUMA TIER DAN Pro
+Peringkat percuma termasuk dua kenderaan, rekod perkhidmatan tanpa had, peringatan perkhidmatan, panggilan semula keselamatan, perkongsian keluarga, pengisian bahan api, bacaan foto odometer, isian foto untuk medan teks dan CSV. Pro menambah kenderaan tanpa had, Rekod Perkhidmatan PDF, resit dan autoisi pam-foto serta cerapan perbelanjaan.
+
+Langganan bulanan dan tahunan masing-masing termasuk percubaan percuma selama seminggu untuk pelanggan baharu yang layak. Pro juga boleh didapati sebagai pembelian sekali sahaja. Pembayaran dicaj kepada Apple ID anda apabila anda mengesahkan. Langganan diperbaharui secara automatik melainkan dibatalkan sekurang-kurangnya 24 jam sebelum tempoh semasa tamat. Tempoh seterusnya dicaj dalam masa 24 jam sebelum ia bermula. Urus atau batalkan langganan dalam tetapan akaun App Store anda.
+
+Jadual adalah panduan umum. Ikut manual pemilik anda dan berunding dengan mekanik yang bertauliah. Ini bukan buku log kapal terbang atau kapal rasmi.
+
+Dasar Privasi: https://jackwallner.github.io/keyring/privacy-policy.html
+Syarat Penggunaan: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

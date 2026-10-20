@@ -1,0 +1,23 @@
+Vehicle Maintenance Log speichert eine gemeinsame Wartungshistorie für jedes Fahrzeug, das Ihre Familie besitzt: Autos, Lastwagen, Motorräder, Boote, Flugzeuge, Wohnmobile, Anhänger und Rasenmäher. Familienmitglieder können per Link oder QR-Code beitreten. Es ist kein Konto erforderlich. Jedes Telefon verfügt über eigene Serviceerinnerungen.
+
+WARTUNGSPLÄNE
+Für jedes Fahrzeug werden je nach Typ und Antriebsstrang Arbeitsvorschläge gemacht. Anstehende Arbeiten werden nach Datum, Meilen, Kilometern oder Betriebsstunden aufgelistet. Zu den Aufgaben gehören Öl, Reifen, Bremsen, Filter, Flüssigkeiten, Inspektionen, Winterlagerung von Booten, Wartung der Bootswasserpumpe und jährliche Flugzeuginspektionen. Die Fahrpläne passen sich der Fahrzeugnutzung an.
+
+SERVICE UND KRAFTSTOFF
+Wartungen und Reparaturen werden mit Kilometerzähler, Kosten und Werkstatt erfasst. Belegfotos können gespeichert werden. Das Lesen von Kilometerzählerfotos und das Ausfüllen von Textfeldern aus Fotos ist kostenlos. Mit Pro füllen Belegfotos die Servicedetails und Kraftstoffpumpenfotos die Kraftstoffdetails aus. Das Auftanken und der Kraftstoffverbrauch von Tank zu Tank in mpg oder l/100 km sind kostenlos. Vorhandener Verlauf kann aus CSV importiert werden.
+
+GESCHICHTE ZUM TEILEN
+Der Verlauf kann durchsucht und in CSV exportiert werden. Pro kann ein Serviceprotokoll-PDF für einen Käufer oder eine Reparaturwerkstatt erstellen. Während der Winterlagerung pausieren die Bootswartungserinnerungen. Es können Betriebsstunden von Wohnmobilgeneratoren, Fahrzeugmodifikationen, Teilekosten, Rennstreckenveranstaltungen und Offroad-Fahrten erfasst werden. Fahrzeugbrief und Versicherungsunterlagen können hinterlegt werden. Überprüfen Sie NHTSA-Sicherheitsrückrufe und finden Sie Reparaturwerkstätten in Apple Maps. Links führen zu Werkzeugen, Teilen, Fahrzeugspezifikationen, Upgrades, Besitzerclubs und Wertratgebern Dritter auf ihren eigenen Websites.
+
+AUTOS, BOOTE, FLUGZEUGE UND MEHR
+Zu den unterstützten Typen gehören Autos, Lastwagen, Transporter, Motorräder, Boote, Flugzeuge, Wohnmobile, Geländefahrzeuge, Anhänger, Traktoren, Mäher und mehr.
+
+KOSTENLOSES TIER UND Pro
+Das kostenlose Kontingent umfasst zwei Fahrzeuge, unbegrenzte Serviceaufzeichnungen, Serviceerinnerungen, Sicherheitsrückrufe, Familienfreigabe, Tanken, Ablesen des Kilometerstandfotos, Fotoausfüllung für Textfelder und CSV. Pro bietet eine unbegrenzte Anzahl an Fahrzeugen, ein Serviceprotokoll im PDF-Format, das automatische Ausfüllen von Quittungen und Pumpenfotos sowie Einblicke in die Ausgaben.
+
+Monats- und Jahresabonnements beinhalten jeweils eine einwöchige kostenlose Testversion für berechtigte neue Abonnenten. Pro ist auch als einmaliger Kauf erhältlich. Die Zahlung wird bei der Bestätigung von Ihrer Apple-ID abgebucht. Abonnements verlängern sich automatisch, sofern sie nicht mindestens 24 Stunden vor Ablauf des aktuellen Zeitraums gekündigt werden. Die Abrechnung der nächsten Periode erfolgt innerhalb von 24 Stunden vor Beginn. Verwalten oder kündigen Sie Abonnements in Ihren App Store-Kontoeinstellungen.
+
+Zeitpläne sind allgemeine Orientierungshilfen. Befolgen Sie die Bedienungsanleitung und wenden Sie sich an einen qualifizierten Mechaniker. Dies ist kein offizielles Flugzeug- oder Schiffslogbuch.
+
+Datenschutzrichtlinie: https://jackwallner.github.io/keyring/privacy-policy.html
+Nutzungsbedingungen: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

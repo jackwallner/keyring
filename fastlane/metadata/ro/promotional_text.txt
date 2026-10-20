@@ -1,0 +1,1 @@
+Un serviciu comun și un jurnal de combustibil pentru fiecare vehicul. Pro adaugă completarea automată a fotografiilor cu pompă.

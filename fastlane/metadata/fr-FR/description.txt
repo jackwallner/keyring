@@ -1,0 +1,23 @@
+Vehicle Maintenance Log stocke un historique d'entretien partagé pour chaque véhicule que possède votre famille : voitures, camions, motos, bateaux, avions, camping-cars, remorques et tondeuses. Les membres de la famille peuvent rejoindre par lien ou code QR. Aucun compte n'est nécessaire. Chaque téléphone possède ses propres rappels de service.
+
+HORAIRES D'ENTRETIEN
+Chaque véhicule reçoit des suggestions de travaux en fonction de son type et de son groupe motopropulseur. Les travaux à venir sont répertoriés par date, miles, kilomètres ou heures moteur. Les tâches comprennent l'huile, les pneus, les freins, les filtres, les fluides, les inspections, l'entreposage hivernal des bateaux, l'entretien des pompes à eau des bateaux et les inspections annuelles des avions. Les horaires s'adaptent à l'utilisation des véhicules.
+
+SERVICE ET CARBURANT
+L'entretien et les réparations sont enregistrés avec le compteur kilométrique, le coût et l'atelier de réparation. Les photos des reçus peuvent être stockées. La lecture des photos du compteur kilométrique et le remplissage des champs de texte à partir des photos sont gratuits. Avec Pro, les photos des reçus remplissent les détails du service et les photos de la pompe à carburant remplissent les détails du carburant. Les pleins de carburant et le rendement énergétique mesuré entre deux pleins, en mpg ou L/100 km, sont gratuits. L'historique existant peut être importé depuis CSV.
+
+HISTOIRE À PARTAGER
+L'historique peut être recherché et exporté au format CSV. Pro peut créer un dossier de service PDF pour un acheteur ou un atelier de réparation. Les rappels d’entretien du bateau s’interrompent pendant l’hivernage. Les heures du générateur de camping-car, les modifications du véhicule, les coûts des pièces, les événements sur piste de course et les voyages hors route peuvent être enregistrés. Le titre du véhicule et les documents d’assurance peuvent être stockés. Consultez les rappels de sécurité de la NHTSA et trouvez des ateliers de réparation dans Apple Maps. Les liens mènent à des outils, des pièces, des spécifications de véhicules, des mises à niveau, des clubs de propriétaires et des guides de valeur tiers sur leurs propres sites Web.
+
+VOITURES, BATEAUX, AVIONS ET PLUS
+Les types pris en charge incluent les voitures, camions, fourgonnettes, motos, bateaux, avions, camping-cars, VTT, remorques, tracteurs, tondeuses et plus encore.
+
+NIVEAU GRATUIT ET Pro
+Le niveau gratuit comprend deux véhicules, des dossiers d'entretien illimités, des rappels d'entretien, des rappels de sécurité, le partage familial, le plein de carburant, la lecture de photos du compteur kilométrique, le remplissage de photos pour les champs de texte et CSV. Pro ajoute un nombre illimité de véhicules, un PDF du dossier de service, un remplissage automatique des reçus et des photos de la pompe, ainsi que des informations sur les dépenses.
+
+Les abonnements mensuels et annuels incluent chacun un essai gratuit d'une semaine pour les nouveaux abonnés éligibles. Pro est également disponible en achat unique. Le paiement est débité de votre identifiant Apple lorsque vous confirmez. Les abonnements se renouvellent automatiquement sauf annulation au moins 24 heures avant la fin de la période en cours. La période suivante est facturée dans les 24 heures précédant son début. Gérez ou annulez les abonnements dans les paramètres de votre compte App Store.
+
+Les horaires sont des indications générales. Suivez votre manuel du propriétaire et consultez un mécanicien qualifié. Il ne s’agit pas d’un journal de bord officiel d’un avion ou d’un navire.
+
+Politique de confidentialité : https://jackwallner.github.io/keyring/privacy-policy.html
+Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -1,0 +1,1 @@
+Ein gemeinsames Service- und Kraftstoffprotokoll für jedes Fahrzeug. Pro fügt Pump-Photo-Autofill hinzu.

@@ -1,0 +1,23 @@
+Vehicle Maintenance Log ukládá jednu sdílenou servisní historii pro každé vozidlo, které vaše rodina vlastní: auta, nákladní auta, motocykly, lodě, letadla, obytné vozy, přívěsy a sekačky. Členové rodiny se mohou připojit pomocí odkazu nebo QR kódu. Není potřeba žádný účet. Každý telefon má vlastní připomenutí služby.
+
+PLÁNOVÁNÍ ÚDRŽBY
+Každé vozidlo dostane návrh práce na základě jeho typu a hnacího ústrojí. Nadcházející práce jsou uvedeny podle data, mil, kilometrů nebo motohodin. Náplň práce zahrnuje olej, pneumatiky, brzdy, filtry, kapaliny, prohlídky, zimní skladování lodí, servis vodních čerpadel lodí a roční prohlídky letadel. Jízdní řády se přizpůsobují použití vozidla.
+
+SERVIS A PALIVO
+Údržba a opravy jsou zaznamenávány počítadlem kilometrů, náklady a opravnou. Fotografie účtenek lze uložit. Čtení fotografií počítadla kilometrů a vyplňování textových polí z fotografií jsou zdarma. S Pro vyplní fotografie účtenky servisní údaje a fotografie palivového čerpadla údaje paliva. Tankování paliva a spotřeba paliva z nádrže do nádrže v mpg nebo l/100 km jsou zdarma. Stávající historii lze importovat z CSV.
+
+HISTORIE KE SDÍLENÍ
+Historii lze vyhledávat a exportovat do CSV. Pro může vytvořit servisní záznam PDF pro kupujícího nebo opravnu. Připomenutí lodního servisu se během zimního skladování pozastaví. Lze zaznamenávat hodiny generátoru obytných vozů, úpravy vozidel, náklady na díly, události na závodní dráze a výlety v terénu. Lze uložit doklady o vlastnictví vozidla a pojištění. Zkontrolujte stažení z bezpečnostních důvodů NHTSA a najděte opravny v Apple Maps. Odkazy vedou k nástrojům, dílům, specifikacím vozidel, upgradům, klubům vlastníků a hodnotovým průvodcům třetích stran na jejich vlastních webových stránkách.
+
+AUTA, LODĚ, LETADLA A DALŠÍ
+Mezi podporované typy patří auta, nákladní auta, dodávky, motocykly, lodě, letadla, obytné vozy, čtyřkolky, přívěsy, traktory, sekačky a další.
+
+FREE TIER A Pro
+Bezplatná úroveň zahrnuje dvě vozidla, neomezené servisní záznamy, servisní připomenutí, bezpečnostní svolání, rodinné sdílení, tankování paliva, odečítání fotografií z počítadla kilometrů, fotografické vyplnění textových polí a CSV. Pro přidává neomezený počet vozidel, servisní záznam ve formátu PDF, automatické vyplňování příjmu a pumpy a přehled výdajů.
+
+Měsíční a roční předplatné zahrnuje týdenní bezplatnou zkušební verzi pro způsobilé nové předplatitele. Pro je také k dispozici jako jednorázový nákup. Po potvrzení je platba naúčtována na vaše Apple ID. Předplatné se automaticky obnovuje, pokud není zrušeno alespoň 24 hodin před koncem aktuálního období. Další období je účtováno do 24 hodin před jeho začátkem. Spravujte nebo zrušte předplatné v nastavení účtu App Store.
+
+Rozvrhy jsou obecným vodítkem. Postupujte podle návodu k obsluze a poraďte se s kvalifikovaným mechanikem. Toto není oficiální deník letadla nebo plavidla.
+
+Zásady ochrany osobních údajů: https://jackwallner.github.io/keyring/privacy-policy.html
+Podmínky použití: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

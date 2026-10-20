@@ -1,0 +1,1 @@
+Fahrzeugwartung,Autoservice,Ölwechsel,Serviceerinnerung,Kilometerzähler,Motorrad,LKW,Boot,Wohnmobil
