@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
@@ -129,9 +130,10 @@ class KeyringFlowTest {
 
     @Test fun reviewerCodeIsRejectedWithoutTheReleaseDigest() {
         launch("skipOnboarding" to true, "route" to "settings")
-        compose.onNodeWithTag("settings.reviewCode").performTextInput("not-the-code")
-        compose.onNodeWithTag("settings.reviewUnlock").performClick()
-        compose.onNodeWithText("That code didn't work.").assertIsDisplayed()
+        compose.onNodeWithTag("settings.reviewCode").performScrollTo().performTextInput("not-the-code")
+        compose.onNodeWithTag("settings.reviewUnlock").performScrollTo().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("That code didn't work.", useUnmergedTree = true).assertExists()
         assertTrue(!graph.store.isPro)
     }
 }

@@ -127,6 +127,8 @@ object NHTSAClient {
         return parseRecalls(body)
     }
 
+    const val USER_AGENT = "VehicleMaintenanceLog/1.0 (Android)"
+
     private val reportedFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.US)
 
     fun parseRecalls(text: String): List<Recall> {
@@ -156,6 +158,8 @@ object NHTSAClient {
             connection.connectTimeout = 15_000
             connection.readTimeout = 20_000
             connection.setRequestProperty("Accept", "application/json")
+            // api.nhtsa.gov answers 403 to Android's default Dalvik user agent.
+            connection.setRequestProperty("User-Agent", USER_AGENT)
             try {
                 if (connection.responseCode !in 200..299) throw IOException("HTTP ${connection.responseCode}")
                 connection.inputStream.bufferedReader().use { it.readText() }
