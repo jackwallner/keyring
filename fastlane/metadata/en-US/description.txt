@@ -1,47 +1,48 @@
-Vehicle Maintenance Log keeps one shared service history for every vehicle your family owns. The truck, your partner's SUV, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower all live in one garage, and each one tells you what's due next.
+Vehicle Maintenance Log keeps one shared service history for every vehicle your family owns. The truck, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower live in one garage, and each one tells you what's due next.
 
 ONE GARAGE, THE WHOLE FAMILY
-Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders are set on each phone, so one oil change doesn't ping the whole house.
+Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders are set per phone, so one oil change doesn't ping the whole house.
 
 KNOWS WHAT'S DUE
-Every vehicle starts with a recommended schedule for its kind and powertrain: oil, tires, brakes, filters, fluids, inspections, winterizing, impellers, annuals. Tell the app when each job was last done and it counts down by date and by miles, kilometers or engine hours, using how much you actually drive.
+Every vehicle starts with a recommended schedule for its kind and powertrain: oil, tires, brakes, filters, fluids, inspections, winterizing, impellers, annuals. It counts down by date and by miles, kilometers or engine hours, at the pace you actually drive.
 
 LOG IN SECONDS
-Tick what was done, add the mileage, cost and shop, and snap the receipt. Every checked job restarts its own countdown. Any typed field, from the license plate and VIN to odometer readings and notes, can be filled from a photo.
+Tick what was done, add the mileage, cost and shop, and snap the receipt. Every checked job restarts its own countdown. Any typed field, from the plate and VIN to odometer readings and notes, can be filled from a photo.
 
 FILL-UPS AND REAL MPG
-Log every fill-up beside the service history. Snap the odometer and the reading fills in. With Pro, snap the pump display and the gallons, price per gallon, total and grade fill in, read right on your iPhone. Fuel economy is worked out from full tank to full tank, in mpg or L/100 km.
+Log fill-ups beside the service history. Snap the odometer and the reading fills in. With Pro, snap the pump and the gallons, price, total and grade fill in. Fuel economy runs full tank to full tank, in mpg or L/100 km.
 
 BRING YOUR HISTORY
-Import a CSV from Fuelly, Drivvo, Simply Auto or your own spreadsheet. The app matches the columns, brings fill-ups in as fill-ups, and restarts each job's countdown from the last time it was done.
+Import a CSV from another maintenance or fuel app, or your own spreadsheet. Fill-ups come in as fill-ups, and each job's countdown restarts from the last time it was done.
 
 SEASONS, SALES AND SECOND METERS
-Put the boat or the convertible in storage and reminders pause until it's back out. Track an RV's generator hours on their own schedule. When you sell, note the date and price and hand the buyer the full record.
+Put the boat in storage and its reminders pause. Track an RV's generator hours on their own schedule. When you sell, hand the buyer the full record.
 
-REPAIRS AND RECALLS TOO
-Log unplanned repairs alongside maintenance and see what each one really costs. The app watches NHTSA for new safety recalls on your cars and lets you know when one is issued. Recalls a dealer already fixed are spotted on saved receipts and notes.
+REPAIRS AND RECALLS
+Log unplanned repairs alongside maintenance. The app checks NHTSA's public database for safety recalls on your cars and lets you know when a new one is issued. Recalls already fixed are spotted on saved receipts and notes.
+
+MODS, EVENTS AND PAPERWORK
+Keep a build list of every mod with its parts and cost. Log a track day or a trail ride and see which jobs it brings due. Check what comes due before a long trip, and keep the title and insurance card with the vehicle.
 
 EVERY KIND OF VEHICLE
-Cars, SUVs, trucks, vans, motorcycles, scooters, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers.
+Cars, SUVs, trucks, vans, motorcycles, scooters, e-bikes, golf carts, motorhomes, campers, trailers, boats, sailboats, jet skis, aircraft, ATVs, snowmobiles, tractors and mowers.
 
-RECALLS, VALUE AND PARTS
-- Safety recalls from NHTSA for your year, make and model, with an alert when a new one is issued
-- One tap to Kelley Blue Book, Edmunds, J.D. Power or your country's price guide, and a place to note what it's worth
+VALUE, PARTS, CLUBS AND SERVICE NEARBY
+- One tap to your country's used-vehicle price guides, and a place to note what it's worth
 - The tools and parts for the job that's due next
 - Quick facts you always look up: oil type, tire size, wiper lengths, paint code
-
-UPGRADES, CLUBS AND SERVICE NEARBY
-Performance, handling and detailing upgrades owners actually recommend, with the honest tradeoffs. Owners clubs and forums for your make. Repair shops, mobile mechanics and mobile detailers near you.
+- Upgrades worth doing, with the honest tradeoffs, and owners clubs for your make
+- Repair shops, mobile mechanics and detailers near you in Apple Maps
 
 A RECORD WORTH HANDING OVER
-Search and filter the whole history, export it to CSV, and with Pro print a clean Service Record PDF with every job and receipt for a buyer, a shop or the glovebox.
+Search the whole history, export it to CSV, and with Pro print a clean Service Record PDF with every job and receipt for a buyer, a shop or the glovebox.
 
 FREE FOR YOUR FIRST TWO
 Two vehicles are free for good, with unlimited logging, fill-ups and mpg, reminders, recalls, family sharing and CSV export. Pro adds unlimited vehicles, the Service Record PDF, receipts and pump photos that fill themselves in, and spending insights.
 
 Vehicle Maintenance Log Pro is available as an auto-renewing monthly or yearly subscription, each with a one-week free trial for eligible new subscribers, or as a one-time purchase. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel any time in your App Store account settings.
 
-Recommended schedules are general guidance. Your owner's manual and a qualified mechanic come first.
+Recommended schedules are general guidance. Your owner's manual and a qualified mechanic come first. This app is not an official aircraft or vessel logbook.
 
 Privacy Policy: https://jackwallner.github.io/keyring/privacy-policy.html
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
