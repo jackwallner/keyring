@@ -43,6 +43,16 @@ object DebugLaunchOptions {
             "recalls" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Recalls(it)) }
             "insights" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Insights(it)) }
             "task" -> first?.let { id -> graph.garage.dues(graph.garage.vehicle(id)!!).firstOrNull()?.let { listOf(Route.Garage, Route.Vehicle(id), Route.Task(id, it.task.id)) } }
+            "value" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Value(it)) }
+            "gear" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Gear(it)) }
+            "upgrades" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Upgrades(it)) }
+            "clubs" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Clubs(it)) }
+            "service" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.ServiceNearby(it)) }
+            "trip" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.TripCheck(it)) }
+            "documents" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Documents(it)) }
+            "storage" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Storage(it)) }
+            "retire" -> first?.let { listOf(Route.Garage, Route.Vehicle(it), Route.Retire(it)) }
+            "import" -> listOf(Route.Garage, Route.Import(first, DemoSeed.SAMPLE_CSV))
             "add" -> listOf(Route.Garage, Route.AddVehicle)
             "history" -> listOf(Route.Garage, Route.History)
             "settings" -> listOf(Route.Garage, Route.Settings)

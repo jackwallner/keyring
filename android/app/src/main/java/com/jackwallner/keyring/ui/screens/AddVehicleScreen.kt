@@ -135,6 +135,14 @@ fun VehicleDetailsForm(kind: VehicleKind, existing: Vehicle?, onBack: () -> Unit
     var traits by remember { mutableStateOf(existing?.traits ?: emptySet()) }
     var drive by rememberSaveable { mutableStateOf(existing?.drive) }
     var tint by rememberSaveable { mutableStateOf(existing?.tint ?: VehicleTint.defaultTint(kind)) }
+    var auxName by rememberSaveable { mutableStateOf(existing?.auxMeterName.orEmpty()) }
+    var auxMeter by rememberSaveable { mutableStateOf(existing?.auxMeter ?: MeterUnit.hours) }
+    var photo by remember { mutableStateOf<ByteArray?>(null) }
+    var photoRemoved by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val photoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let { com.jackwallner.keyring.ui.PickedFiles.read(context, it) }?.second?.let { photo = it; photoRemoved = false } }
     var decoding by remember { mutableStateOf(false) }
     var vinMessage by remember { mutableStateOf<String?>(null) }
 
@@ -148,8 +156,9 @@ fun VehicleDetailsForm(kind: VehicleKind, existing: Vehicle?, onBack: () -> Unit
             val added = graph.garage.addVehicle(NewVehicle(
                 kind = kind, powertrain = powertrain, meter = meter, year = year.toIntOrNull() ?: 0, make = make, model = model,
                 nickname = nickname, vin = vin, plate = plate, reading = parsedReading, yearlyUse = yearlyUse, traits = traits,
-                drive = drive, tint = tint,
+                drive = drive, tint = tint, auxMeterName = auxName, auxMeter = auxMeter,
             ))
+            photo?.let { graph.garage.setPhoto(added, it) }
             nav.replace(Route.Vehicle(added.id))
         } else {
             graph.garage.updateVehicle(existing.copy(
@@ -159,6 +168,14 @@ fun VehicleDetailsForm(kind: VehicleKind, existing: Vehicle?, onBack: () -> Unit
                 traits = traits, drive = drive, tint = tint,
             ))
             if (parsedReading > existing.reading) graph.garage.updateReading(graph.garage.vehicle(existing.id)!!, parsedReading)
+            val name = auxName.trim().ifEmpty { null }
+            if (name != existing.auxMeterName || (name != null && auxMeter != existing.auxMeter)) {
+                graph.garage.setAuxMeter(graph.garage.vehicle(existing.id)!!, name, auxMeter)
+            }
+            when {
+                photo != null -> graph.garage.setPhoto(graph.garage.vehicle(existing.id)!!, photo)
+                photoRemoved -> graph.garage.setPhoto(graph.garage.vehicle(existing.id)!!, null)
+            }
             nav.pop()
         }
     }
@@ -233,6 +250,24 @@ fun VehicleDetailsForm(kind: VehicleKind, existing: Vehicle?, onBack: () -> Unit
                 }
             }
             if (kind.hasNHTSARecords || kind.registrationLabel != "Plate") Field(plate, { plate = it }, kind.registrationLabel + " (optional)")
+            Eyebrow("Second meter")
+            Field(auxName, { auxName = it }, "Name (optional)", tag = "add.auxName",
+                supporting = "A generator, track hours or trail miles, counted apart from the ${meter.meterName.lowercase()}.")
+            if (auxName.isNotBlank()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.xs), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    listOf(MeterUnit.hours, MeterUnit.miles, MeterUnit.kilometers).forEach { m ->
+                        Chip(if (m == MeterUnit.hours) "Hours" else m.title, auxMeter == m, { auxMeter = m }, tag = "add.auxMeter.${m.name}")
+                    }
+                }
+            }
+            Eyebrow("Photo")
+            val hasPhoto = photo != null || (existing?.photo != null && !photoRemoved)
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                SecondaryButton(if (hasPhoto) "Change photo" else "Add a photo", {
+                    photoPicker.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }, Modifier.weight(1f), tag = "add.photo")
+                if (hasPhoto) SecondaryButton("Remove", { photo = null; photoRemoved = true }, Modifier.weight(0.6f))
+            }
             Eyebrow("Color")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.xs), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 VehicleTint.entries.forEach { t ->

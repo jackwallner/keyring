@@ -3,6 +3,7 @@ package com.jackwallner.keyring
 import com.jackwallner.keyring.data.GarageStore
 import com.jackwallner.keyring.data.NewVehicle
 import com.jackwallner.keyring.data.ServiceDraft
+import com.jackwallner.keyring.data.ValuationKind
 import com.jackwallner.keyring.data.Vehicle
 import com.jackwallner.keyring.model.EntryKind
 import com.jackwallner.keyring.model.MeterUnit
@@ -79,6 +80,15 @@ object DemoSeed {
             Visit(70.0, listOf("oil"), "", 164.20, "", true),
         ))
 
+        // What the Tacoma is worth over time, and its title kept with it.
+        store.vehicle(truck.id)?.let { tacoma ->
+            store.addValuation(34_500.0, "KBB private party", ValuationKind.estimate, tacoma, ago(300.0))
+            store.addValuation(33_200.0, "CarMax", ValuationKind.offer, tacoma, ago(120.0))
+            store.addValuation(32_800.0, "KBB private party", ValuationKind.estimate, tacoma, ago(10.0))
+            store.addDocument("Title", SAMPLE_PDF.toByteArray(Charsets.US_ASCII), tacoma, ago(650.0))
+            store.addDocument("Window sticker", SAMPLE_PDF.toByteArray(Charsets.US_ASCII), tacoma, ago(640.0))
+        }
+
         // The garage leads with one of each kind, so the first screen shows the range.
         listOf(truck, bike, boat, plane, rav).forEachIndexed { index, v -> store.vehicle(v.id)?.let { store.updateVehicle(it.copy(sortIndex = index)) } }
     }
@@ -107,4 +117,12 @@ object DemoSeed {
         }
         store.vehicle(added.id)?.let { store.updateVehicle(it.copy(reading = current, readingDate = now)) }
     }
+
+    /** A one-page blank PDF, enough for a document row to open. */
+    const val SAMPLE_PDF = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+        "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+
+    /** A small Fuelly-style export for the import screen in screenshots and tests. */
+    const val SAMPLE_CSV = "Date,Odometer,Service,Cost,Shop\n2023-04-12,38110,Oil change,64.99,Jiffy Lube\n" +
+        "2023-09-30,41020,Tire rotation,25.00,Les Schwab\n2024-02-18,43900,Brake pads,289.50,Les Schwab\n2024-06-02,45210,Insurance,600.00,\n"
 }

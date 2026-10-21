@@ -32,6 +32,7 @@ import com.jackwallner.keyring.BuildConfig
 import com.jackwallner.keyring.model.AppLinks
 import com.jackwallner.keyring.ui.LocalGraph
 import com.jackwallner.keyring.ui.LocalNavigator
+import com.jackwallner.keyring.model.Format
 import com.jackwallner.keyring.ui.nav.Route
 import com.jackwallner.keyring.ui.openUrl
 import com.jackwallner.keyring.ui.sendEmail
@@ -114,9 +115,14 @@ fun SettingsScreen() {
             Card(padding = PaddingValues(horizontal = Space.cardPadding)) {
                 ListRow("Export everything (CSV)", "Every entry on every vehicle, free", Symbols.icon("checklist"), modifier = Modifier.testTag("settings.csv"),
                     onClick = { shareFile(context, writeCsv(context, graph.garage, graph.garage.activeVehicles + retired), "text/csv") })
+                Divider()
+                ListRow("Import history", "From Fuelly, Drivvo, Simply Auto, aCar or a spreadsheet", Symbols.icon("tray.and.arrow.down"),
+                    modifier = Modifier.testTag("settings.import"), onClick = { nav.push(Route.Import()) })
                 retired.forEach { vehicle ->
                     Divider()
-                    ListRow(vehicle.displayName, "Retired · tap to bring it back", Symbols.kind(vehicle.kind), onClick = { graph.garage.retire(vehicle, false) })
+                    val sold = vehicle.soldDate?.let { "Sold ${Format.shortDate(it)}" + (vehicle.soldPrice.takeIf { p -> p > 0 }?.let { p -> " for ${Format.money(p)}" } ?: "") }
+                    ListRow(vehicle.displayName, "${sold ?: "Retired"} · tap to bring it back", Symbols.kind(vehicle.kind),
+                        modifier = Modifier.testTag("settings.retired.${vehicle.displayName}"), onClick = { graph.garage.retire(vehicle, false) })
                 }
             }
             Text("Your log stays on this phone. Family sharing and iPhone sync use iCloud and aren't on Android yet.",

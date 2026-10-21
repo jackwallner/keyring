@@ -87,6 +87,15 @@ fun LogServiceScreen(vehicleId: String, entryId: String?, preselectTask: String?
     var unitPrice by rememberSaveable { mutableStateOf(existing?.fuelUnitPrice?.takeIf { it > 0 }?.let { unit.fromPerLiter(it).plain() }.orEmpty()) }
     var event by rememberSaveable { mutableStateOf(existing?.event ?: UsageEvent.choices(vehicle.kind).first()) }
     var pickingDate by remember { mutableStateOf(false) }
+    var auxReading by rememberSaveable { mutableStateOf(existing?.auxReading?.takeIf { it >= 0 }?.plain() ?: "") }
+    var photos by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+    var files by remember { mutableStateOf<List<Pair<String, ByteArray>>>(emptyList()) }
+    val photoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia(8),
+    ) { uris -> photos = photos + uris.mapNotNull { com.jackwallner.keyring.ui.PickedFiles.read(context, it)?.second } }
+    val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments(),
+    ) { uris -> files = files + uris.mapNotNull { com.jackwallner.keyring.ui.PickedFiles.read(context, it) } }
 
     val date = LocalDate.ofEpochDay(day)
     fun save() {
@@ -101,6 +110,8 @@ fun LogServiceScreen(vehicleId: String, entryId: String?, preselectTask: String?
             title = title, cost = total, shop = shop, isDIY = diy, notes = notes, recallCampaign = existing?.recallCampaign ?: recall,
             fuelVolume = gallons?.let { unit.toLiters(it) } ?: 0.0, fuelUnitPrice = price?.let { unit.toPerLiter(it) } ?: 0.0,
             event = if (kind == EntryKind.event) event else null,
+            auxReading = parseNumber(auxReading).takeIf { vehicle.hasAuxMeter },
+            photos = photos, files = files,
         )
         graph.garage.log(draft, graph.garage.vehicle(vehicle.id)!!, editing = existing)
         if (existing == null && kind != EntryKind.fuel) requestReviewIfDue(context.findActivity(), graph)
@@ -155,6 +166,10 @@ fun LogServiceScreen(vehicleId: String, entryId: String?, preselectTask: String?
                 Field(reading, { reading = it }, "${vehicle.meter.meterName} (${vehicle.meter.short})", number = true, tag = "log.reading",
                     supporting = "Last ${Format.reading(vehicle.reading, vehicle.meter)}")
             }
+            if (vehicle.hasAuxMeter && kind != EntryKind.fuel) {
+                Field(auxReading, { auxReading = it }, "${vehicle.auxMeterLabel} (${vehicle.auxMeter.short})", number = true, tag = "log.auxReading",
+                    supporting = "Last ${Format.reading(vehicle.auxReading, vehicle.auxMeter)}")
+            }
             if (kind == EntryKind.fuel) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Field(volume, { volume = it }, unit.title, number = true, tag = "log.volume", modifier = Modifier.weight(1f))
@@ -171,6 +186,23 @@ fun LogServiceScreen(vehicleId: String, entryId: String?, preselectTask: String?
             }
             if (!diy) Field(shop, { shop = it }, if (kind == EntryKind.fuel) "Station" else "Shop", tag = "log.shop")
             Field(notes, { notes = it }, "Notes", singleLine = false, tag = "log.notes")
+            if (kind != EntryKind.fuel) {
+                Eyebrow("Receipt and photos")
+                val saved = existing?.let { graph.garage.attachments(it) }.orEmpty()
+                if (saved.isNotEmpty()) AttachmentStrip(saved, onRemove = { graph.garage.delete(it) })
+                if (photos.isNotEmpty() || files.isNotEmpty()) {
+                    Text(listOfNotNull(photos.size.takeIf { it > 0 }?.let { Format.count(it, "photo", "photos") },
+                        files.size.takeIf { it > 0 }?.let { Format.count(it, "file", "files") }).joinToString(" and ") + " to attach",
+                        style = Type.footnote, color = colors.secondaryInk, modifier = Modifier.testTag("log.pending"))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    SecondaryButton("Add photos", {
+                        photoPicker.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }, Modifier.weight(1f), tag = "log.photos")
+                    SecondaryButton("Add a file", { filePicker.launch(arrayOf("application/pdf", "image/*")) }, Modifier.weight(1f), tag = "log.files")
+                }
+                Text("Receipts and photos stay on this phone with the entry.", style = Type.footnote, color = colors.faintInk)
+            }
             Spacer(Modifier.height(Space.md))
         }
         Column(Modifier.padding(horizontal = Space.margin, vertical = Space.sm)) {
