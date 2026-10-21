@@ -1,0 +1,1889 @@
+{
+ "models": {
+  "tacoma": [
+   {
+    "name": "Tacoma World",
+    "detail": "The biggest Tacoma forum",
+    "kind": "forum",
+    "url": "https://www.tacomaworld.com/"
+   },
+   {
+    "name": "r/Tacoma",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Tacoma/"
+   }
+  ],
+  "tundra": [
+   {
+    "name": "Tundras.com",
+    "detail": "Tundra owners forum",
+    "kind": "forum",
+    "url": "https://www.tundras.com/"
+   },
+   {
+    "name": "r/ToyotaTundra",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/ToyotaTundra/"
+   }
+  ],
+  "4runner": [
+   {
+    "name": "r/4Runner",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/4Runner/"
+   }
+  ],
+  "rav4": [
+   {
+    "name": "r/rav4club",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/rav4club/"
+   }
+  ],
+  "prius": [
+   {
+    "name": "PriusChat",
+    "detail": "Hybrid owners since 2003",
+    "kind": "forum",
+    "url": "https://priuschat.com/"
+   },
+   {
+    "name": "r/prius",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/prius/"
+   }
+  ],
+  "land cruiser": [
+   {
+    "name": "Toyota Land Cruiser Association",
+    "detail": "Trails, events and tech since 1975",
+    "kind": "club",
+    "url": "https://tlca.org/"
+   }
+  ],
+  "gr86": [
+   {
+    "name": "FT86Club",
+    "detail": "86, BRZ and GR86 owners",
+    "kind": "forum",
+    "url": "https://www.ft86club.com/"
+   },
+   {
+    "name": "r/GR86",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GR86/"
+   }
+  ],
+  "f 150": [
+   {
+    "name": "F150 Forum",
+    "detail": "F-150 owners and tech",
+    "kind": "forum",
+    "url": "https://www.f150forum.com/"
+   },
+   {
+    "name": "r/f150",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/f150/"
+   }
+  ],
+  "mustang": [
+   {
+    "name": "AllFordMustangs",
+    "detail": "Every generation of Mustang",
+    "kind": "forum",
+    "url": "https://www.allfordmustangs.com/"
+   },
+   {
+    "name": "r/Mustang",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Mustang/"
+   }
+  ],
+  "bronco": [
+   {
+    "name": "r/bronco",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/bronco/"
+   }
+  ],
+  "ranger": [
+   {
+    "name": "Ranger Forums",
+    "detail": "Ford Ranger owners",
+    "kind": "forum",
+    "url": "https://www.rangerforums.net/"
+   }
+  ],
+  "maverick": [
+   {
+    "name": "r/FordMaverickTruck",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/FordMaverickTruck/"
+   }
+  ],
+  "mustang mach e": [
+   {
+    "name": "Mach-E Forum",
+    "detail": "Mustang Mach-E owners",
+    "kind": "forum",
+    "url": "https://www.macheforum.com/"
+   },
+   {
+    "name": "r/MachE",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MachE/"
+   }
+  ],
+  "corvette": [
+   {
+    "name": "National Corvette Restorers Society",
+    "detail": "Judging, restoration and history",
+    "kind": "club",
+    "url": "https://www.ncrs.org/"
+   },
+   {
+    "name": "National Council of Corvette Clubs",
+    "detail": "Clubs, autocross and events",
+    "kind": "club",
+    "url": "https://www.corvettesnccc.org/"
+   },
+   {
+    "name": "Corvette Forum",
+    "detail": "Every generation, every question",
+    "kind": "forum",
+    "url": "https://www.corvetteforum.com/"
+   },
+   {
+    "name": "r/Corvette",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Corvette/"
+   }
+  ],
+  "camaro": [
+   {
+    "name": "Camaro6",
+    "detail": "Sixth-gen Camaro owners",
+    "kind": "forum",
+    "url": "https://www.camaro6.com/"
+   },
+   {
+    "name": "r/camaro",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/camaro/"
+   }
+  ],
+  "silverado 1500": [
+   {
+    "name": "r/Silverado",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Silverado/"
+   }
+  ],
+  "silverado": [
+   {
+    "name": "r/Silverado",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Silverado/"
+   }
+  ],
+  "colorado": [
+   {
+    "name": "r/chevycolorado",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/chevycolorado/"
+   }
+  ],
+  "bolt ev": [
+   {
+    "name": "r/BoltEV",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/BoltEV/"
+   }
+  ],
+  "civic": [
+   {
+    "name": "CivicX",
+    "detail": "10th and 11th gen Civic owners",
+    "kind": "forum",
+    "url": "https://www.civicx.com/"
+   },
+   {
+    "name": "r/civic",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/civic/"
+   }
+  ],
+  "accord": [
+   {
+    "name": "r/accord",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/accord/"
+   }
+  ],
+  "cr v": [
+   {
+    "name": "r/crv",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/crv/"
+   }
+  ],
+  "odyssey": [
+   {
+    "name": "r/hondaodyssey",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/hondaodyssey/"
+   }
+  ],
+  "s2000": [
+   {
+    "name": "S2Ki",
+    "detail": "The S2000 community",
+    "kind": "forum",
+    "url": "https://www.s2ki.com/"
+   }
+  ],
+  "gold wing": [
+   {
+    "name": "Gold Wing Road Riders Association",
+    "detail": "Chapters and rallies for Wing riders",
+    "kind": "club",
+    "url": "https://www.gwrra.org/"
+   },
+   {
+    "name": "r/GoldWing",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GoldWing/"
+   }
+  ],
+  "350z": [
+   {
+    "name": "My350Z",
+    "detail": "350Z owners",
+    "kind": "forum",
+    "url": "https://my350z.com/"
+   }
+  ],
+  "370z": [
+   {
+    "name": "Z Car Club of America",
+    "detail": "Every Z since the 240Z",
+    "kind": "club",
+    "url": "https://www.zcca.org/"
+   },
+   {
+    "name": "r/370z",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/370z/"
+   }
+  ],
+  "frontier": [
+   {
+    "name": "Nissan Frontier Forum",
+    "detail": "Frontier owners and tech",
+    "kind": "forum",
+    "url": "https://www.nissanfrontier.org/"
+   }
+  ],
+  "rogue": [
+   {
+    "name": "Rogue Forums",
+    "detail": "Nissan Rogue owners",
+    "kind": "forum",
+    "url": "https://www.rogueforums.com/"
+   }
+  ],
+  "leaf": [
+   {
+    "name": "r/nissanleaf",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/nissanleaf/"
+   }
+  ],
+  "telluride": [
+   {
+    "name": "Kia Telluride Forum",
+    "detail": "Telluride owners",
+    "kind": "forum",
+    "url": "https://www.kiatelluride.org/"
+   },
+   {
+    "name": "r/KiaTelluride",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/KiaTelluride/"
+   }
+  ],
+  "ev6": [
+   {
+    "name": "Kia EV6 Forum",
+    "detail": "EV6 owners",
+    "kind": "forum",
+    "url": "https://www.kiaev6forum.com/"
+   },
+   {
+    "name": "r/KiaEV6",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/KiaEV6/"
+   }
+  ],
+  "ioniq 5": [
+   {
+    "name": "r/Ioniq5",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Ioniq5/"
+   }
+  ],
+  "wrangler": [
+   {
+    "name": "r/JeepWrangler",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/JeepWrangler/"
+   }
+  ],
+  "grand cherokee": [
+   {
+    "name": "r/GrandCherokee",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GrandCherokee/"
+   }
+  ],
+  "cherokee": [
+   {
+    "name": "Cherokee Forum",
+    "detail": "Jeep Cherokee owners",
+    "kind": "forum",
+    "url": "https://www.cherokeeforum.com/"
+   }
+  ],
+  "1500": [
+   {
+    "name": "5th Gen Rams",
+    "detail": "Ram truck owners",
+    "kind": "forum",
+    "url": "https://5thgenrams.com/"
+   }
+  ],
+  "2500": [
+   {
+    "name": "5th Gen Rams",
+    "detail": "Ram truck owners",
+    "kind": "forum",
+    "url": "https://5thgenrams.com/"
+   },
+   {
+    "name": "r/Cummins",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cummins/"
+   }
+  ],
+  "challenger": [
+   {
+    "name": "r/Challenger",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Challenger/"
+   }
+  ],
+  "wrx": [
+   {
+    "name": "r/WRX",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/WRX/"
+   }
+  ],
+  "outback": [
+   {
+    "name": "r/Subaru_Outback",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Subaru_Outback/"
+   }
+  ],
+  "forester": [
+   {
+    "name": "r/SubaruForester",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/SubaruForester/"
+   }
+  ],
+  "mx 5": [
+   {
+    "name": "r/Miata",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Miata/"
+   }
+  ],
+  "mx 5 miata": [
+   {
+    "name": "r/Miata",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Miata/"
+   }
+  ],
+  "miata": [
+   {
+    "name": "r/Miata",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Miata/"
+   }
+  ],
+  "cx 5": [
+   {
+    "name": "r/CX5",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/CX5/"
+   }
+  ],
+  "model 3": [
+   {
+    "name": "r/TeslaModel3",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/TeslaModel3/"
+   }
+  ],
+  "model y": [
+   {
+    "name": "r/TeslaModelY",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/TeslaModelY/"
+   }
+  ],
+  "gti": [
+   {
+    "name": "r/GolfGTI",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GolfGTI/"
+   }
+  ],
+  "golf gti": [
+   {
+    "name": "r/GolfGTI",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GolfGTI/"
+   }
+  ],
+  "g37": [
+   {
+    "name": "MyG37",
+    "detail": "Infiniti G37 owners",
+    "kind": "forum",
+    "url": "https://www.myg37.com/"
+   }
+  ],
+  "g35": [
+   {
+    "name": "G35Driver",
+    "detail": "Infiniti G35 owners",
+    "kind": "forum",
+    "url": "https://g35driver.com/"
+   }
+  ],
+  "lancer evolution": [
+   {
+    "name": "EvolutionM",
+    "detail": "Lancer Evolution owners",
+    "kind": "forum",
+    "url": "https://www.evolutionm.net/"
+   }
+  ]
+ },
+ "makes": {
+  "toyota": [
+   {
+    "name": "r/Toyota",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Toyota/"
+   }
+  ],
+  "lexus": [
+   {
+    "name": "ClubLexus",
+    "detail": "Lexus owners forum",
+    "kind": "forum",
+    "url": "https://www.clublexus.com/"
+   },
+   {
+    "name": "r/Lexus",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Lexus/"
+   }
+  ],
+  "ford": [
+   {
+    "name": "Ford-Trucks.com",
+    "detail": "Ford truck owners",
+    "kind": "forum",
+    "url": "https://www.ford-trucks.com/"
+   },
+   {
+    "name": "r/Ford",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Ford/"
+   }
+  ],
+  "shelby": [
+   {
+    "name": "Shelby American Automobile Club",
+    "detail": "Shelby registry and events",
+    "kind": "club",
+    "url": "https://www.saac.com/"
+   }
+  ],
+  "chevrolet": [
+   {
+    "name": "r/Chevrolet",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Chevrolet/"
+   }
+  ],
+  "gmc": [
+   {
+    "name": "GMC Forum",
+    "detail": "GMC truck and SUV owners",
+    "kind": "forum",
+    "url": "https://www.gmcforum.com/"
+   },
+   {
+    "name": "r/gmc",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/gmc/"
+   }
+  ],
+  "honda": [
+   {
+    "name": "r/Honda",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Honda/"
+   }
+  ],
+  "acura": [
+   {
+    "name": "AcuraZine",
+    "detail": "Acura owners",
+    "kind": "forum",
+    "url": "https://acurazine.com/"
+   },
+   {
+    "name": "r/Acura",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Acura/"
+   }
+  ],
+  "nissan": [
+   {
+    "name": "r/Nissan",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Nissan/"
+   }
+  ],
+  "infiniti": [
+   {
+    "name": "r/infiniti",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/infiniti/"
+   }
+  ],
+  "hyundai": [
+   {
+    "name": "r/Hyundai",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Hyundai/"
+   }
+  ],
+  "kia": [
+   {
+    "name": "r/kia",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/kia/"
+   }
+  ],
+  "genesis": [
+   {
+    "name": "r/GenesisMotors",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/GenesisMotors/"
+   }
+  ],
+  "jeep": [
+   {
+    "name": "Jeep Jamboree USA",
+    "detail": "Guided off-road weekends",
+    "kind": "club",
+    "url": "https://www.jeepjamboreeusa.com/"
+   },
+   {
+    "name": "r/Jeep",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Jeep/"
+   }
+  ],
+  "ram": [
+   {
+    "name": "r/ramtrucks",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/ramtrucks/"
+   }
+  ],
+  "dodge": [
+   {
+    "name": "r/Dodge",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Dodge/"
+   }
+  ],
+  "chrysler": [
+   {
+    "name": "Chrysler 300 Club",
+    "detail": "Letter-car history and events",
+    "kind": "club",
+    "url": "https://www.chrysler300club.com/"
+   },
+   {
+    "name": "r/Chrysler",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Chrysler/"
+   }
+  ],
+  "subaru": [
+   {
+    "name": "r/subaru",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/subaru/"
+   }
+  ],
+  "mazda": [
+   {
+    "name": "Mazdas247",
+    "detail": "Every Mazda model",
+    "kind": "forum",
+    "url": "https://www.mazdas247.com/"
+   },
+   {
+    "name": "r/mazda",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/mazda/"
+   }
+  ],
+  "tesla": [
+   {
+    "name": "Tesla Owners Clubs",
+    "detail": "Tesla's official directory of local clubs",
+    "kind": "club",
+    "url": "https://engage.tesla.com/pages/clubs"
+   },
+   {
+    "name": "r/teslamotors",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/teslamotors/"
+   }
+  ],
+  "volkswagen": [
+   {
+    "name": "VW Club of America",
+    "detail": "Chapters, events and the Vintage Volkswagen community",
+    "kind": "club",
+    "url": "https://www.vwclub.org/"
+   },
+   {
+    "name": "r/Volkswagen",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Volkswagen/"
+   }
+  ],
+  "audi": [
+   {
+    "name": "Audi Club North America",
+    "detail": "Driving schools and chapters",
+    "kind": "club",
+    "url": "https://www.audiclubna.org/"
+   },
+   {
+    "name": "AudiWorld",
+    "detail": "Audi owners forum",
+    "kind": "forum",
+    "url": "https://www.audiworld.com/"
+   },
+   {
+    "name": "r/Audi",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Audi/"
+   }
+  ],
+  "bmw": [
+   {
+    "name": "BMW Car Club of America",
+    "detail": "Chapters, track days and Roundel",
+    "kind": "club",
+    "url": "https://www.bmwcca.org/"
+   },
+   {
+    "name": "Bimmerfest",
+    "detail": "BMW owners forum",
+    "kind": "forum",
+    "url": "https://www.bimmerfest.com/"
+   },
+   {
+    "name": "r/BMW",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/BMW/"
+   }
+  ],
+  "mercedes": [
+   {
+    "name": "MBWorld",
+    "detail": "Mercedes-Benz owners",
+    "kind": "forum",
+    "url": "https://mbworld.org/"
+   },
+   {
+    "name": "r/mercedes_benz",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/mercedes_benz/"
+   }
+  ],
+  "porsche": [
+   {
+    "name": "Porsche Club of America",
+    "detail": "The largest single-marque club in the world",
+    "kind": "club",
+    "url": "https://www.pca.org/"
+   },
+   {
+    "name": "Rennlist",
+    "detail": "Porsche owners forum",
+    "kind": "forum",
+    "url": "https://rennlist.com/"
+   },
+   {
+    "name": "r/Porsche",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Porsche/"
+   }
+  ],
+  "volvo": [
+   {
+    "name": "Volvo Club of America",
+    "detail": "Chapters and the Rolling magazine",
+    "kind": "club",
+    "url": "https://vcoa.org/"
+   },
+   {
+    "name": "r/Volvo",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Volvo/"
+   }
+  ],
+  "cadillac": [
+   {
+    "name": "Cadillac & LaSalle Club",
+    "detail": "Since 1958",
+    "kind": "club",
+    "url": "https://www.cadillaclasalleclub.org/"
+   },
+   {
+    "name": "r/Cadillac",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cadillac/"
+   }
+  ],
+  "buick": [
+   {
+    "name": "Buick Club of America",
+    "detail": "Chapters and national meets",
+    "kind": "club",
+    "url": "https://www.buickclub.org/"
+   },
+   {
+    "name": "r/Buick",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Buick/"
+   }
+  ],
+  "lincoln": [
+   {
+    "name": "Lincoln & Continental Owners Club",
+    "detail": "Lincoln history and meets",
+    "kind": "club",
+    "url": "https://www.lincolnclub.org/"
+   },
+   {
+    "name": "Lincoln Forum",
+    "detail": "Lincoln owners",
+    "kind": "forum",
+    "url": "https://www.lincolnforum.com/"
+   },
+   {
+    "name": "r/lincoln",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/lincoln/"
+   }
+  ],
+  "mitsubishi": [
+   {
+    "name": "r/mitsubishi",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/mitsubishi/"
+   }
+  ],
+  "land rover": [
+   {
+    "name": "r/landrover",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/landrover/"
+   }
+  ],
+  "jaguar": [
+   {
+    "name": "Jaguar Clubs of North America",
+    "detail": "Concours, rallies and chapters",
+    "kind": "club",
+    "url": "https://www.jcna.com/"
+   },
+   {
+    "name": "r/Jaguar",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Jaguar/"
+   }
+  ],
+  "mini": [
+   {
+    "name": "North American Motoring",
+    "detail": "MINI owners forum",
+    "kind": "forum",
+    "url": "https://www.northamericanmotoring.com/"
+   },
+   {
+    "name": "r/MINI",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MINI/"
+   }
+  ],
+  "alfa romeo": [
+   {
+    "name": "Alfa Romeo Owners Club",
+    "detail": "Since 1957",
+    "kind": "club",
+    "url": "https://www.aroc-usa.org/"
+   },
+   {
+    "name": "r/alfaromeo",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/alfaromeo/"
+   }
+  ],
+  "fiat": [
+   {
+    "name": "r/fiat",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/fiat/"
+   }
+  ],
+  "rivian": [
+   {
+    "name": "Rivian Forums",
+    "detail": "Rivian owners",
+    "kind": "forum",
+    "url": "https://www.rivianforums.com/"
+   },
+   {
+    "name": "r/Rivian",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Rivian/"
+   }
+  ],
+  "lucid": [
+   {
+    "name": "Lucid Owners",
+    "detail": "Lucid Air and Gravity owners",
+    "kind": "forum",
+    "url": "https://lucidowners.com/"
+   },
+   {
+    "name": "r/LUCID",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/LUCID/"
+   }
+  ],
+  "polestar": [
+   {
+    "name": "r/Polestar",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Polestar/"
+   }
+  ],
+  "saab": [
+   {
+    "name": "Saab Club of North America",
+    "detail": "Keeping Saabs on the road",
+    "kind": "club",
+    "url": "https://www.saabclub.com/"
+   },
+   {
+    "name": "r/saab",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/saab/"
+   }
+  ],
+  "amc": [
+   {
+    "name": "AMC Rambler Club",
+    "detail": "American Motors history",
+    "kind": "club",
+    "url": "https://www.amcrc.com/"
+   }
+  ],
+  "harley davidson": [
+   {
+    "name": "Harley Owners Group",
+    "detail": "Chapters and rides worldwide",
+    "kind": "club",
+    "url": "https://www.harley-davidson.com/us/en/content/hog.html"
+   },
+   {
+    "name": "HDForums",
+    "detail": "Harley owners forum",
+    "kind": "forum",
+    "url": "https://www.hdforums.com/"
+   },
+   {
+    "name": "r/harley",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/harley/"
+   }
+  ],
+  "ducati": [
+   {
+    "name": "r/Ducati",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Ducati/"
+   }
+  ],
+  "triumph": [
+   {
+    "name": "r/Triumph",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Triumph/"
+   }
+  ]
+ },
+ "byKind": {
+  "car": [
+   {
+    "name": "Antique Automobile Club of America",
+    "detail": "For anything 25 years and older",
+    "kind": "organization",
+    "url": "https://www.aaca.org/"
+   },
+   {
+    "name": "SCCA",
+    "detail": "Autocross and track days for any car",
+    "kind": "organization",
+    "url": "https://www.scca.com/"
+   },
+   {
+    "name": "r/MechanicAdvice",
+    "detail": "Ask a mechanic, free",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MechanicAdvice/"
+   },
+   {
+    "name": "r/Cartalk",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cartalk/"
+   }
+  ],
+  "suv": [
+   {
+    "name": "Antique Automobile Club of America",
+    "detail": "For anything 25 years and older",
+    "kind": "organization",
+    "url": "https://www.aaca.org/"
+   },
+   {
+    "name": "SCCA",
+    "detail": "Autocross and track days for any car",
+    "kind": "organization",
+    "url": "https://www.scca.com/"
+   },
+   {
+    "name": "r/MechanicAdvice",
+    "detail": "Ask a mechanic, free",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MechanicAdvice/"
+   },
+   {
+    "name": "r/Cartalk",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cartalk/"
+   }
+  ],
+  "truck": [
+   {
+    "name": "Antique Automobile Club of America",
+    "detail": "For anything 25 years and older",
+    "kind": "organization",
+    "url": "https://www.aaca.org/"
+   },
+   {
+    "name": "SCCA",
+    "detail": "Autocross and track days for any car",
+    "kind": "organization",
+    "url": "https://www.scca.com/"
+   },
+   {
+    "name": "r/MechanicAdvice",
+    "detail": "Ask a mechanic, free",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MechanicAdvice/"
+   },
+   {
+    "name": "r/Cartalk",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cartalk/"
+   }
+  ],
+  "van": [
+   {
+    "name": "Antique Automobile Club of America",
+    "detail": "For anything 25 years and older",
+    "kind": "organization",
+    "url": "https://www.aaca.org/"
+   },
+   {
+    "name": "SCCA",
+    "detail": "Autocross and track days for any car",
+    "kind": "organization",
+    "url": "https://www.scca.com/"
+   },
+   {
+    "name": "r/MechanicAdvice",
+    "detail": "Ask a mechanic, free",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MechanicAdvice/"
+   },
+   {
+    "name": "r/Cartalk",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/Cartalk/"
+   }
+  ],
+  "motorcycle": [
+   {
+    "name": "American Motorcyclist Association",
+    "detail": "Rider rights, events and roadside help",
+    "kind": "organization",
+    "url": "https://americanmotorcyclist.com/"
+   },
+   {
+    "name": "BMW Motorcycle Owners of America",
+    "detail": "Rallies and tech days, any bike welcome",
+    "kind": "club",
+    "url": "https://www.bmwmoa.org/"
+   },
+   {
+    "name": "r/motorcycles",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/motorcycles/"
+   },
+   {
+    "name": "r/motorcyclemaintenance",
+    "detail": "Wrenching help for every bike",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/motorcyclemaintenance/"
+   }
+  ],
+  "scooter": [
+   {
+    "name": "American Motorcyclist Association",
+    "detail": "Rider rights, events and roadside help",
+    "kind": "organization",
+    "url": "https://americanmotorcyclist.com/"
+   },
+   {
+    "name": "BMW Motorcycle Owners of America",
+    "detail": "Rallies and tech days, any bike welcome",
+    "kind": "club",
+    "url": "https://www.bmwmoa.org/"
+   },
+   {
+    "name": "r/motorcycles",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/motorcycles/"
+   },
+   {
+    "name": "r/motorcyclemaintenance",
+    "detail": "Wrenching help for every bike",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/motorcyclemaintenance/"
+   }
+  ],
+  "rv": [
+   {
+    "name": "Good Sam",
+    "detail": "Campground discounts and roadside help",
+    "kind": "organization",
+    "url": "https://www.goodsam.com/"
+   },
+   {
+    "name": "Escapees RV Club",
+    "detail": "Full-timer community, mail service and parks",
+    "kind": "club",
+    "url": "https://www.escapees.com/"
+   },
+   {
+    "name": "FRVA",
+    "detail": "The Family RV Association, formerly FMCA",
+    "kind": "club",
+    "url": "https://www.frva.com/"
+   },
+   {
+    "name": "r/RVLiving",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/RVLiving/"
+   }
+  ],
+  "camper": [
+   {
+    "name": "Good Sam",
+    "detail": "Campground discounts and roadside help",
+    "kind": "organization",
+    "url": "https://www.goodsam.com/"
+   },
+   {
+    "name": "Escapees RV Club",
+    "detail": "Full-timer community, mail service and parks",
+    "kind": "club",
+    "url": "https://www.escapees.com/"
+   },
+   {
+    "name": "FRVA",
+    "detail": "The Family RV Association, formerly FMCA",
+    "kind": "club",
+    "url": "https://www.frva.com/"
+   },
+   {
+    "name": "r/RVLiving",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/RVLiving/"
+   }
+  ],
+  "trailer": [
+   {
+    "name": "r/trailers",
+    "detail": "Hitching, wiring and bearings",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/trailers/"
+   }
+  ],
+  "boat": [
+   {
+    "name": "BoatUS",
+    "detail": "Towing on the water, insurance and advocacy",
+    "kind": "organization",
+    "url": "https://www.boatus.com/"
+   },
+   {
+    "name": "U.S. Coast Guard Auxiliary",
+    "detail": "Free vessel safety checks",
+    "kind": "organization",
+    "url": "https://cgaux.org/vsc/"
+   },
+   {
+    "name": "r/boating",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/boating/"
+   }
+  ],
+  "personalWatercraft": [
+   {
+    "name": "BoatUS",
+    "detail": "Towing on the water, insurance and advocacy",
+    "kind": "organization",
+    "url": "https://www.boatus.com/"
+   },
+   {
+    "name": "U.S. Coast Guard Auxiliary",
+    "detail": "Free vessel safety checks",
+    "kind": "organization",
+    "url": "https://cgaux.org/vsc/"
+   },
+   {
+    "name": "r/boating",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/boating/"
+   }
+  ],
+  "sailboat": [
+   {
+    "name": "US Sailing",
+    "detail": "Training, racing and local clubs",
+    "kind": "organization",
+    "url": "https://www.ussailing.org/"
+   },
+   {
+    "name": "BoatUS",
+    "detail": "Towing on the water, insurance and advocacy",
+    "kind": "organization",
+    "url": "https://www.boatus.com/"
+   },
+   {
+    "name": "r/sailing",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/sailing/"
+   }
+  ],
+  "aircraft": [
+   {
+    "name": "AOPA",
+    "detail": "Pilot advocacy, legal plans and the Pilot magazine",
+    "kind": "organization",
+    "url": "https://www.aopa.org/"
+   },
+   {
+    "name": "EAA",
+    "detail": "Chapters, Young Eagles and AirVenture Oshkosh",
+    "kind": "club",
+    "url": "https://www.eaa.org/"
+   },
+   {
+    "name": "r/flying",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/flying/"
+   }
+  ],
+  "atv": [
+   {
+    "name": "National Off-Highway Vehicle Conservation Council",
+    "detail": "Trails and riding areas",
+    "kind": "organization",
+    "url": "https://nohvcc.org/"
+   },
+   {
+    "name": "r/ATV",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/ATV/"
+   },
+   {
+    "name": "r/SXSCommunity",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/SXSCommunity/"
+   }
+  ],
+  "snowmobile": [
+   {
+    "name": "American Council of Snowmobile Associations",
+    "detail": "Find your state association and trail maps",
+    "kind": "organization",
+    "url": "https://www.snowmobilers.org/"
+   },
+   {
+    "name": "r/snowmobiling",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/snowmobiling/"
+   }
+  ],
+  "tractor": [
+   {
+    "name": "r/tractors",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/tractors/"
+   },
+   {
+    "name": "r/lawncare",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/lawncare/"
+   }
+  ],
+  "ebike": [
+   {
+    "name": "League of American Bicyclists",
+    "detail": "Bike-friendly advocacy and classes",
+    "kind": "organization",
+    "url": "https://bikeleague.org/"
+   },
+   {
+    "name": "r/ebikes",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/ebikes/"
+   }
+  ],
+  "golfCart": [
+   {
+    "name": "r/golfcarts",
+    "detail": "Owners trading tips, photos and fixes",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/golfcarts/"
+   }
+  ],
+  "other": [
+   {
+    "name": "r/MechanicAdvice",
+    "detail": "Ask a mechanic, free",
+    "kind": "subreddit",
+    "url": "https://www.reddit.com/r/MechanicAdvice/"
+   }
+  ]
+ },
+ "upgrades": {
+  "performance": [
+   {
+    "title": "Brake pads and rotors",
+    "why": "The upgrade you feel every drive: shorter stops and less fade than worn factory parts, for a little more dust or noise.",
+    "symbol": "exclamationmark.brakesignal",
+    "category": "performance",
+    "query": "{vehicle} brake pads and rotors"
+   },
+   {
+    "title": "Cold air intake",
+    "why": "Mostly sound and throttle feel. Expect a few horsepower on a non-turbo engine and next to nothing on a stock turbo without a tune.",
+    "symbol": "wind",
+    "category": "performance",
+    "query": "{vehicle} cold air intake"
+   },
+   {
+    "title": "Cat-back exhaust",
+    "why": "Bought for the sound, not the power. Listen to clips first, since drone on the highway is the common regret.",
+    "symbol": "speaker.wave.3.fill",
+    "category": "performance",
+    "query": "{vehicle} cat back exhaust"
+   },
+   {
+    "title": "High-temp brake fluid",
+    "why": "Only worth it for mountain roads or track days. For commuting, fresh fluid at the factory spec does the job.",
+    "symbol": "drop.fill",
+    "category": "performance",
+    "query": "DOT 4 high temperature brake fluid"
+   }
+  ],
+  "performanceTires": [
+   {
+    "title": "Performance tires",
+    "why": "The biggest handling gain for the money, everywhere owners compare notes. Match the size on the driver's door sticker and pick for your climate.",
+    "symbol": "steeringwheel",
+    "category": "handling",
+    "query": "{vehicle} performance tires"
+   }
+  ],
+  "allTerrainTires": [
+   {
+    "title": "All-terrain tires",
+    "why": "More grip on gravel, mud and snow for a little road noise and mileage. Match the size on the driver's door sticker.",
+    "symbol": "steeringwheel",
+    "category": "handling",
+    "query": "{vehicle} all terrain tires"
+   }
+  ],
+  "handling": [
+   {
+    "title": "Shocks and struts",
+    "why": "Fresh dampers bring back the control worn ones lose so gradually you stop noticing. Usually done past 60,000 miles or with a lift.",
+    "symbol": "arrow.up.and.down.circle.fill",
+    "category": "handling",
+    "query": "{vehicle} shocks and struts"
+   },
+   {
+    "title": "Rear sway bar",
+    "why": "Cuts body roll in corners and when towing without making the ride harsh. Check the listing includes the bar, not just end links.",
+    "symbol": "arrow.left.and.right.circle.fill",
+    "category": "handling",
+    "query": "{vehicle} rear sway bar"
+   }
+  ],
+  "carHandling": [
+   {
+    "title": "Lowering springs",
+    "why": "Less roll and a better stance for a firmer ride. Keep it under about two inches or stock shocks wear out fast.",
+    "symbol": "arrow.down.to.line",
+    "category": "handling",
+    "query": "{vehicle} lowering springs"
+   },
+   {
+    "title": "Strut tower brace",
+    "why": "Cheap and a bolt-on, but owners call the gain small. Sharper turn-in more than lap times.",
+    "symbol": "wrench.adjustable.fill",
+    "category": "handling",
+    "query": "{vehicle} strut tower brace"
+   }
+  ],
+  "levelingKit": [
+   {
+    "title": "Leveling kit",
+    "why": "Raises the front to match the rear and makes room for bigger tires. It's for looks and clearance, not handling.",
+    "symbol": "arrow.up.to.line",
+    "category": "handling",
+    "query": "{vehicle} leveling kit"
+   }
+  ],
+  "detailing": [
+   {
+    "title": "Two-bucket wash kit",
+    "why": "Grit guards keep dirt off the mitt, which is how most swirl marks get started.",
+    "symbol": "bubbles.and.sparkles.fill",
+    "category": "detailing",
+    "query": "car wash bucket kit grit guard"
+   },
+   {
+    "title": "Microfiber drying towels",
+    "why": "A big plush towel dries without scratching and replaces the chamois.",
+    "symbol": "rectangle.stack.fill",
+    "category": "detailing",
+    "query": "microfiber car drying towel"
+   },
+   {
+    "title": "Clay bar kit",
+    "why": "Pulls out the bonded grit washing leaves behind, so paint feels smooth and wax bonds. Start with a mild clay.",
+    "symbol": "circle.hexagongrid.fill",
+    "category": "detailing",
+    "query": "clay bar kit car"
+   },
+   {
+    "title": "Ceramic spray sealant",
+    "why": "Months of gloss and water beading from a spray-on, wipe-off coat. Far easier than a full ceramic coating.",
+    "symbol": "sparkles",
+    "category": "detailing",
+    "query": "ceramic spray coating car"
+   },
+   {
+    "title": "Trim restorer",
+    "why": "Brings faded black plastic back for months, the quickest way to make an older car look newer.",
+    "symbol": "paintbrush.fill",
+    "category": "detailing",
+    "query": "ceramic trim restorer"
+   },
+   {
+    "title": "Dual action polisher",
+    "why": "The first real tool detailers suggest. It removes swirls safely, but plan on pads, polish and an afternoon of practice.",
+    "symbol": "circle.dashed.inset.filled",
+    "category": "detailing",
+    "query": "dual action polisher car"
+   }
+  ],
+  "motorcycle": [
+   {
+    "title": "Battery tender",
+    "why": "A maintainer through the off season is the difference between a spring start and a new battery.",
+    "symbol": "minus.plus.batteryblock.fill",
+    "category": "care",
+    "query": "motorcycle battery tender"
+   },
+   {
+    "title": "Chain cleaning kit",
+    "why": "Brush, cleaner and lube in one kit makes the 500 mile chain job quick.",
+    "symbol": "link",
+    "category": "care",
+    "query": "motorcycle chain cleaning kit"
+   },
+   {
+    "title": "Rear stand",
+    "why": "Lifts the back wheel for chain work and tire checks.",
+    "symbol": "arrow.up.to.line",
+    "category": "care",
+    "query": "motorcycle rear paddock stand"
+   },
+   {
+    "title": "Helmet communicator",
+    "why": "Navigation and calls without taking a hand off the bars.",
+    "symbol": "headphones",
+    "category": "convenience",
+    "query": "motorcycle helmet bluetooth communicator"
+   },
+   {
+    "title": "Frame sliders",
+    "why": "A tip-over in a parking lot stays a scuff instead of a cracked fairing.",
+    "symbol": "shield.fill",
+    "category": "protection",
+    "query": "{vehicle} frame sliders"
+   },
+   {
+    "title": "Waterproof cover",
+    "why": "Keeps rain, sun and birds off between rides.",
+    "symbol": "cloud.rain.fill",
+    "category": "protection",
+    "query": "waterproof motorcycle cover"
+   }
+  ],
+  "rv": [
+   {
+    "title": "Surge protector",
+    "why": "One bad campground pedestal can fry the converter and every appliance aboard.",
+    "symbol": "bolt.shield.fill",
+    "category": "safety",
+    "query": "rv surge protector 30 amp"
+   },
+   {
+    "title": "Water pressure regulator",
+    "why": "Protects your plumbing from high pressure park water.",
+    "symbol": "drop.degreesign.fill",
+    "category": "protection",
+    "query": "rv water pressure regulator with gauge"
+   },
+   {
+    "title": "Tire pressure monitor",
+    "why": "RV blowouts are expensive and dangerous; a monitor shows trouble on the dash.",
+    "symbol": "gauge.with.dots.needle.33percent",
+    "category": "safety",
+    "query": "rv tire pressure monitoring system"
+   },
+   {
+    "title": "Leveling blocks",
+    "why": "Fast, stackable leveling on uneven sites.",
+    "symbol": "square.3.layers.3d",
+    "category": "convenience",
+    "query": "rv leveling blocks"
+   },
+   {
+    "title": "Drinking water hose and filter",
+    "why": "A dedicated hose and inline filter for the fresh tank.",
+    "symbol": "drop.fill",
+    "category": "care",
+    "query": "rv drinking water hose filter"
+   },
+   {
+    "title": "Sewer hose kit",
+    "why": "A good kit makes the least favorite job quick and clean.",
+    "symbol": "arrow.down.to.line",
+    "category": "care",
+    "query": "rv sewer hose kit"
+   }
+  ],
+  "trailer": [
+   {
+    "title": "Bearing grease gun",
+    "why": "Repacking bearings yourself is the cheapest way to avoid a roadside failure.",
+    "symbol": "gearshape.2.fill",
+    "category": "care",
+    "query": "grease gun trailer bearings"
+   },
+   {
+    "title": "Spare tire and mount",
+    "why": "Trailer tire sizes are hard to find on a Sunday.",
+    "symbol": "circle.circle.fill",
+    "category": "safety",
+    "query": "{vehicle} trailer spare tire"
+   },
+   {
+    "title": "LED trailer lights",
+    "why": "LEDs outlast bulbs and survive dunking at the ramp.",
+    "symbol": "lightbulb.fill",
+    "category": "safety",
+    "query": "led trailer light kit"
+   },
+   {
+    "title": "Coupler lock",
+    "why": "Stops someone from hitching up and driving away.",
+    "symbol": "lock.fill",
+    "category": "safety",
+    "query": "trailer coupler lock"
+   }
+  ],
+  "boat": [
+   {
+    "title": "Onboard battery charger",
+    "why": "Keeps batteries topped up at the dock or in storage.",
+    "symbol": "minus.plus.batteryblock.fill",
+    "category": "care",
+    "query": "marine onboard battery charger"
+   },
+   {
+    "title": "Fuel stabilizer",
+    "why": "Ethanol fuel goes stale fast; stabilizer is the cheapest winterizing step.",
+    "symbol": "fuelpump.fill",
+    "category": "care",
+    "query": "marine fuel stabilizer"
+   },
+   {
+    "title": "Inflatable life jackets",
+    "why": "Comfortable enough that people actually wear them.",
+    "symbol": "lifepreserver.fill",
+    "category": "safety",
+    "query": "inflatable life jacket"
+   },
+   {
+    "title": "Bilge pump backup",
+    "why": "A second automatic pump is cheap insurance on a mooring.",
+    "symbol": "water.waves.and.arrow.down",
+    "category": "safety",
+    "query": "automatic bilge pump"
+   },
+   {
+    "title": "Boat cover",
+    "why": "Sun and rain wear out vinyl and canvas fastest.",
+    "symbol": "umbrella.fill",
+    "category": "protection",
+    "query": "{vehicle} boat cover"
+   },
+   {
+    "title": "Flush muffs",
+    "why": "Rinse an outboard with fresh water after every salt run.",
+    "symbol": "drop.triangle.fill",
+    "category": "care",
+    "query": "outboard motor flush muffs"
+   }
+  ],
+  "aircraft": [
+   {
+    "title": "Engine monitor",
+    "why": "Per-cylinder temperatures catch trouble long before an annual does.",
+    "symbol": "waveform.path.ecg",
+    "category": "safety",
+    "query": "aircraft engine monitor"
+   },
+   {
+    "title": "Carbon monoxide detector",
+    "why": "A cracked exhaust can poison a cabin without any smell.",
+    "symbol": "sensor.fill",
+    "category": "safety",
+    "query": "aviation carbon monoxide detector"
+   },
+   {
+    "title": "Sun shade and cowl plugs",
+    "why": "Keeps the panel cool and birds out of the cowling.",
+    "symbol": "sun.max.fill",
+    "category": "protection",
+    "query": "{make} aircraft sunshade cowl plugs"
+   },
+   {
+    "title": "Preheater",
+    "why": "Cold starts are the hardest minutes on an engine.",
+    "symbol": "thermometer.sun.fill",
+    "category": "care",
+    "query": "aircraft engine preheater"
+   },
+   {
+    "title": "Fuel tester",
+    "why": "Sump every tank, every preflight.",
+    "symbol": "testtube.2",
+    "category": "safety",
+    "query": "aircraft fuel sampler tester"
+   }
+  ],
+  "powersports": [
+   {
+    "title": "Battery tender",
+    "why": "Seasonal machines kill batteries in storage.",
+    "symbol": "minus.plus.batteryblock.fill",
+    "category": "care",
+    "query": "powersports battery tender"
+   },
+   {
+    "title": "Winch",
+    "why": "Self-recovery when the trail gets the better of you.",
+    "symbol": "arrow.uturn.backward.circle.fill",
+    "category": "safety",
+    "query": "{vehicle} winch"
+   },
+   {
+    "title": "Skid plates",
+    "why": "Protects the underside from rocks and stumps.",
+    "symbol": "shield.lefthalf.filled",
+    "category": "protection",
+    "query": "{vehicle} skid plate"
+   },
+   {
+    "title": "Storage cover",
+    "why": "Keeps rodents and sun off between seasons.",
+    "symbol": "umbrella.fill",
+    "category": "protection",
+    "query": "{vehicle} cover"
+   }
+  ],
+  "tractor": [
+   {
+    "title": "Blade sharpener",
+    "why": "A sharp blade cuts cleaner and saves fuel.",
+    "symbol": "scissors",
+    "category": "care",
+    "query": "lawn mower blade sharpener"
+   },
+   {
+    "title": "Seat cover",
+    "why": "Saves a cracked seat and a sore back.",
+    "symbol": "chair.fill",
+    "category": "protection",
+    "query": "tractor seat cover"
+   },
+   {
+    "title": "Battery tender",
+    "why": "Winter storage is hard on small batteries.",
+    "symbol": "minus.plus.batteryblock.fill",
+    "category": "care",
+    "query": "lawn tractor battery maintainer"
+   },
+   {
+    "title": "Grease gun",
+    "why": "Most tractor wear starts at a dry fitting.",
+    "symbol": "gearshape.2.fill",
+    "category": "care",
+    "query": "grease gun"
+   }
+  ],
+  "ebike": [
+   {
+    "title": "Heavy-duty lock",
+    "why": "E-bikes are top theft targets; a rated U-lock or chain matters.",
+    "symbol": "lock.fill",
+    "category": "safety",
+    "query": "ebike heavy duty lock"
+   },
+   {
+    "title": "Floor pump with gauge",
+    "why": "Correct pressure is free range and fewer flats.",
+    "symbol": "gauge.with.dots.needle.50percent",
+    "category": "care",
+    "query": "bike floor pump with gauge"
+   },
+   {
+    "title": "Bright lights",
+    "why": "Be seen at e-bike speeds, day and night.",
+    "symbol": "flashlight.on.fill",
+    "category": "safety",
+    "query": "ebike front rear light set"
+   },
+   {
+    "title": "GPS tracker",
+    "why": "A hidden tracker helps recover a stolen bike.",
+    "symbol": "location.fill",
+    "category": "safety",
+    "query": "bike gps tracker hidden"
+   }
+  ],
+  "golfCart": [
+   {
+    "title": "Battery watering system",
+    "why": "Fills every cell at once, which keeps lead-acid packs alive longer.",
+    "symbol": "drop.fill",
+    "category": "care",
+    "query": "golf cart battery watering system"
+   },
+   {
+    "title": "Enclosure",
+    "why": "Turns a fair-weather cart into a year-round one.",
+    "symbol": "cloud.rain.fill",
+    "category": "protection",
+    "query": "{make} golf cart enclosure"
+   },
+   {
+    "title": "LED light kit",
+    "why": "Safer driving at dusk around the neighborhood.",
+    "symbol": "lightbulb.fill",
+    "category": "safety",
+    "query": "golf cart led light kit"
+   }
+  ],
+  "generic": [
+   {
+    "title": "Battery maintainer",
+    "why": "Anything that sits needs one.",
+    "symbol": "minus.plus.batteryblock.fill",
+    "category": "care",
+    "query": "battery maintainer"
+   },
+   {
+    "title": "Cover",
+    "why": "Sun and weather wear out everything faster.",
+    "symbol": "umbrella.fill",
+    "category": "protection",
+    "query": "{vehicle} cover"
+   }
+  ]
+ }
+}
