@@ -215,7 +215,12 @@ class StoreService(private val context: Context, private val defaults: KeyValueS
         if (BuildConfig.DEBUG && key.startsWith("goog_")) return false
         if (!BuildConfig.DEBUG && !key.startsWith("goog_")) return false
         Purchases.logLevel = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.ERROR
-        Purchases.configure(PurchasesConfiguration.Builder(context, key).build())
+        val builder = PurchasesConfiguration.Builder(context, key)
+        // Test Store runs share one tester so test installs don't inflate the
+        // live project's customer charts. Never with the Play key: real buyers
+        // would share one identity.
+        if (key.startsWith("test_")) builder.appUserID(QA_APP_USER_ID)
+        Purchases.configure(builder.build())
         Purchases.sharedInstance.updatedCustomerInfoListener = UpdatedCustomerInfoListener { apply(it) }
         isConfigured = true
         return true
@@ -246,6 +251,7 @@ class StoreService(private val context: Context, private val defaults: KeyValueS
     }
 
     companion object {
+        private const val QA_APP_USER_ID = "qa-android"
         const val ENTITLEMENT = "pro"
         const val OFFERING_ID = "default"
         const val MONTHLY = "com.jackwallner.keyring.monthly"
