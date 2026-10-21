@@ -22,6 +22,8 @@ object GarageCodec {
         .put("tasks", JSONArray(data.tasks.map(::task)))
         .put("entries", JSONArray(data.entries.map(::entry)))
         .put("readings", JSONArray(data.readings.map(::reading)))
+        .put("attachments", JSONArray(data.attachments.map(::attachment)))
+        .put("valuations", JSONArray(data.valuations.map(::valuation)))
         .toString()
 
     fun decode(text: String?): GarageData {
@@ -32,6 +34,8 @@ object GarageCodec {
             tasks = rows(root, "tasks", ::task),
             entries = rows(root, "entries", ::entry),
             readings = rows(root, "readings", ::reading),
+            attachments = rows(root, "attachments", ::attachment),
+            valuations = rows(root, "valuations", ::valuation),
         )
     }
 
@@ -49,6 +53,11 @@ object GarageCodec {
         .put("tintRaw", v.tint.name).putOpt("notes", v.notes).put("sortIndex", v.sortIndex)
         .put("isRetired", v.isRetired).put("yearlyUse", v.yearlyUse)
         .put("traits", JSONArray(v.traits.map { it.name }.sorted())).putOpt("drive", v.drive?.name)
+        .putOpt("soldDate", v.soldDate?.toEpochMilli()).put("soldPrice", v.soldPrice)
+        .putOpt("auxMeterName", v.auxMeterName).putOpt("auxMeterRaw", v.auxMeter.takeIf { it != MeterUnit.hours }?.name)
+        .put("auxReading", v.auxReading).putOpt("auxReadingDate", v.auxReadingDate?.toEpochMilli())
+        .putOpt("storedSince", v.storedSince?.toEpochMilli()).putOpt("storedUntil", v.storedUntil?.toEpochMilli())
+        .putOpt("photo", v.photo)
 
     private fun vehicle(o: JSONObject): Vehicle {
         val kind = VehicleKind.fromRaw(o.optString("kindRaw"))
@@ -66,6 +75,12 @@ object GarageCodec {
             notes = string(o, "notes"), sortIndex = o.optInt("sortIndex"), isRetired = o.optBoolean("isRetired"),
             yearlyUse = o.optDouble("yearlyUse", 0.0), traits = traits.orEmpty().toSet(),
             drive = FinalDrive.entries.firstOrNull { it.name == o.optString("drive") },
+            soldDate = instant(o, "soldDate"), soldPrice = o.optDouble("soldPrice", 0.0),
+            auxMeterName = string(o, "auxMeterName"),
+            auxMeter = MeterUnit.fromRaw(string(o, "auxMeterRaw"))?.takeIf { it.hasReading } ?: MeterUnit.hours,
+            auxReading = o.optDouble("auxReading", 0.0), auxReadingDate = instant(o, "auxReadingDate"),
+            storedSince = instant(o, "storedSince"), storedUntil = instant(o, "storedUntil"),
+            photo = string(o, "photo"),
         )
     }
 
@@ -75,6 +90,7 @@ object GarageCodec {
         .put("intervalDistance", t.intervalDistance).put("intervalMonths", t.intervalMonths)
         .putOpt("baselineDate", t.baselineDate?.toEpochMilli()).put("baselineReading", t.baselineReading)
         .put("isEnabled", t.isEnabled).putOpt("notes", t.notes).putOpt("triggerRaw", t.trigger?.name)
+        .put("usesAuxMeter", t.usesAuxMeter).put("auxInterval", t.auxInterval)
 
     private fun task(o: JSONObject) = MaintenanceTask(
         id = o.getString("id"), vehicleId = o.getString("vehicleId"), createdAt = instant(o, "createdAt") ?: Instant.EPOCH,
@@ -82,6 +98,7 @@ object GarageCodec {
         intervalDistance = o.optDouble("intervalDistance", 0.0), intervalMonths = o.optInt("intervalMonths"),
         baselineDate = instant(o, "baselineDate"), baselineReading = o.optDouble("baselineReading", -1.0),
         isEnabled = o.optBoolean("isEnabled", true), notes = string(o, "notes"), trigger = UsageEvent.fromRaw(string(o, "triggerRaw")),
+        usesAuxMeter = o.optBoolean("usesAuxMeter"), auxInterval = o.optDouble("auxInterval", 0.0),
     )
 
     private fun entry(e: ServiceEntry) = JSONObject()
@@ -90,6 +107,7 @@ object GarageCodec {
         .put("taskIDs", JSONArray(e.taskIds)).put("cost", e.cost).putOpt("shop", e.shop).put("isDIY", e.isDIY)
         .putOpt("notes", e.notes).put("kindRaw", e.kind.name).putOpt("recallCampaign", e.recallCampaign)
         .put("fuelVolume", e.fuelVolume).put("fuelUnitPrice", e.fuelUnitPrice).putOpt("event", e.event?.name)
+        .put("auxReading", e.auxReading).put("fuelPartial", e.fuelPartial)
 
     private fun entry(o: JSONObject): ServiceEntry {
         val ids = o.optJSONArray("taskIDs")?.let { a -> (0 until a.length()).map { a.getString(it) } }.orEmpty()
@@ -100,14 +118,35 @@ object GarageCodec {
             notes = string(o, "notes"), kind = EntryKind.fromRaw(string(o, "kindRaw")), recallCampaign = string(o, "recallCampaign"),
             fuelVolume = o.optDouble("fuelVolume", 0.0), fuelUnitPrice = o.optDouble("fuelUnitPrice", 0.0),
             event = UsageEvent.fromRaw(string(o, "event")),
+            auxReading = o.optDouble("auxReading", -1.0), fuelPartial = o.optBoolean("fuelPartial"),
         )
     }
 
     private fun reading(r: MeterReading) = JSONObject()
         .put("id", r.id).put("vehicleId", r.vehicleId).put("date", r.date.toEpochMilli()).put("value", r.value)
+        .put("isAux", r.isAux)
 
     private fun reading(o: JSONObject) = MeterReading(
         id = o.getString("id"), vehicleId = o.getString("vehicleId"), date = instant(o, "date") ?: Instant.EPOCH, value = o.getDouble("value"),
+        isAux = o.optBoolean("isAux"),
+    )
+
+    private fun attachment(a: Attachment) = JSONObject()
+        .put("id", a.id).put("vehicleId", a.vehicleId).put("createdAt", a.createdAt.toEpochMilli())
+        .put("kindRaw", a.kind).put("file", a.file).putOpt("name", a.name).putOpt("entryId", a.entryId)
+
+    private fun attachment(o: JSONObject) = Attachment(
+        id = o.getString("id"), vehicleId = o.getString("vehicleId"), createdAt = instant(o, "createdAt") ?: Instant.EPOCH,
+        kind = o.optString("kindRaw", "photo"), file = o.getString("file"), name = string(o, "name"), entryId = string(o, "entryId"),
+    )
+
+    private fun valuation(v: Valuation) = JSONObject()
+        .put("id", v.id).put("vehicleId", v.vehicleId).put("date", v.date.toEpochMilli()).put("amount", v.amount)
+        .putOpt("source", v.source).putOpt("kindRaw", v.kind.takeIf { it != ValuationKind.estimate }?.name)
+
+    private fun valuation(o: JSONObject) = Valuation(
+        id = o.getString("id"), vehicleId = o.getString("vehicleId"), date = instant(o, "date") ?: Instant.EPOCH,
+        amount = o.optDouble("amount", 0.0), source = string(o, "source"), kind = ValuationKind.fromRaw(string(o, "kindRaw")),
     )
 
     private fun string(o: JSONObject, key: String): String? = if (o.has(key) && !o.isNull(key)) o.getString(key) else null

@@ -36,7 +36,33 @@ data class Vehicle(
     val yearlyUse: Double = 0.0,
     val traits: Set<VehicleTrait> = emptySet(),
     val drive: FinalDrive? = null,
+    /** Set when the owner marks it sold rather than just retired. */
+    val soldDate: Instant? = null,
+    val soldPrice: Double = 0.0,
+    /** A second meter, such as an RV's generator hours. Null when there's none. */
+    val auxMeterName: String? = null,
+    /** The second meter's unit; hours unless it reads distance. */
+    val auxMeter: MeterUnit = MeterUnit.hours,
+    val auxReading: Double = 0.0,
+    val auxReadingDate: Instant? = null,
+    /** Laid up for the season: reminders pause and the meter isn't assumed to move. */
+    val storedSince: Instant? = null,
+    val storedUntil: Instant? = null,
+    /** File name of the vehicle's photo in app storage. */
+    val photo: String? = null,
 ) {
+    val hasAuxMeter: Boolean get() = !auxMeterName.isNullOrEmpty()
+
+    val isStored: Boolean get() = storedSince != null
+
+    /** "Generator hours", "Track hours", "Trail miles". */
+    val auxMeterLabel: String
+        get() {
+            val name = auxMeterName ?: "Second meter"
+            val unit = if (auxMeter == MeterUnit.hours) "hours" else auxMeter.title.lowercase()
+            return if (name.lowercase().endsWith(unit)) name else "$name $unit"
+        }
+
     /** "2019 Toyota Tacoma", or whatever parts are known. */
     val descriptor: String
         get() = listOfNotNull(if (year > 0) year.toString() else null, make, model)
@@ -69,6 +95,10 @@ data class MaintenanceTask(
     val isEnabled: Boolean = true,
     val notes: String? = null,
     val trigger: UsageEvent? = null,
+    /** Counted on the vehicle's second meter instead of its main one. */
+    val usesAuxMeter: Boolean = false,
+    /** A whichever-first interval on the second meter (a UTV's oil at 100 hours or 1,000 miles); 0 = none. */
+    val auxInterval: Double = 0.0,
 )
 
 data class ServiceEntry(
@@ -89,11 +119,44 @@ data class ServiceEntry(
     val fuelVolume: Double = 0.0,
     val fuelUnitPrice: Double = 0.0,
     val event: UsageEvent? = null,
+    /** The second meter that day; -1 when not given. */
+    val auxReading: Double = -1.0,
+    /** A top-up that didn't fill the tank. */
+    val fuelPartial: Boolean = false,
 ) {
     val hasReading: Boolean get() = reading >= 0
+    val hasAuxReading: Boolean get() = auxReading >= 0
 }
 
-data class MeterReading(val id: String, val vehicleId: String, val date: Instant, val value: Double)
+data class MeterReading(val id: String, val vehicleId: String, val date: Instant, val value: Double, val isAux: Boolean = false)
+
+/** A photo, receipt or document. Kept with a visit (`entryId`) or with the vehicle itself (a document). */
+data class Attachment(
+    val id: String,
+    val vehicleId: String,
+    val createdAt: Instant,
+    /** "photo", "receipt" or "pdf", the iOS raw values. */
+    val kind: String,
+    /** File name in app storage. */
+    val file: String,
+    val name: String? = null,
+    val entryId: String? = null,
+) {
+    val isPDF: Boolean get() = kind == "pdf"
+    val isDocument: Boolean get() = entryId == null
+}
+
+@Suppress("EnumEntryName")
+enum class ValuationKind(val title: String) {
+    estimate("Estimate"), appraisal("Appraisal"), agreedValue("Agreed value (insurance)"), offer("Offer");
+
+    companion object {
+        fun fromRaw(raw: String?): ValuationKind = entries.firstOrNull { it.name == raw } ?: estimate
+    }
+}
+
+/** A figure the owner noted: a quote, an offer, an appraisal. Never a third-party value shown as the app's own. */
+data class Valuation(val id: String, val vehicleId: String, val date: Instant, val amount: Double, val source: String? = null, val kind: ValuationKind = ValuationKind.estimate)
 
 /** The whole log. Immutable; the store swaps it whole and persists it as one JSON document. */
 data class GarageData(
@@ -101,6 +164,8 @@ data class GarageData(
     val tasks: List<MaintenanceTask> = emptyList(),
     val entries: List<ServiceEntry> = emptyList(),
     val readings: List<MeterReading> = emptyList(),
+    val attachments: List<Attachment> = emptyList(),
+    val valuations: List<Valuation> = emptyList(),
 )
 
 /** One job on one vehicle, with when it comes due. */
@@ -112,6 +177,11 @@ data class TaskDue(
     val meter: MeterUnit,
     val currentReading: Double,
     val pendingEvent: Instant? = null,
+    /** Counted on the second meter. */
+    val usesAuxMeter: Boolean = false,
+    /** The whichever-first figure on the second meter; 0 = none. */
+    val secondInterval: Double = 0.0,
+    val secondMeter: MeterUnit = MeterUnit.hours,
 ) {
     val name: String get() = task.name
     val hasInterval: Boolean get() = task.intervalMonths > 0 || (task.intervalDistance > 0 && meter.hasReading)
@@ -134,6 +204,8 @@ data class NewVehicle(
     val traits: Set<VehicleTrait> = emptySet(),
     val drive: FinalDrive? = null,
     val tint: VehicleTint? = null,
+    val auxMeterName: String = "",
+    val auxMeter: MeterUnit = MeterUnit.hours,
     /** Catalog key to the date it was last done. */
     val lastDone: Map<String, Instant> = emptyMap(),
 )
@@ -152,6 +224,11 @@ data class ServiceDraft(
     val fuelVolume: Double = 0.0,
     val fuelUnitPrice: Double = 0.0,
     val event: UsageEvent? = null,
+    val auxReading: Double? = null,
+    /** Photos of the work, already scaled to JPEG. */
+    val photos: List<ByteArray> = emptyList(),
+    /** Files picked from storage: (name, bytes), PDFs or images. */
+    val files: List<Pair<String, ByteArray>> = emptyList(),
 )
 
 /** Fill-ups are stored in liters like iOS; the reader sees their own unit. */

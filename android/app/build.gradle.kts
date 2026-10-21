@@ -104,6 +104,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("com.revenuecat.purchases:purchases:10.23.2")
     implementation("androidx.browser:browser:1.10.0")
+    implementation("androidx.glance:glance-appwidget:1.2.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

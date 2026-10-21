@@ -32,6 +32,7 @@ class ReminderScheduler(private val context: Context, private val defaults: KeyV
     data class Planned(val id: String, val title: String, val body: String, val fireAt: Instant, val vehicleId: String? = null)
 
     data class PlanInput(val vehicle: String, val vehicleId: String, val due: TaskDue)
+    data class Return(val vehicle: String, val vehicleId: String, val date: Instant)
 
     var enabled: Boolean
         get() = defaults.getBoolean(ENABLED, true)
@@ -58,8 +59,10 @@ class ReminderScheduler(private val context: Context, private val defaults: KeyV
             defaults.putStringSet(SCHEDULED, emptySet())
             return
         }
-        val inputs = store.activeVehicles.flatMap { vehicle -> store.dues(vehicle, now).map { PlanInput(vehicle.displayName, vehicle.id, it) } }
-        val planned = plan(inputs, now, reminderHour, ZoneId.systemDefault())
+        // Stored vehicles pause; one reminder brings them back out.
+        val inputs = store.activeVehicles.filter { !it.isStored }.flatMap { vehicle -> store.dues(vehicle, now).map { PlanInput(vehicle.displayName, vehicle.id, it) } }
+        val returns = store.activeVehicles.mapNotNull { vehicle -> vehicle.storedUntil?.let { Return(vehicle.displayName, vehicle.id, it) } }
+        val planned = plan(inputs, now, reminderHour, ZoneId.systemDefault(), returns)
         planned.forEach { alarms.set(AlarmManager.RTC_WAKEUP, it.fireAt.toEpochMilli(), pending(it.id, it)) }
         defaults.putStringSet(SCHEDULED, planned.map { it.id }.toSet())
     }
@@ -85,9 +88,14 @@ class ReminderScheduler(private val context: Context, private val defaults: KeyV
         const val EXTRA_VEHICLE = "vehicleId"
 
         /** Pure planning, so the rules are testable without an alarm manager. */
-        fun plan(dues: List<PlanInput>, now: Instant, hour: Int, zone: ZoneId): List<Planned> {
+        fun plan(dues: List<PlanInput>, now: Instant, hour: Int, zone: ZoneId, returns: List<Return> = emptyList()): List<Planned> {
             fun atHour(date: Instant): Instant = date.atZone(zone).withHour(hour).withMinute(0).withSecond(0).withNano(0).toInstant()
             val planned = mutableListOf<Planned>()
+            for ((vehicle, vehicleId, date) in returns) {
+                val fire = atHour(date)
+                if (fire > now) planned.add(Planned("storage-$vehicleId", "$vehicle comes out of storage",
+                    "Tap to update the meter and see what's due before its first trip.", fire, vehicleId))
+            }
             for ((vehicle, vehicleId, due) in dues) {
                 val dueDate = due.result.dueDate ?: continue
                 if (due.result.status == DueStatus.NO_RECORD || due.result.status == DueStatus.OVERDUE) continue
