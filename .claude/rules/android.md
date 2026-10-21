@@ -57,3 +57,24 @@ files, not a template.
 - 2026-10-20 (jmbp run): port verified, 51 JVM + 7 connected tests, lint clean, debug and QA APKs. Not created in
   Play Console; no upload key, RevenueCat Play app or Play products yet. Remaining steps are in
   `~/fleet-evidence/shift-android-keyring-1-1792531430/REPORT.md` (release preparation section).
+- 2026-10-21 (Air package run `shift-android-package-keyring-1-1792573131`): blocked, no signed APK/AAB. Source
+  f773e74 (android tree 8259884, same as origin/main). RevenueCat proj634d6667 has only app_store and test_store
+  apps (no Play app, so no `goog_` key); no `~/.android/keystores/keyring-upload.p12` or backup; no
+  `android/local.properties` with `PLAY_UPLOAD_*` or `PLAY_REVIEW_CODE_SHA256`. Signed `assembleRelease bundleRelease`
+  stops at `validateReleaseConfiguration` as designed. Evidence and next steps:
+  `~/fleet-evidence/shift-android-package-keyring-1-1792573131/SHIFT_CHECKPOINT.md`. No Play app record, track,
+  staged release or review.
+
+## Release preparation (in order)
+1. Play Console (Jack's Chrome, E3 Apps): create app `com.jackwallner.keyring`, then subscriptions
+   `com.jackwallner.keyring.monthly` / `.yearly` (base plans `monthly`/`yearly`, 7-day trial offer) and in-app
+   product `.lifetime` at $1.99 / $14.99 / $29.99.
+2. RevenueCat proj634d6667: add the Play app (service account needs Jack's go-ahead), attach the products to
+   entitlement `pro` and offering `default`.
+3. Air release worker: create the first upload key `~/.android/keystores/keyring-upload.p12` with an encrypted
+   backup, write ignored `android/local.properties` (`sdk.dir`, `REVENUECAT_PLAY_KEY`, `PLAY_UPLOAD_*`,
+   `PLAY_REVIEW_CODE_SHA256`).
+4. Rerun the package task from origin/main: signed `assembleRelease bundleRelease`, then `apksigner verify
+   --print-certs`, `aapt2 dump badging`, debug-hook absence in release dex, `zipalign -c -P 16 -v 4`, and ELF LOAD
+   alignment for every `lib/*/*.so`.
+
