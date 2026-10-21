@@ -129,35 +129,3 @@ object AppLinks {
         if (productId == null) "https://play.google.com/store/account/subscriptions"
         else "https://play.google.com/store/account/subscriptions?sku=$productId&package=$PACKAGE"
 }
-
-object AmazonLinks {
-    const val ASSOCIATE_TAG = ""
-    val isAffiliate: Boolean get() = ASSOCIATE_TAG.isNotEmpty()
-
-    fun host(region: String?): String = when (region) {
-        "CA" -> "www.amazon.ca"
-        "GB", "IE" -> "www.amazon.co.uk"
-        "AU", "NZ" -> "www.amazon.com.au"
-        "DE", "AT", "CH" -> "www.amazon.de"
-        "FR", "BE" -> "www.amazon.fr"
-        "IT" -> "www.amazon.it"
-        "ES" -> "www.amazon.es"
-        "NL" -> "www.amazon.nl"
-        "MX" -> "www.amazon.com.mx"
-        "JP" -> "www.amazon.co.jp"
-        "IN" -> "www.amazon.in"
-        else -> "www.amazon.com"
-    }
-
-    fun search(query: String, region: String? = Locale.getDefault().country): String {
-        val k = java.net.URLEncoder.encode(query, "UTF-8").replace("+", "%20")
-        val tag = if (isAffiliate) "&tag=$ASSOCIATE_TAG" else ""
-        return "https://${host(region)}/s?k=$k$tag"
-    }
-
-    /** Fills `{vehicle}` and `{make}`; a vehicle with no make or model falls back to its kind. */
-    fun resolve(template: String, descriptor: String, make: String?, kindTitle: String): String {
-        val vehicle = descriptor.ifEmpty { kindTitle.lowercase() }
-        return template.replace("{vehicle}", vehicle).replace("{make}", make?.ifEmpty { null } ?: kindTitle.lowercase())
-    }
-}

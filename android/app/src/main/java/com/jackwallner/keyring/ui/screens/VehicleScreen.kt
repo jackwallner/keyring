@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -78,6 +79,7 @@ fun VehicleScreen(vehicleId: String) {
     val dues = remember(vehicle, data) { graph.garage.dues(vehicle) }
     val entries = remember(vehicle, data) { graph.garage.entries(vehicle) }
     var updatingMeter by remember { mutableStateOf(false) }
+    var updatingAux by remember { mutableStateOf(false) }
     var confirmingDelete by remember { mutableStateOf(false) }
     val isPro = graph.store.isPro
 
@@ -88,7 +90,17 @@ fun VehicleScreen(vehicleId: String) {
             }
         }
         LazyColumn(contentPadding = PaddingValues(start = Space.margin, end = Space.margin, bottom = Space.xxl), modifier = Modifier.testTag("vehicle.list")) {
-            item { Header(vehicle) { updatingMeter = true } }
+            item { Header(vehicle, graph.attachmentFiles.read(vehicle.photo ?: ""), { updatingAux = true }) { updatingMeter = true } }
+            if (vehicle.isStored) item {
+                Spacer(Modifier.height(Space.sm))
+                Card(Modifier.testTag("vehicle.stored")) {
+                    Text("In storage since ${Format.shortDate(vehicle.storedSince!!)}", style = Type.subheadlineBold, color = colors.ink)
+                    Text(vehicle.storedUntil?.let { "Reminders are paused until ${Format.shortDate(it)}." } ?: "Reminders are paused.",
+                        style = Type.footnote, color = colors.secondaryInk)
+                    androidx.compose.material3.TextButton({ nav.push(Route.Storage(vehicle.id)) }, modifier = Modifier.testTag("vehicle.unstore"),
+                        contentPadding = PaddingValues(0.dp)) { Text("Back on the road", style = Type.subheadlineBold, color = colors.brass) }
+                }
+            }
             item {
                 Row(Modifier.padding(vertical = Space.md), horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     PrimaryButton("Log service", { nav.push(Route.LogService(vehicle.id)) }, Modifier.weight(1f), tag = "vehicle.log")
@@ -148,39 +160,65 @@ fun VehicleScreen(vehicleId: String) {
             }
             item {
                 Spacer(Modifier.height(Space.sectionGap))
-                SectionHeader("Tools")
+                SectionHeader("Explore")
+                val valuations = graph.garage.valuations(vehicle)
+                val firstSource = com.jackwallner.keyring.catalog.ValueSource.sources(vehicle).firstOrNull()
+                val tiles = listOfNotNull(
+                    Tile("What it's worth", valuations.firstOrNull()?.let { "Last noted ${Format.money(it.amount)}" }
+                        ?: if (vehicle.kind.isRoad && firstSource != null) "${firstSource.name} and more" else "Price guides",
+                        "dollarsign.circle.fill", "explore.value") { nav.push(Route.Value(vehicle.id)) },
+                    Tile("Parts and tools", "For what's due next", "wrench.and.screwdriver.fill", "explore.gear") { nav.push(Route.Gear(vehicle.id)) },
+                    Tile("Upgrades", "Popular add-ons", "sparkles", "explore.upgrades") { nav.push(Route.Upgrades(vehicle.id)) },
+                    Tile("Clubs", "Owners like you", "person.3.fill", "explore.clubs") { nav.push(Route.Clubs(vehicle.id)) },
+                    Tile("Service nearby", "Shops, mobile mechanics, detailing", "mappin.and.ellipse", "explore.service") { nav.push(Route.ServiceNearby(vehicle.id)) },
+                    if (vehicle.kind.hasNHTSARecords) Tile(if (isUSRegion) "Recalls" else "US recalls",
+                        if (vehicle.year > 0 && vehicle.make != null) graph.vinChecks.check(vehicle)?.let { "VIN checked ${Format.shortDate(it.date)}" } ?: "Open NHTSA campaigns"
+                        else "Add year, make and model", "exclamationmark.shield.fill", "vehicle.recalls") { nav.push(Route.Recalls(vehicle.id)) } else null,
+                    Tile("Insights", if (isPro) "Where the money goes" else "Pro", "chart.bar.fill", "vehicle.insights") {
+                        nav.push(if (isPro) Route.Insights(vehicle.id) else Route.Paywall(ProFeature.insights))
+                    },
+                )
+                TileGrid(tiles)
+                Spacer(Modifier.height(Space.sectionGap))
+                SectionHeader("Records")
                 Card(padding = PaddingValues(horizontal = Space.cardPadding)) {
-                    if (vehicle.kind.hasNHTSARecords) {
-                        ListRow("Safety recalls", "Open NHTSA campaigns for this ${vehicle.kind.title.lowercase()}", Symbols.icon("exclamationmark.shield.fill"),
-                            modifier = Modifier.testTag("vehicle.recalls"), onClick = { nav.push(Route.Recalls(vehicle.id)) })
-                        Divider()
-                    }
-                    ListRow("Where the money goes", if (isPro) "Upkeep, fuel and cost per ${vehicle.meter.short.ifEmpty { "year" }}" else "Pro",
-                        Symbols.icon("gauge.with.dots.needle.33percent"), modifier = Modifier.testTag("vehicle.insights"),
-                        onClick = { nav.push(if (isPro) Route.Insights(vehicle.id) else Route.Paywall(ProFeature.insights)) })
+                    val documents = graph.garage.documents(vehicle).size
+                    ListRow("Documents", if (documents == 0) "Title, build sheet, appraisals" else Format.count(documents, "document", "documents"),
+                        Symbols.icon("doc.text"), iconTint = colors.brass, modifier = Modifier.testTag("vehicle.documents"), onClick = { nav.push(Route.Documents(vehicle.id)) })
+                    Divider()
+                    ListRow("Trip check", "What comes due before you're back", Symbols.icon("suitcase.rolling"), iconTint = colors.brass,
+                        modifier = Modifier.testTag("vehicle.trip"), onClick = { nav.push(Route.TripCheck(vehicle.id)) })
                     Divider()
                     ListRow("Service Record", if (isPro) "A clean PDF of every job, for a buyer, a shop or the glovebox" else "Pro",
-                        Symbols.icon("doc.text"), modifier = Modifier.testTag("vehicle.record"),
+                        Symbols.icon("doc.text"), iconTint = colors.brass, modifier = Modifier.testTag("vehicle.record"),
                         onClick = {
                             if (isPro) shareFile(context, ServiceRecordPDF.write(context, graph.garage, vehicle), "application/pdf")
                             else nav.push(Route.Paywall(ProFeature.serviceRecord))
                         })
                     Divider()
-                    ListRow("Spreadsheet (CSV)", "Every entry, free, always", Symbols.icon("checklist"), modifier = Modifier.testTag("vehicle.csv"),
+                    ListRow("Spreadsheet (CSV)", "Every entry, free, always", Symbols.icon("checklist"), iconTint = colors.brass, modifier = Modifier.testTag("vehicle.csv"),
                         onClick = { shareFile(context, writeCsv(context, graph.garage, listOf(vehicle)), "text/csv") })
+                    Divider()
+                    ListRow("Import history", "From Fuelly, Drivvo, Simply Auto or a spreadsheet", Symbols.icon("tray.and.arrow.down"), iconTint = colors.brass,
+                        modifier = Modifier.testTag("vehicle.import"), onClick = { nav.push(Route.Import(vehicle.id)) })
                 }
                 Spacer(Modifier.height(Space.lg))
-                SecondaryButton("Retire or sell", { graph.garage.retire(vehicle); nav.pop() }, tag = "vehicle.retire")
+                if (!vehicle.isStored) {
+                    SecondaryButton("Put in storage", { nav.push(Route.Storage(vehicle.id)) }, tag = "vehicle.store")
+                    Spacer(Modifier.height(Space.xs))
+                }
+                SecondaryButton("Sold or retired", { nav.push(Route.Retire(vehicle.id)) }, tag = "vehicle.retire")
                 Spacer(Modifier.height(Space.xs))
                 androidx.compose.material3.TextButton(onClick = { confirmingDelete = true }, modifier = Modifier.fillMaxWidth().testTag("vehicle.delete")) {
                     Text("Delete vehicle and history", style = Type.subheadlineBold, color = colors.overdue)
                 }
-                Text("Retired vehicles keep their full history and stop sending reminders. They don't count toward the free limit.",
+                Text("Retired and sold vehicles keep their full history and stop sending reminders. They don't count toward the free limit.",
                     style = Type.footnote, color = colors.faintInk)
             }
         }
     }
     if (updatingMeter) MeterDialog(vehicle, graph.garage) { updatingMeter = false }
+    if (updatingAux) AuxMeterDialog(vehicle, graph.garage) { updatingAux = false }
     if (confirmingDelete) {
         AlertDialog(
             onDismissRequest = { confirmingDelete = false },
@@ -199,10 +237,43 @@ private fun TextButtonRow(text: String, tag: String, onClick: () -> Unit) {
     }
 }
 
+private class Tile(val title: String, val detail: String, val symbol: String, val tag: String, val onClick: () -> Unit)
+
+/** Two tiles a row, like the iOS explore grid; an odd last tile takes the full width. */
 @Composable
-private fun Header(vehicle: Vehicle, onMeter: () -> Unit) {
+private fun TileGrid(tiles: List<Tile>) {
+    val colors = Keyring.colors
+    Column(verticalArrangement = Arrangement.spacedBy(Space.stackGap)) {
+        tiles.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.stackGap)) {
+                row.forEach { tile ->
+                    Column(Modifier.weight(1f).clip(RoundedCornerShape(Space.radius)).background(colors.surface)
+                        .clickable(onClick = tile.onClick).testTag(tile.tag).padding(Space.md)) {
+                        Icon(Symbols.icon(tile.symbol), contentDescription = null, tint = colors.brass, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.height(Space.sm))
+                        Text(tile.title, style = Type.subheadlineBold, color = colors.ink, maxLines = 1)
+                        Text(tile.detail, style = Type.footnote, color = colors.secondaryInk, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Header(vehicle: Vehicle, photo: ByteArray?, onAux: () -> Unit, onMeter: () -> Unit) {
     val tint = vehicle.tint
     val fg = tint.foreground()
+    val image = androidx.compose.runtime.remember(vehicle.photo) {
+        photo?.let { android.graphics.BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+    }
+    if (image != null) {
+        androidx.compose.foundation.Image(image, contentDescription = "Photo of ${vehicle.displayName}",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(Space.radius)).testTag("vehicle.photo"))
+        Spacer(Modifier.height(Space.sm))
+    }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Space.radius)).background(tint.color()).padding(Space.lg)) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
@@ -213,14 +284,29 @@ private fun Header(vehicle: Vehicle, onMeter: () -> Unit) {
             }
             Icon(Symbols.kind(vehicle.kind), contentDescription = null, tint = fg, modifier = Modifier.size(30.dp))
         }
-        if (vehicle.meter.hasReading) {
+        if (vehicle.meter.hasReading || vehicle.hasAuxMeter) {
             Spacer(Modifier.height(Space.md))
-            Box(Modifier.clip(RoundedCornerShape(14.dp)).background(androidx.compose.ui.graphics.Color.Black.copy(alpha = if (tint.isLight) 0.08f else 0.22f))
-                .clickable(onClick = onMeter).testTag("vehicle.meter").padding(horizontal = Space.md, vertical = Space.sm)) {
-                Column {
-                    Text(vehicle.meter.meterName.uppercase(), style = Type.caption, color = fg.copy(alpha = 0.75f))
-                    Text(Format.reading(vehicle.reading, vehicle.meter), style = Type.figure(22), color = fg)
-                    Text("Tap to update", style = Type.footnote, color = fg.copy(alpha = 0.75f))
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                val chip = androidx.compose.ui.graphics.Color.Black.copy(alpha = if (tint.isLight) 0.08f else 0.22f)
+                if (vehicle.meter.hasReading) {
+                    Box(Modifier.clip(RoundedCornerShape(14.dp)).background(chip)
+                        .clickable(onClick = onMeter).testTag("vehicle.meter").padding(horizontal = Space.md, vertical = Space.sm)) {
+                        Column {
+                            Text(vehicle.meter.meterName.uppercase(), style = Type.caption, color = fg.copy(alpha = 0.75f))
+                            Text(Format.reading(vehicle.reading, vehicle.meter), style = Type.figure(22), color = fg)
+                            Text("Tap to update", style = Type.footnote, color = fg.copy(alpha = 0.75f))
+                        }
+                    }
+                }
+                if (vehicle.hasAuxMeter) {
+                    Box(Modifier.clip(RoundedCornerShape(14.dp)).background(chip)
+                        .clickable(onClick = onAux).testTag("vehicle.auxMeter").padding(horizontal = Space.md, vertical = Space.sm)) {
+                        Column {
+                            Text(vehicle.auxMeterLabel.uppercase(), style = Type.caption, color = fg.copy(alpha = 0.75f), maxLines = 1)
+                            Text(Format.reading(vehicle.auxReading, vehicle.auxMeter), style = Type.figure(22), color = fg)
+                            Text("Tap to update", style = Type.footnote, color = fg.copy(alpha = 0.75f))
+                        }
+                    }
                 }
             }
         }
@@ -259,6 +345,33 @@ fun MeterDialog(vehicle: Vehicle, store: GarageStore, onDismiss: () -> Unit) {
                 store.updateReading(vehicle, v)
                 onDismiss()
             }, modifier = Modifier.testTag("meter.save")) { Text(if (warned) "Save anyway" else "Save", color = colors.ink) }
+        },
+        dismissButton = { TextButton(onDismiss) { Text("Cancel", color = colors.ink) } },
+    )
+}
+
+/** Update the second meter. */
+@Composable
+fun AuxMeterDialog(vehicle: Vehicle, store: GarageStore, onDismiss: () -> Unit) {
+    val colors = Keyring.colors
+    var text by remember { mutableStateOf("") }
+    val value = parseNumber(text)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update ${vehicle.auxMeterLabel.lowercase()}") },
+        text = {
+            Column {
+                Field(text, { text = it }, "Now (${vehicle.auxMeter.short})", number = true, tag = "auxMeter.field")
+                Spacer(Modifier.height(Space.xs))
+                Text("Last ${Format.reading(vehicle.auxReading, vehicle.auxMeter)}${vehicle.auxReadingDate?.let { ", ${Format.relative(it)}" } ?: ""}.",
+                    style = Type.footnote, color = colors.secondaryInk)
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = value != null, onClick = {
+                value?.let { store.updateAuxReading(vehicle, it) }
+                onDismiss()
+            }, modifier = Modifier.testTag("auxMeter.save")) { Text("Save", color = colors.ink) }
         },
         dismissButton = { TextButton(onDismiss) { Text("Cancel", color = colors.ink) } },
     )

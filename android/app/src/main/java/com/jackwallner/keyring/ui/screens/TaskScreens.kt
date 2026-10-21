@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.jackwallner.keyring.data.DueCopy
-import com.jackwallner.keyring.model.AmazonLinks
+import com.jackwallner.keyring.catalog.AmazonLinks
 import com.jackwallner.keyring.model.Format
 import com.jackwallner.keyring.ui.LocalGraph
 import com.jackwallner.keyring.ui.LocalNavigator
@@ -117,7 +117,7 @@ fun TaskScreen(vehicleId: String, taskId: String) {
                     item.gear.forEachIndexed { index, gear ->
                         if (index > 0) Divider()
                         ListRow(gear.title, "Search on Amazon", Symbols.icon("link"), onClick = {
-                            context.openUrl(AmazonLinks.search(AmazonLinks.resolve(gear.query, vehicle.descriptor, vehicle.make, vehicle.kind.title)))
+                            context.openUrl(AmazonLinks.search(AmazonLinks.resolve(gear.query, vehicle)))
                         })
                     }
                 }

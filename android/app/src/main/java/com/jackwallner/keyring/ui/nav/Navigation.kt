@@ -15,6 +15,17 @@ sealed interface Route {
     data class Recalls(val vehicleId: String) : Route
     data class Insights(val vehicleId: String) : Route
     data class EditVehicle(val vehicleId: String) : Route
+    data class Value(val vehicleId: String) : Route
+    data class Gear(val vehicleId: String) : Route
+    data class Upgrades(val vehicleId: String) : Route
+    data class Clubs(val vehicleId: String) : Route
+    data class ServiceNearby(val vehicleId: String) : Route
+    data class TripCheck(val vehicleId: String) : Route
+    data class Documents(val vehicleId: String) : Route
+    data class Storage(val vehicleId: String) : Route
+    data class Retire(val vehicleId: String) : Route
+    data class VinCheck(val vehicleId: String) : Route
+    data class Import(val vehicleId: String? = null, val text: String? = null) : Route
     data object History : Route
     data object Settings : Route
     data class Paywall(val focus: ProFeature? = null) : Route

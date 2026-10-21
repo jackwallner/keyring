@@ -61,6 +61,36 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.TireRepair
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.ElectricBolt
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.FlashlightOn
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Luggage
+import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.Paid
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material.icons.outlined.Umbrella
+import androidx.compose.material.icons.outlined.VerticalAlignBottom
+import androidx.compose.material.icons.outlined.VerticalAlignTop
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jackwallner.keyring.model.EntryKind
 import com.jackwallner.keyring.model.VehicleKind
@@ -96,9 +126,23 @@ object Symbols {
         "antenna.radiowaves.left.and.right" to Icons.Outlined.SettingsInputAntenna, "cable" to Icons.Outlined.Cable,
         "hammer.fill" to Icons.Outlined.Build, "exclamationmark.shield.fill" to Icons.Outlined.Warning,
         "flag.checkered" to Icons.Outlined.Flag, "water.waves" to Icons.Outlined.Waves,
+        "person.3" to Icons.Outlined.Groups, "bubble.left.and.bubble.right" to Icons.Outlined.Forum, "text.bubble" to Icons.Outlined.Chat,
+        "building.columns" to Icons.Outlined.AccountBalance, "safari" to Icons.Outlined.Public, "cart" to Icons.Outlined.ShoppingCart,
+        "mappin.and.ellipse" to Icons.Outlined.Place, "building.2" to Icons.Outlined.Business, "checkmark.seal.fill" to Icons.Outlined.Verified,
+        "car.side" to Icons.Outlined.DirectionsCar, "calendar.badge.clock" to Icons.Outlined.Event, "dollarsign.circle" to Icons.Outlined.Paid,
+        "chart.bar" to Icons.Outlined.BarChart, "photo" to Icons.Outlined.Image, "plus" to Icons.Outlined.Add,
+        "suitcase.rolling" to Icons.Outlined.Luggage, "archivebox" to Icons.Outlined.Inventory2, "key.horizontal" to Icons.Outlined.Key,
+        "lock" to Icons.Outlined.Lock, "headphones" to Icons.Outlined.Headphones, "shield" to Icons.Outlined.Shield,
+        "cloud.rain" to Icons.Outlined.Umbrella, "umbrella" to Icons.Outlined.Umbrella, "bolt.shield" to Icons.Outlined.ElectricBolt,
+        "location" to Icons.Outlined.LocationOn, "flashlight.on" to Icons.Outlined.FlashlightOn, "waveform.path.ecg" to Icons.Outlined.MonitorHeart,
+        "sensor" to Icons.Outlined.Sensors, "thermometer.sun" to Icons.Outlined.Thermostat, "square.3.layers.3d" to Icons.Outlined.Layers,
+        "arrow.down.to.line" to Icons.Outlined.VerticalAlignBottom, "arrow.up.to.line" to Icons.Outlined.VerticalAlignTop,
+        "exclamationmark.brakesignal" to Icons.Outlined.Warning, "speaker.wave.3" to Icons.Outlined.VolumeUp,
+        "tray.and.arrow.down" to Icons.Outlined.Download, "ruler" to Icons.Outlined.Straighten,
     )
 
-    fun icon(name: String?): ImageVector = map[name] ?: Icons.Outlined.Build
+    /** The exact symbol, else its outline form ("drop.fill" draws as "drop"), else a wrench. */
+    fun icon(name: String?): ImageVector = map[name] ?: name?.removeSuffix(".fill")?.let { map[it] } ?: Icons.Outlined.Build
 
     fun kind(kind: VehicleKind): ImageVector = when (kind) {
         VehicleKind.car, VehicleKind.suv -> Icons.Outlined.DirectionsCar

@@ -32,6 +32,17 @@ import com.jackwallner.keyring.DebugLaunchOptions
 import com.jackwallner.keyring.ui.nav.Navigator
 import com.jackwallner.keyring.ui.nav.Route
 import com.jackwallner.keyring.ui.screens.AddVehicleScreen
+import com.jackwallner.keyring.ui.screens.ClubsScreen
+import com.jackwallner.keyring.ui.screens.DocumentsScreen
+import com.jackwallner.keyring.ui.screens.GearScreen
+import com.jackwallner.keyring.ui.screens.ImportScreen
+import com.jackwallner.keyring.ui.screens.RetireScreen
+import com.jackwallner.keyring.ui.screens.ServiceNearbyScreen
+import com.jackwallner.keyring.ui.screens.StorageScreen
+import com.jackwallner.keyring.ui.screens.TripCheckScreen
+import com.jackwallner.keyring.ui.screens.UpgradesScreen
+import com.jackwallner.keyring.ui.screens.ValueScreen
+import com.jackwallner.keyring.ui.screens.VinCheckScreen
 import com.jackwallner.keyring.ui.screens.CatalogScreen
 import com.jackwallner.keyring.ui.screens.EditVehicleScreen
 import com.jackwallner.keyring.ui.screens.GarageScreen
@@ -102,6 +113,17 @@ private fun Screen(route: Route) {
         is Route.Recalls -> RecallsScreen(route.vehicleId)
         is Route.Insights -> InsightsScreen(route.vehicleId)
         is Route.EditVehicle -> EditVehicleScreen(route.vehicleId)
+        is Route.Value -> ValueScreen(route.vehicleId)
+        is Route.Gear -> GearScreen(route.vehicleId)
+        is Route.Upgrades -> UpgradesScreen(route.vehicleId)
+        is Route.Clubs -> ClubsScreen(route.vehicleId)
+        is Route.ServiceNearby -> ServiceNearbyScreen(route.vehicleId)
+        is Route.TripCheck -> TripCheckScreen(route.vehicleId)
+        is Route.Documents -> DocumentsScreen(route.vehicleId)
+        is Route.Storage -> StorageScreen(route.vehicleId)
+        is Route.Retire -> RetireScreen(route.vehicleId)
+        is Route.VinCheck -> VinCheckScreen(route.vehicleId)
+        is Route.Import -> ImportScreen(route.vehicleId, route.text)
         Route.History -> HistoryScreen()
         Route.Settings -> SettingsScreen()
         is Route.Paywall -> PaywallScreen(route.focus)
