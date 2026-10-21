@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
+import androidx.core.graphics.scale
 import com.jackwallner.keyring.AppGraph
 import com.jackwallner.keyring.data.Attachment
 import com.jackwallner.keyring.data.GarageStore
@@ -33,7 +34,7 @@ object PickedFiles {
         while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MAX_SIDE) sample *= 2
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return null
         val scale = MAX_SIDE.toFloat() / maxOf(bitmap.width, bitmap.height)
-        val sized = if (scale < 1) Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true) else bitmap
+        val sized = if (scale < 1) bitmap.scale((bitmap.width * scale).toInt(), (bitmap.height * scale).toInt()) else bitmap
         return ByteArrayOutputStream().use { out ->
             sized.compress(Bitmap.CompressFormat.JPEG, 82, out)
             out.toByteArray()

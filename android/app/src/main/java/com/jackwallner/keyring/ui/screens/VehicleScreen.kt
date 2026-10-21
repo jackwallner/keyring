@@ -3,6 +3,7 @@ package com.jackwallner.keyring.ui.screens
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -248,6 +249,7 @@ private fun TileGrid(tiles: List<Tile>) {
             Row(horizontalArrangement = Arrangement.spacedBy(Space.stackGap)) {
                 row.forEach { tile ->
                     Column(Modifier.weight(1f).clip(RoundedCornerShape(Space.radius)).background(colors.surface)
+                        .border(1.dp, colors.hairline, RoundedCornerShape(Space.radius))
                         .clickable(onClick = tile.onClick).testTag(tile.tag).padding(Space.md)) {
                         Icon(Symbols.icon(tile.symbol), contentDescription = null, tint = colors.brass, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.height(Space.sm))

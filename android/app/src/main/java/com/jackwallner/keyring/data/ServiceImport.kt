@@ -427,7 +427,7 @@ object ServiceImport {
 
     /** RFC 4180 rows, with the delimiter (comma, semicolon or tab) taken from the file itself. */
     fun rows(source: String): List<List<String>> {
-        val text = source.removePrefix("﻿")
+        val text = source.removePrefix("\uFEFF")
         val delimiter = detectDelimiter(text)
         val rows = mutableListOf<List<String>>()
         var row = mutableListOf<String>()

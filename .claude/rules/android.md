@@ -30,7 +30,10 @@ files, not a template.
   for the guest load to drop before tests or captures. Kill the emulator with `adb -s emulator-5584 emu kill`.
 - Debug launch extras (debug source set only; release/QA ignore them): `seedDemo`, `demoPro`, `emptyLog`,
   `skipOnboarding`, `previewStore` (US price ladder, no store), `dark`, `uiTest`,
-  `route vehicle|log|fuel|recalls|insights|task|add|history|settings|paywall`, `focus <ProFeature>`.
+  `route vehicle|log|fuel|recalls|insights|task|value|gear|upgrades|clubs|service|trip|documents|storage|retire|import|add|history|settings|paywall`
+  (`import` preloads `DemoSeed.SAMPLE_CSV`), `focus <ProFeature>`.
+- jmbp2 (8 GB): pass `-Dorg.gradle.jvmargs=-Xmx2560m -Pkotlin.compiler.execution.strategy=in-process` so Gradle,
+  Kotlin and the 2 GB AVD fit together; the first boot ANRs SystemUI for about 10 minutes.
 
 ## Catalog parity
 - `MaintenanceCatalog.kt` is a mechanical conversion of `Shared/Catalog/MaintenanceCatalog.swift`. After any Swift
@@ -40,20 +43,42 @@ files, not a template.
 - jmbp's Swift is 5.7 (CommandLineTools), too old to compile the Swift 6 catalog, so the literals are extracted
   from source instead of exported by running Swift.
 
+## Explore catalogs
+- `catalog/Clubs.kt` and `catalog/Upgrades.kt` are mechanical conversions of `Shared/Catalog/Clubs.swift` and
+  `Upgrades.swift`. After editing either Swift file run `python3 scripts/export-android-explore.py` (writes
+  `android/app/src/test/resources/explore_literals_swift.json`) and port the change; `ImportAndExploreTest`
+  fails until every club and upgrade list matches. `catalog/Explore.kt` holds `AmazonLinks`, `ValueSource` and
+  `ServiceFinder`, hand-ported; their iOS tests are ported in the same test class.
+- `data/ServiceImport.kt` is a line-for-line port of `Shared/Export/ServiceImport.swift` (same header names,
+  date-column voting with java.time strict formatters, two-digit years within the last 80 years). Fuel grade is
+  not stored on Android entries, so imports drop it; partial fills are kept.
+
 ## Intentionally different from iOS (platform gaps, decisions pending)
 - CloudKit sync and family sharing (`CKShare`): no Android equivalent. The log is one JSON file in app storage
   (`files/garage.json`, excluded from backup). Cross-platform sharing needs a backend decision (Supabase or
   similar); not guessed. Settings says sharing and iPhone sync aren't on Android.
 - Receipt, pump, odometer and VIN scanning (Vision/VisionKit): not ported. The Android paywall does not claim
   receipt reading. ML Kit would add a Google SDK and a Data safety change; decision pending.
-- Not yet ported: photos and documents, second (aux) meters, storage/sold flows, valuations and value links,
-  clubs, upgrades and gear browsing, service nearby, import from other apps, the per-VIN NHTSA web check,
-  the widget (Glance), trip check.
+- Ported 2026-10-21 (run `shift-android-keyring-parity-1-1792561214`): photos, receipts and documents (files in
+  `files/attachments`, picked with the system photo picker and `OpenMultipleDocuments`, no storage permission),
+  vehicle photo, second meters (generator hours, whichever-first UTV miles), storage with a return reminder,
+  sold/retired with handover, valuations and value links, clubs, upgrades, parts and tools, service nearby,
+  trip check, import (vehicle Records, Settings), the per-VIN NHTSA check (WebView on nhtsa.gov, JS bridge
+  `KeyringRecalls`, results in prefs `vinRecallChecks.<vehicleId>`), and a Glance widget (`UpcomingWidget`,
+  snapshot JSON in prefs `widgetSnapshot`, written on every log change; stored vehicles left out).
+- Platform differences in that work: service-nearby map searches use Google's universal Maps link
+  (`google.com/maps/search/?api=1&query=`) instead of Apple Maps; the widget shows a tint swatch instead of the
+  kind's SF Symbol (Glance needs drawable resources); "Scan a paper" for documents and the receipt/pump/odometer
+  scanners stay out with the ML Kit decision above. Not ported yet: parts and measurements on entries
+  (`EntryDetails`), the Build list, odometer changes/mileage status (`VehicleProfile`), facts editor and
+  vehicle-section ordering; the import column fixer covers only the main table, like iOS.
 - Rating ask: Play In-App Review after a logged service from the 2nd launch, 30-day cooldown, no question first.
 - Privacy and terms link to `docs/android-privacy.html` and `docs/android-terms.html` (live once merged and
   Pages deploys).
 
 ## Play state
+- 2026-10-21 (jmbp2 run `shift-android-keyring-parity-1-1792561214`): parity features above, JVM and connected
+  counts in that run's `REPORT.md`. Still not in Play Console; release steps unchanged from the line below.
 - 2026-10-20 (jmbp run): port verified, 51 JVM + 7 connected tests, lint clean, debug and QA APKs. Not created in
   Play Console; no upload key, RevenueCat Play app or Play products yet. Remaining steps are in
   `~/fleet-evidence/shift-android-keyring-1-1792531430/REPORT.md` (release preparation section).

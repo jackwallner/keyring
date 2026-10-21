@@ -20,9 +20,21 @@ Log it in seconds
 • Date, reading, cost, shop or DIY, and notes
 • Full history across every vehicle, by month
 
+• Receipts, photos and documents kept with each visit or with the vehicle
+• A second meter for generator hours, track hours or trail miles
+• Put a boat or bike in storage for the season and reminders pause
+• Import your history from Fuelly, Drivvo, Simply Auto or a spreadsheet
+• Home screen widget with what's due next
+
 Safety recalls
 • Decode a VIN and list recalls from the U.S. NHTSA's public data
+• Check what's still open on your VIN on NHTSA's own lookup
 • A recall closes when the log shows the fix
+
+Explore
+• Price guides opened on your exact vehicle, plus the values you note over time
+• Parts and tools for what's due, popular upgrades, owners clubs and forums
+• Shops, mobile mechanics and detailers near you
 
 Your data stays yours
 • No account and no ads
@@ -39,14 +51,18 @@ Schedules are general guidance for normal use. Your owner's manual and a qualifi
 - Email: jackwallner@gmail.com. Website: https://jackwallner.github.io/keyring/
 - Privacy policy: https://jackwallner.github.io/keyring/android-privacy.html (live after this branch merges)
 
-## Data safety (from code, 2026-10-20)
+## Data safety (from code, 2026-10-21)
 - Data collected: Purchase history and an anonymous app user ID, sent to RevenueCat to confirm purchases
   (App functionality). Not shared for advertising, not sold.
 - VIN, or year, make and model: sent to NHTSA's public API only when the user taps "Fill in from VIN" or opens
   Safety recalls. Processed ephemerally by a government API, not stored by the developer. Declare as
   "Vehicle info / Other" only if Play's form treats a user-initiated lookup as collection; it is not linked to
   an identity.
-- Garage, entries, readings: stored on device only, excluded from backup. Not collected.
+- Garage, entries, readings, values, attached photos and documents: stored on device only, excluded from backup.
+  Not collected. Photos and files come through the system pickers (no media or storage permission).
+- Per-VIN recall check: NHTSA's nhtsa.gov page loads in an in-app WebView with the VIN typed into its field;
+  the user presses Search. The page's own cookies and reCAPTCHA run under NHTSA's policy; the app reads the
+  result off the page and keeps it on the device. Same "user-initiated government lookup" answer as above.
 - Encrypted in transit: yes (HTTPS). Deletion: in-app delete or uninstall; nothing is kept off device.
 - No ads, no ad ID, no analytics SDK. Not a health, finance, government or news app.
 

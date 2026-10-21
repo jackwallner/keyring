@@ -18,7 +18,7 @@ import com.jackwallner.keyring.data.ReviewPrompter
 import com.jackwallner.keyring.data.ServiceEntry
 import com.jackwallner.keyring.data.StoreService
 import com.jackwallner.keyring.data.TaskDue
-import com.jackwallner.keyring.model.AmazonLinks
+import com.jackwallner.keyring.catalog.AmazonLinks
 import com.jackwallner.keyring.model.DueResult
 import com.jackwallner.keyring.model.DueStatus
 import com.jackwallner.keyring.model.EntryKind
@@ -155,8 +155,11 @@ class ServicesTest {
         assertTrue(AmazonLinks.search("wipers", "CA").startsWith("https://www.amazon.ca/"))
         assertTrue(url.contains("k=2019%20Toyota%20Tacoma%20oil%20filter"))
         assertFalse(url.contains("tag="))
-        assertEquals("2019 Toyota Tacoma oil filter", AmazonLinks.resolve("{vehicle} oil filter", "2019 Toyota Tacoma", "Toyota", "Truck"))
-        assertEquals("truck oil filter", AmazonLinks.resolve("{vehicle} oil filter", "", null, "Truck"))
+        fun truck(year: Int, make: String?, model: String?) = com.jackwallner.keyring.data.Vehicle("t", java.time.Instant.EPOCH,
+            com.jackwallner.keyring.model.VehicleKind.truck, com.jackwallner.keyring.model.Powertrain.gasoline, com.jackwallner.keyring.model.MeterUnit.miles,
+            year = year, make = make, model = model)
+        assertEquals("2019 Toyota Tacoma oil filter", AmazonLinks.resolve("{vehicle} oil filter", truck(2019, "Toyota", "Tacoma")))
+        assertEquals("truck oil filter", AmazonLinks.resolve("{vehicle} oil filter", truck(0, null, null)))
     }
 
     @Test fun fuelIsStoredInLiters() {
