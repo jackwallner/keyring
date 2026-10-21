@@ -22,10 +22,11 @@ files, not a template.
   vehicles, Service Record PDF, insights. Logging, fill-ups, reminders, recalls and CSV stay free.
 
 ## Build and test (jmbp or jmbp2, never the Air)
-- `JAVA_HOME=~/jdks/temurin-17/Contents/Home ./gradlew :app:testDebugUnitTest` from `android/`.
+- From the Air: `fm-gradle :app:testDebugUnitTest` in `android/`. On jmbp or jmbp2 itself:
+  `JAVA_HOME=~/jdks/temurin-17/Contents/Home ./gradlew :app:testDebugUnitTest`.
 - Connected: lease an idle `agent-emu-1`/`agent-emu-2` (check `adb devices` and qemu processes first), boot
   `emulator -avd agent-emu-1 -port 5584 -no-window -no-audio -no-boot-anim -no-metrics -no-snapshot-save`, then
-  `ANDROID_SERIAL=emulator-5584 ./gradlew :app:connectedDebugAndroidTest`. The AVDs render in software on the
+  `ANDROID_SERIAL=emulator-5584 ./gradlew :app:connectedDebugAndroidTest` (on that machine, or `fm-gradle` from the Air). The AVDs render in software on the
   4-core Intel jmbp: after a cold boot SystemUI, the launcher and Digital Wellbeing ANR for several minutes; wait
   for the guest load to drop before tests or captures. Kill the emulator with `adb -s emulator-5584 emu kill`.
 - Debug launch extras (debug source set only; release/QA ignore them): `seedDemo`, `demoPro`, `emptyLog`,
