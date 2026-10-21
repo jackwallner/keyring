@@ -86,9 +86,9 @@ fun RecallsScreen(vehicleId: String) {
                     Text(error!!, style = Type.callout, color = colors.ink, modifier = Modifier.testTag("recalls.error"))
                     SecondaryButton("Try again", { attempt += 1 })
                 }
-                recalls == null -> item { CircularProgressIndicator(Modifier.padding(Space.lg).size(28.dp), color = colors.ink) }
-                listed!!.isEmpty() -> item { Text(if (check?.covered == true) "Nothing open on your VIN." else "No recalls on record for this model year.", style = Type.callout, color = colors.ink, modifier = Modifier.testTag("recalls.none")) }
-                else -> items(listed!!, key = { it.campaign }) { recall ->
+                listed == null -> item { CircularProgressIndicator(Modifier.padding(Space.lg).size(28.dp), color = colors.ink) }
+                listed.isEmpty() -> item { Text(if (check?.covered == true) "Nothing open on your VIN." else "No recalls on record for this model year.", style = Type.callout, color = colors.ink, modifier = Modifier.testTag("recalls.none")) }
+                else -> items(listed, key = { it.campaign }) { recall ->
                     val fixed = RecallMatcher.fix(recall, entries)
                     Card(Modifier.testTag("recall.${recall.campaign}")) {
                         Eyebrow(if (fixed != null) "Fixed ${Format.shortDate(fixed.date)}" else if (recall.parkIt) "Don't drive it" else "Open",
