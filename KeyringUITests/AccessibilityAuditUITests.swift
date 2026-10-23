@@ -40,15 +40,17 @@ final class AccessibilityAuditUITests: XCTestCase {
     }
 
     private func audit(_ label: String) {
+        var lines: [String] = []
         do {
-            try app.performAccessibilityAudit(for: .all) { [self] issue in
+            try app.performAccessibilityAudit(for: .all) { issue in
                 let element = issue.element?.label ?? "?"
-                report.append("AUDIT \(label) type=\(issue.auditType.rawValue) element=[\(element)] \(issue.compactDescription) | \(issue.detailedDescription)")
+                lines.append("AUDIT \(label) type=\(issue.auditType.rawValue) element=[\(element)] \(issue.compactDescription) | \(issue.detailedDescription)")
                 return true
             }
         } catch {
-            report.append("AUDIT \(label) threw \(error)")
+            lines.append("AUDIT \(label) threw \(error)")
         }
+        report += lines
     }
 
     private func smallTargets(_ label: String) {
