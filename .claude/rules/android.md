@@ -78,6 +78,14 @@ files, not a template.
   Pages deploys).
 
 ## Play state
+- 2026-10-23 (Air run `shift-android-package-keyring-3-1792789671`): signed release APK and AAB of `46ccb79`
+  (android tree `60e2bfd`), versionCode 1 / 1.0, target 36, in `~/fleet-artifacts/<run>/keyring-1.0-vc1.{apk,aab}`.
+  Upload key `~/.android/keystores/keyring-upload.p12` (backup in `backups/`), cert SHA-256 `df79f3fb...a88c`.
+  Verified: apksigner v2, jarsigner, 16 KB zip and ELF alignment, no debug hooks or test key, `goog_` key present.
+  Build signed releases with `./gradlew assembleRelease bundleRelease` on the Air: `fm-gradle` sends release tasks
+  to jmbp without the keys and fails at `validateReleaseConfiguration`. Remaining: no Play Console app (the Play
+  API returns 404 for the package), no Play products, and the RevenueCat Play app `app35e833a779` has no products
+  or entitlement/offering attachments. Nothing uploaded, staged or in review.
 - 2026-10-21 (jmbp2 run `shift-android-keyring-parity-1-1792561214`): parity features above, JVM and connected
   counts in that run's `REPORT.md`. Still not in Play Console; release steps unchanged from the line below.
 - 2026-10-20 (jmbp run): port verified, 51 JVM + 7 connected tests, lint clean, debug and QA APKs. Not created in
