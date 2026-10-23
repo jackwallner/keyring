@@ -5,6 +5,7 @@ import XCTest
 /// attaches screenshots, the system accessibility audit findings and a list of
 /// controls smaller than 44 pt. Findings are attached, never asserted, so one
 /// bad screen does not hide the rest.
+@MainActor
 final class AccessibilityAuditUITests: XCTestCase {
     private var app: XCUIApplication!
     private var report: [String] = []
