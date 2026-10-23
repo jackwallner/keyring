@@ -1100,3 +1100,45 @@ final class VehicleSectionOrderTests: XCTestCase {
         XCTAssertEqual(VehicleSection.order(from: VehicleSection.stored(order)), order)
     }
 }
+
+final class RoadsideTests: XCTestCase {
+    func testPhoneLinkDialsLettersAndRejectsJunk() {
+        XCTAssertEqual(PhoneLink.url("1-800-AAA-HELP")?.absoluteString, "tel:18002224357")
+        XCTAssertEqual(PhoneLink.url("+1 (800) 555-0142")?.absoluteString, "tel:+18005550142")
+        XCTAssertNil(PhoneLink.url("n/a"))
+    }
+
+    func testProfileKeepsRoadsideAndOldJSONStillDecodes() {
+        var profile = VehicleProfile()
+        profile.roadside = RoadsideInfo(insurer: "Cascade Mutual", policyNumber: "CM-1")
+        let decoded = profile.encoded.flatMap(VehicleProfile.decode)
+        XCTAssertEqual(decoded?.roadside?.policyNumber, "CM-1")
+        XCTAssertNil(VehicleProfile.decode(#"{"traitsRaw":[],"odometerChanges":[]}"#)?.roadside)
+    }
+
+    func testCleanedTrimsAndEmptyIsEmpty() {
+        XCTAssertTrue(RoadsideInfo(insurer: "  ", roadsidePhone: "\n").cleaned.isEmpty)
+        let info = RoadsideInfo(roadsideName: " AAA ")
+        XCTAssertTrue(info.hasRoadside)
+        XCTAssertFalse(info.hasInsurance)
+        XCTAssertEqual(info.cleaned.roadsideName, "AAA")
+    }
+
+    func testEveryKindHasHowToAndSearchesTheVehicle() {
+        for kind in VehicleKind.allCases {
+            for powertrain in Powertrain.allCases {
+                XCTAssertGreaterThanOrEqual(HowToCatalog.guides(for: kind, powertrain: powertrain).count, 3, "\(kind) \(powertrain)")
+            }
+        }
+        let electric = HowToCatalog.guides(for: .car, powertrain: .electric).map(\.title)
+        XCTAssertFalse(electric.contains("Check the oil"))
+        XCTAssertTrue(HowToCatalog.guides(for: .car, powertrain: .gasoline).map(\.title).contains("Check the oil"))
+        let guide = HowToCatalog.guides(for: .truck, powertrain: .gasoline)[0]
+        let url = HowToCatalog.url(for: guide, vehicle: "2019 Toyota Tacoma", kind: .truck)
+        XCTAssertEqual(url.host(), "www.youtube.com")
+        XCTAssertEqual(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first?.value,
+                       "how to change a flat tire 2019 Toyota Tacoma")
+        let bare = HowToCatalog.url(for: guide, vehicle: " ", kind: .truck)
+        XCTAssertTrue(bare.absoluteString.hasSuffix("truck"))
+    }
+}

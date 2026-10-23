@@ -66,6 +66,8 @@ final class SmokeUITests: XCTestCase {
         launch("vehicle")
         expectTitle("The Tacoma", timeout: 10)
         let tiles: [(String, String)] = [
+            ("Roadside", "Roadside"),
+            ("How-to", "How-to"),
             ("What it's worth", "What it's worth"),
             ("Parts and tools", "Parts and tools"),
             ("Upgrades", "Upgrades"),
@@ -107,6 +109,21 @@ final class SmokeUITests: XCTestCase {
         }
         expectOpensSafari(button(containing: "Leveling kit"))
         expectOpensSafari(button(containing: "Clay bar kit"))
+    }
+
+    func testRoadsideAndHowTo() {
+        launch("vehicle")
+        expectTitle("The Tacoma", timeout: 10)
+        tapButton("Roadside")
+        expectTitle("Roadside")
+        XCTAssertTrue(button(containing: "Call Cascade Mutual").waitForExistence(timeout: 5), "No insurer call row")
+        XCTAssertTrue(button(containing: "Call Cascade Roadside").exists, "No roadside call row")
+        XCTAssertTrue(app.staticTexts["CM-4471-0928"].exists, "No policy number")
+        goBack()
+        tapButton("How-to")
+        expectTitle("How-to")
+        expectOpensSafari(button(containing: "Change a flat tire"))
+        expectOpensSafari(button(containing: "Add washer fluid"))
     }
 
     func testServiceNearbyLinks() {

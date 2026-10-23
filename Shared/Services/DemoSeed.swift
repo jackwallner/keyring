@@ -34,6 +34,10 @@ enum DemoSeed {
             VehicleFact(label: "Wiper sizes", value: "26\" / 18\""),
             VehicleFact(label: "Paint code", value: "6X3 Army Green"),
         ]
+        var profile = truck.profile
+        profile.roadside = RoadsideInfo(insurer: "Cascade Mutual", policyNumber: "CM-4471-0928", claimsPhone: "1-800-555-0142",
+                                        roadsideName: "Cascade Roadside", roadsidePhone: "1-800-555-0199", memberNumber: "429 118 776")
+        truck.profile = profile
         store.addValuation(31_850, source: "Kelley Blue Book, private party", to: truck, at: ago(20))
         // The build: what went on the truck, with part numbers.
         let build: [(Double, Double, String, String, String, Double, String, Bool)] = [

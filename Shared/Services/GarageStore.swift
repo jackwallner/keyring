@@ -956,6 +956,14 @@ final class GarageStore: ObservableObject {
         save()
     }
 
+    func setRoadside(_ info: RoadsideInfo, on vehicle: Vehicle) {
+        var profile = vehicle.profile
+        let cleaned = info.cleaned
+        profile.roadside = cleaned.isEmpty ? nil : cleaned
+        vehicle.profile = profile
+        save()
+    }
+
     struct FuelDraft: Equatable {
         var date: Date = .now
         var reading: Double?

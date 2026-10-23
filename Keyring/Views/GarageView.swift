@@ -282,7 +282,7 @@ struct GarageView: View {
         routedScreenshot = true
         let first = garage.vehicles.first
         switch route {
-        case "vehicle", "explore", "record", "fuel", "fuelcard", "build", "pace", "recalls":
+        case "vehicle", "explore", "record", "fuel", "fuelcard", "build", "pace", "recalls", "roadside", "howto":
             if let first { path.append(first.objectID) }
         case "log":
             logging = first.map { LogRequest(vehicle: $0) }

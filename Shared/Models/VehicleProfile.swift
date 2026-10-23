@@ -8,6 +8,7 @@ struct VehicleProfile: Codable, Equatable, Sendable {
     var driveRaw: String?
     var odometerChanges: [OdometerChange] = []
     var mileageStatusRaw: String?
+    var roadside: RoadsideInfo?
 
     var traits: Set<VehicleTrait> {
         get { Set(traitsRaw.compactMap(VehicleTrait.init(rawValue:))) }

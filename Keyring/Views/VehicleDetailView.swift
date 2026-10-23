@@ -32,6 +32,8 @@ struct VehicleDetailView: View {
     @State private var changingOdometer = false
     @State private var checkingTrip = false
     @State private var showingBuild = false
+    @State private var showingRoadside = false
+    @State private var showingHowTo = false
     @State private var showingRecalls = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppGroup.Key.vehicleSectionOrder, store: AppGroup.defaults) private var sectionOrder = ""
@@ -75,6 +77,8 @@ struct VehicleDetailView: View {
         }
         .navigationDestination(isPresented: $checkingTrip) { TripCheckView(vehicle: vehicle) }
         .navigationDestination(isPresented: $showingBuild) { BuildListView(vehicle: vehicle) }
+        .navigationDestination(isPresented: $showingRoadside) { RoadsideView(vehicle: vehicle) }
+        .navigationDestination(isPresented: $showingHowTo) { HowToView(vehicle: vehicle) }
         .navigationDestination(isPresented: $showingRecalls) { RecallsView(vehicle: vehicle, recalls: recalls) }
         .sheet(isPresented: $loggingEvent) { LogEventSheet(vehicle: vehicle) }
         .sheet(isPresented: $loggingMod) { LogServiceView(vehicle: vehicle, startingKind: .mod) }
@@ -95,6 +99,8 @@ struct VehicleDetailView: View {
                 if route == "record" { showingRecord = true }
                 if route == "fuel" { fueling = true }
                 if route == "build" { showingBuild = true }
+                if route == "roadside" { showingRoadside = true }
+                if route == "howto" { showingHowTo = true }
                 if route == "fuelcard" {
                     try? await Task.sleep(for: .milliseconds(300))
                     proxy.scrollTo("fuel", anchor: .top)
@@ -393,8 +399,10 @@ struct VehicleDetailView: View {
             LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize
                       ? [GridItem(.flexible())]
                       : [GridItem(.flexible(), spacing: Theme.stackGap), GridItem(.flexible(), spacing: Theme.stackGap)], spacing: Theme.stackGap) {
+                tile("Roadside", detail: roadsideDetail, symbol: "shield.lefthalf.filled") { RoadsideView(vehicle: vehicle) }
                 tile("What it's worth", detail: valueDetail, symbol: "dollarsign.circle.fill") { ValueView(vehicle: vehicle) }
                 tile("Parts and tools", detail: "For what's due next", symbol: "wrench.and.screwdriver.fill") { GearView(vehicle: vehicle) }
+                tile("How-to", detail: howToDetail, symbol: "play.rectangle.fill") { HowToView(vehicle: vehicle) }
                 tile("Upgrades", detail: "Popular add-ons", symbol: "sparkles") { UpgradesView(vehicle: vehicle) }
                 tile("Clubs", detail: "Owners like you", symbol: "person.3.fill") { ClubsView(vehicle: vehicle) }
                 tile("Service nearby", detail: "Shops, mobile mechanics, detailing", symbol: "mappin.and.ellipse") { ServiceNearbyView(vehicle: vehicle) }
@@ -411,7 +419,16 @@ struct VehicleDetailView: View {
         }
     }
 
-    /// Seven tiles leave Insights alone in the last row of two, so it takes the full width instead.
+    private var roadsideDetail: String {
+        guard let info = vehicle.profile.roadside, !info.isEmpty else { return "Insurance and who to call" }
+        return [info.insurer, info.roadsideName].first { !$0.isEmpty } ?? "Saved"
+    }
+
+    private var howToDetail: String {
+        HowToCatalog.guides(for: vehicle).first.map { "\($0.title) and more" } ?? "Basic jobs"
+    }
+
+    /// Nine tiles leave Insights alone in the last row of two, so it takes the full width instead.
     private var insightsSpansRow: Bool {
         vehicle.kind.hasNHTSARecords && !dynamicTypeSize.isAccessibilitySize
     }
