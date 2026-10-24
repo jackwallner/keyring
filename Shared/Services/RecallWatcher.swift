@@ -108,14 +108,23 @@ final class NotificationRouter: NSObject, ObservableObject, UNUserNotificationCe
         destination = Destination(vehicleID: id, showsRecalls: parts.dropFirst().first == "recalls")
     }
 
+    // Completion handler form, answered on the main thread. The async form's
+    // compiler-made thunk calls UIKit's handler from a background thread, and
+    // UIKit asserts the main thread there, so a tap could abort the app (the
+    // crash Baby build 66 and Recharge build 39 shipped).
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
         let info = response.notification.request.content.userInfo
-        guard let raw = info["vehicleID"] as? String, let id = UUID(uuidString: raw) else { return }
+        let id = (info["vehicleID"] as? String).flatMap(UUID.init(uuidString:))
         let recalls = info["recalls"] as? Bool ?? false
-        await MainActor.run { destination = Destination(vehicleID: id, showsRecalls: recalls) }
+        nonisolated(unsafe) let done = completionHandler
+        Task { @MainActor in
+            if let id { destination = Destination(vehicleID: id, showsRecalls: recalls) }
+            done()
+        }
     }
 
     nonisolated func userNotificationCenter(
