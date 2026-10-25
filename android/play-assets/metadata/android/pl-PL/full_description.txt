@@ -1,0 +1,37 @@
+Każdy pojazd, jeden dziennik. Samochody, ciężarówki, motocykle, łodzie, kampery, samoloty, quady i kosiarka: wybierz rodzaj, a harmonogram przeglądów powstanie za Ciebie, z milami dla ciężarówki i motogodzinami dla łodzi.
+
+Wie, co jest na czasie
+- Olej, opony, hamulce, filtry, płyny i przeglądy, z typowymi interwałami, które możesz zmieniać
+- Terminy szacowane według tego, ile naprawdę jeździsz, a nie tylko według kalendarza
+- Przypomnienia tydzień wcześniej i w dniu terminu, a w weekend dodatkowa wiadomość o zaległościach
+- Dni na torze, brody i zakurzone trasy przyspieszają odpowiednie prace
+
+Wpisuj w kilka sekund
+- Konserwacja, naprawy, poprawki w ramach akcji serwisowej, modyfikacje, zdarzenia i tankowania, każde osobno
+- Data, stan licznika, koszt, warsztat lub samodzielnie, i notatki
+- Pełna historia wszystkich pojazdów, miesiąc po miesiącu
+- Paragony, zdjęcia i dokumenty przechowywane przy każdej wizycie lub przy pojeździe
+- Drugi licznik dla godzin pracy generatora, godzin na torze lub mil na szlaku
+- Odstaw łódź lub motocykl na sezon, a przypomnienia zostaną wstrzymane
+- Zaimportuj historię z Fuelly, Drivvo, Simply Auto lub z arkusza kalkulacyjnego
+- Widżet na ekran główny z tym, co jest następne w kolejce
+
+Akcje serwisowe dotyczące bezpieczeństwa
+- Zdekoduj numer VIN i wyświetl akcje serwisowe z publicznych danych amerykańskiej NHTSA
+- Sprawdź, co nadal jest otwarte dla Twojego VIN, w wyszukiwarce samej NHTSA
+- Akcja zostaje zamknięta, gdy dziennik pokazuje wykonaną naprawę
+
+Odkrywaj
+- Cenniki otwierane dla dokładnie Twojego pojazdu oraz wartości, które notujesz w czasie
+- Części i narzędzia do bieżących prac, popularne ulepszenia, kluby właścicieli i fora
+- Warsztaty, mobilni mechanicy i studia detailingu w pobliżu
+
+Twoje dane należą do Ciebie
+- Bez konta i bez reklam
+- Dziennik zostaje na Twoim telefonie
+- Wyeksportuj każdy wpis do arkusza kalkulacyjnego (CSV), bezpłatnie
+
+Pro
+Pierwsze dwa pojazdy są bezpłatne na zawsze, z nieograniczonym wpisywaniem, przypomnieniami, akcjami serwisowymi i eksportem. Pro dodaje wszystkie Twoje pojazdy, przejrzysty Service Record PDF dla kupującego lub warsztatu oraz zestawienie, na co idą pieniądze, w tym Twój rzeczywisty koszt na milę. Pro jest dostępne w abonamencie miesięcznym lub rocznym z tygodniowym bezpłatnym okresem próbnym dla kwalifikujących się nowych subskrybentów albo jako jednorazowy zakup.
+
+Harmonogramy to ogólne wskazówki dla normalnej eksploatacji. Instrukcja obsługi i wykwalifikowany mechanik mają pierwszeństwo.

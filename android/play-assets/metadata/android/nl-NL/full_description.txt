@@ -1,0 +1,37 @@
+Elk voertuig, één logboek. Auto's, vrachtwagens, motoren, boten, campers, vliegtuigen, quads en de grasmaaier: kies het type en het onderhoudsschema wordt voor je opgebouwd, met mijlen voor de truck en draaiuren voor de boot.
+
+Het weet wat er aankomt
+- Olie, banden, remmen, filters, vloeistoffen en keuringen, met gangbare intervallen die je kunt aanpassen
+- Datums geschat op basis van hoeveel je echt rijdt, niet alleen de kalender
+- Herinneringen een week van tevoren en op de dag zelf, plus een weekendmelding voor wat te laat is
+- Circuitdagen, waterdoorwaadingen en stoffige ritten halen de juiste klussen naar voren
+
+Binnen enkele seconden vastgelegd
+- Onderhoud, reparaties, terugroepreparaties, aanpassingen, gebeurtenissen en tankbeurten, elk apart
+- Datum, stand, kosten, garage of zelf gedaan, en notities
+- Volledige geschiedenis van alle voertuigen, per maand
+- Bonnetjes, foto's en documenten bewaard bij elk bezoek of bij het voertuig
+- Een tweede teller voor generatoruren, circuituren of trailmijlen
+- Zet een boot of motor voor het seizoen in de stalling en de herinneringen pauzeren
+- Importeer je geschiedenis uit Fuelly, Drivvo, Simply Auto of een spreadsheet
+- Widget voor het beginscherm met wat als volgende aan de beurt is
+
+Veiligheidsterugroepacties
+- Decodeer een VIN en toon terugroepacties uit de openbare gegevens van de Amerikaanse NHTSA
+- Bekijk wat er voor je VIN nog openstaat in de eigen zoekfunctie van de NHTSA
+- Een terugroepactie sluit zodra het logboek de reparatie toont
+
+Ontdekken
+- Prijsgidsen geopend op je exacte voertuig, plus de waarden die je in de loop van de tijd noteert
+- Onderdelen en gereedschap voor wat aankomt, populaire upgrades, eigenaarsclubs en forums
+- Garages, mobiele monteurs en detailers bij jou in de buurt
+
+Je gegevens blijven van jou
+- Geen account en geen advertenties
+- Je logboek blijft op je telefoon
+- Exporteer elke invoer naar een spreadsheet (CSV), gratis
+
+Pro
+Je eerste twee voertuigen zijn voor altijd gratis, met onbeperkt vastleggen, herinneringen, terugroepacties en export. Pro voegt al je voertuigen toe, een nette Service Record PDF voor een koper of garage, en een overzicht van waar het geld heen gaat, inclusief je echte kosten per mijl. Pro is er per maand of per jaar met een week gratis proefperiode voor in aanmerking komende nieuwe abonnees, of als eenmalige aankoop.
+
+De schema's zijn algemene richtlijnen voor normaal gebruik. De handleiding en een gekwalificeerde monteur gaan voor.

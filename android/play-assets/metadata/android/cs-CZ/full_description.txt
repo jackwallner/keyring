@@ -1,0 +1,37 @@
+Každé vozidlo, jeden deník. Auta, náklaďáky, motorky, lodě, karavany, letadla, čtyřkolky i sekačka: vyberte typ a plán údržby se vytvoří za vás, s mílemi pro náklaďák a motohodinami pro loď.
+
+Ví, co je na řadě
+- Olej, pneumatiky, brzdy, filtry, kapaliny a kontroly s typickými intervaly, které můžete upravit
+- Termíny odhadnuté podle toho, kolik skutečně jezdíte, nejen podle kalendáře
+- Připomínky týden předem a v den termínu, k tomu víkendová zpráva o všem, co je po termínu
+- Dny na okruhu, brody a prašné vyjížďky posunou správné práce dřív
+
+Zapište za pár vteřin
+- Údržba, opravy, opravy v rámci svolávací akce, úpravy, události a tankování, vše odděleně
+- Datum, stav, cena, servis nebo vlastní práce a poznámky
+- Kompletní historie všech vozidel po měsících
+- Účtenky, fotky a dokumenty uložené u každé návštěvy nebo u vozidla
+- Druhé počítadlo pro hodiny generátoru, hodiny na okruhu nebo míle v terénu
+- Odstavte loď nebo motorku na sezonu a připomínky se pozastaví
+- Importujte historii z Fuelly, Drivvo, Simply Auto nebo z tabulky
+- Widget na plochu s tím, co je na řadě příště
+
+Bezpečnostní svolávací akce
+- Dekódujte VIN a zobrazte svolávací akce z veřejných dat americké NHTSA
+- Zkontrolujte, co je pro váš VIN stále otevřené, ve vyhledávání samotné NHTSA
+- Svolávací akce se uzavře, když deník ukáže provedenou opravu
+
+Objevujte
+- Cenové průvodce otevřené přímo pro vaše vozidlo a hodnoty, které si v čase zapisujete
+- Díly a nářadí pro to, co je na řadě, oblíbená vylepšení, kluby majitelů a fóra
+- Servisy, mobilní mechanici a čištění vozidel ve vašem okolí
+
+Vaše data zůstávají vaše
+- Bez účtu a bez reklam
+- Váš deník zůstává v telefonu
+- Exportujte každý záznam do tabulky (CSV), zdarma
+
+Pro
+První dvě vozidla jsou zdarma navždy, s neomezeným zapisováním, připomínkami, svolávacími akcemi a exportem. Pro přidává všechna vaše vozidla, přehledný Service Record PDF pro kupujícího nebo servis a rozpis toho, kam jdou peníze, včetně vašich skutečných nákladů na míli. Pro je k dispozici měsíčně nebo ročně s týdenní bezplatnou zkušební dobou pro způsobilé nové odběratele, nebo jako jednorázový nákup.
+
+Plány jsou obecným vodítkem pro běžný provoz. Přednost mají návod k obsluze a kvalifikovaný mechanik.

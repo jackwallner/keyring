@@ -1,0 +1,37 @@
+Minden jármű, egyetlen napló. Autók, teherautók, motorok, hajók, lakóautók, repülők, quadok és a fűnyíró: válaszd ki a típust, és elkészül hozzá a karbantartási terv, mérföldekkel a teherautónak és üzemórákkal a hajónak.
+
+Tudja, mi jön legközelebb
+- Olaj, gumik, fékek, szűrők, folyadékok és ellenőrzések, szerkeszthető tipikus időközökkel
+- A határidők azon alapulnak, mennyit vezetsz valójában, nem csak a naptáron
+- Emlékeztetők egy héttel előtte és a napon, plusz hétvégi értesítés mindenről, ami lejárt
+- A pályanapok, a vízen átkelések és a poros túrák előrehozzák a megfelelő munkákat
+
+Rögzítsd másodpercek alatt
+- Karbantartás, javítások, visszahívási javítások, módosítások, események és tankolások, mind külön
+- Dátum, állás, költség, műhely vagy házilag, és jegyzetek
+- Az összes jármű teljes előzménye, hónapok szerint
+- Számlák, fotók és dokumentumok minden látogatásnál vagy a járműnél tárolva
+- Második számláló az áramfejlesztő üzemóráihoz, pályaórákhoz vagy terepmérföldekhez
+- Tárold el a hajót vagy a motort az idényre, és az emlékeztetők szünetelnek
+- Importáld az előzményeidet a Fuellyből, a Drivvóból, a Simply Autóból vagy táblázatból
+- Kezdőképernyő-widget a következő esedékes feladattal
+
+Biztonsági visszahívások
+- Fejtsd vissza a VIN-t, és listázd a visszahívásokat az amerikai NHTSA nyilvános adataiból
+- Nézd meg, mi van még nyitva a VIN-ed alatt, az NHTSA saját keresőjében
+- A visszahívás lezárul, ha a napló mutatja a javítást
+
+Fedezd fel
+- Árkalauzok pontosan a te járművedre megnyitva, és az idővel általad rögzített értékek
+- Alkatrészek és szerszámok az esedékes munkákhoz, népszerű fejlesztések, tulajdonosi klubok és fórumok
+- Műhelyek, mobil szerelők és autókozmetikák a közeledben
+
+Az adataid a tieid
+- Nincs fiók és nincs hirdetés
+- A naplód a telefonodon marad
+- Exportálj minden bejegyzést táblázatba (CSV), ingyen
+
+Pro
+Az első két járműved örökre ingyenes, korlátlan naplózással, emlékeztetőkkel, visszahívásokkal és exporttal. A Pro hozzáadja az összes járművedet, egy tiszta Service Record PDF-et vevőnek vagy műhelynek, és egy bontást arról, hová megy a pénz, a valós mérföldenkénti költségeddel együtt. A Pro havi vagy éves előfizetéssel érhető el, egyhetes ingyenes próbával a jogosult új előfizetőknek, vagy egyszeri vásárlással.
+
+A tervek általános útmutatók normál használathoz. A kezelési útmutató és egy képzett szerelő szava az első.

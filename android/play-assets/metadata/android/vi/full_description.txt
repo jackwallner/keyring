@@ -1,0 +1,37 @@
+Mọi phương tiện, một cuốn nhật ký. Ô tô, xe tải, xe máy, thuyền, xe RV, máy bay, xe ATV và cả máy cắt cỏ: chọn loại xe và lịch bảo dưỡng được dựng sẵn, tính bằng dặm cho xe tải và giờ máy cho thuyền.
+
+Biết việc gì sắp đến hạn
+- Dầu, lốp, phanh, bộ lọc, chất lỏng và kiểm tra, với chu kỳ thông dụng mà bạn có thể chỉnh
+- Ngày đến hạn ước tính theo mức bạn thực sự sử dụng, không chỉ theo lịch
+- Nhắc trước một tuần và đúng ngày, kèm một thông báo cuối tuần cho mọi việc quá hạn
+- Ngày chạy đường đua, lội nước và những chuyến đi nhiều bụi sẽ đưa các việc phù hợp đến sớm hơn
+
+Ghi chép trong vài giây
+- Bảo dưỡng, sửa chữa, khắc phục triệu hồi, độ xe, sự kiện và đổ nhiên liệu, mỗi loại tách riêng
+- Ngày, chỉ số, chi phí, tiệm sửa hoặc tự làm, và ghi chú
+- Toàn bộ lịch sử của mọi phương tiện, theo tháng
+- Hóa đơn, ảnh và tài liệu được lưu cùng từng lần ghé hoặc cùng phương tiện
+- Công tơ thứ hai cho giờ máy phát, giờ chạy đường đua hoặc dặm đường mòn
+- Cất thuyền hoặc xe máy theo mùa, lời nhắc sẽ tạm dừng
+- Nhập lịch sử từ Fuelly, Drivvo, Simply Auto hoặc bảng tính
+- Tiện ích màn hình chính hiển thị việc đến hạn kế tiếp
+
+Triệu hồi an toàn
+- Giải mã VIN và liệt kê các đợt triệu hồi từ dữ liệu công khai của NHTSA (Hoa Kỳ)
+- Kiểm tra những gì còn mở cho VIN của bạn trên trang tra cứu của chính NHTSA
+- Một đợt triệu hồi được đóng khi nhật ký cho thấy đã sửa
+
+Khám phá
+- Hướng dẫn giá mở đúng xe của bạn, cùng các giá trị bạn ghi lại theo thời gian
+- Phụ tùng và dụng cụ cho việc đến hạn, nâng cấp phổ biến, câu lạc bộ chủ xe và diễn đàn
+- Tiệm sửa, thợ lưu động và dịch vụ chăm sóc xe gần bạn
+
+Dữ liệu vẫn là của bạn
+- Không cần tài khoản, không quảng cáo
+- Nhật ký nằm trên điện thoại của bạn
+- Xuất mọi mục ra bảng tính (CSV), miễn phí
+
+Pro
+Hai phương tiện đầu tiên của bạn miễn phí mãi mãi, với ghi chép, nhắc lịch, triệu hồi và xuất dữ liệu không giới hạn. Pro thêm mọi phương tiện bạn có, một tệp Service Record PDF gọn gàng cho người mua hoặc tiệm sửa, và bảng phân tích tiền đi đâu, gồm cả chi phí thực tế trên mỗi dặm của bạn. Pro có gói theo tháng hoặc theo năm kèm một tuần dùng thử miễn phí cho người đăng ký mới đủ điều kiện, hoặc mua một lần.
+
+Lịch bảo dưỡng chỉ là hướng dẫn chung cho việc sử dụng bình thường. Sách hướng dẫn của xe và thợ có chuyên môn được ưu tiên trước.

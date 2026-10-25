@@ -1,0 +1,37 @@
+Vsako vozilo, en dnevnik. Avtomobili, tovornjaki, motorji, čolni, avtodomi, letala, štirikolesniki in kosilnica: izberite vrsto in urnik vzdrževanja se ustvari zanjo, z miljami za tovornjak in motornimi urami za čoln.
+
+Ve, kaj je na vrsti
+- Olje, pnevmatike, zavore, filtri, tekočine in pregledi, s tipičnimi intervali, ki jih lahko urejate
+- Roki, ocenjeni glede na to, koliko dejansko vozite, ne le po koledarju
+- Opomniki teden dni prej in na dan roka, poleg tega vikend obvestilo za vse, kar zamuja
+- Dnevi na stezi, prebrodi in prašne vožnje pospešijo prava opravila
+
+Vnesite v nekaj sekundah
+- Vzdrževanje, popravila, popravila ob odpoklicu, predelave, dogodki in točenje goriva, vse ločeno
+- Datum, stanje, strošek, servis ali lastno delo in opombe
+- Celotna zgodovina vseh vozil po mesecih
+- Računi, fotografije in dokumenti, shranjeni pri vsakem obisku ali pri vozilu
+- Drugi števec za ure agregata, ure na stezi ali milje po poteh
+- Čoln ali motor za sezono preložite v shrambo in opomniki se ustavijo
+- Uvozite zgodovino iz aplikacij Fuelly, Drivvo, Simply Auto ali iz preglednice
+- Pripomoček na začetnem zaslonu s tem, kar je na vrsti naslednje
+
+Varnostni odpoklici
+- Dekodirajte VIN in prikažite odpoklice iz javnih podatkov ameriške NHTSA
+- Preverite, kaj je za vaš VIN še odprto, v iskalniku NHTSA
+- Odpoklic se zapre, ko dnevnik pokaže popravilo
+
+Odkrijte
+- Cenovni vodniki, odprti za vaše natančno vozilo, in vrednosti, ki jih beležite skozi čas
+- Deli in orodje za to, kar je na vrsti, priljubljene nadgradnje, klubi lastnikov in forumi
+- Servisi, mobilni mehaniki in nege vozil v vaši bližini
+
+Vaši podatki ostanejo vaši
+- Brez računa in brez oglasov
+- Vaš dnevnik ostane v telefonu
+- Izvozite vsak vnos v preglednico (CSV), brezplačno
+
+Pro
+Prvi dve vozili sta brezplačni za vedno, z neomejenim vnašanjem, opomniki, odpokliki in izvozom. Pro doda vsa vaša vozila, pregleden Service Record PDF za kupca ali servis in razčlenitev, kam gre denar, vključno z vašim dejanskim stroškom na miljo. Pro je na voljo mesečno ali letno s tedenskim brezplačnim preizkusom za upravičene nove naročnike ali kot enkratni nakup.
+
+Urniki so splošna navodila za običajno uporabo. Prednost imata navodila za uporabo in usposobljen mehanik.

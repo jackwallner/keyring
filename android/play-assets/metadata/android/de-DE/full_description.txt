@@ -1,0 +1,37 @@
+Jedes Fahrzeug, ein Logbuch. Autos, Lkw, Motorräder, Boote, Wohnmobile, Flugzeuge, Quads und der Rasenmäher: Art wählen, und der passende Wartungsplan wird für Sie angelegt, mit Meilen für den Lkw und Motorstunden für das Boot.
+
+Es weiß, was fällig ist
+- Öl, Reifen, Bremsen, Filter, Flüssigkeiten und Prüfungen, mit üblichen Intervallen, die Sie ändern können
+- Fälligkeiten geschätzt nach Ihrer tatsächlichen Fahrleistung, nicht nur nach dem Kalender
+- Erinnerungen eine Woche vorher und am Tag selbst, dazu ein Hinweis am Wochenende für alles Überfällige
+- Trackdays, Wasserdurchfahrten und staubige Touren ziehen die passenden Arbeiten vor
+
+In Sekunden eintragen
+- Wartung, Reparaturen, Rückruf-Reparaturen, Umbauten, Ereignisse und Tankstopps, jeweils getrennt
+- Datum, Stand, Kosten, Werkstatt oder selbst gemacht, und Notizen
+- Komplette Historie aller Fahrzeuge, nach Monaten
+- Belege, Fotos und Dokumente bleiben bei jedem Besuch oder beim Fahrzeug
+- Ein zweiter Zähler für Generatorstunden, Streckenstunden oder Trail-Meilen
+- Boot oder Motorrad für die Saison einlagern, und die Erinnerungen pausieren
+- Historie aus Fuelly, Drivvo, Simply Auto oder einer Tabelle importieren
+- Widget für den Startbildschirm mit der nächsten Fälligkeit
+
+Sicherheitsrückrufe
+- VIN entschlüsseln und Rückrufe aus den öffentlichen Daten der US-Behörde NHTSA auflisten
+- Auf der eigenen NHTSA-Abfrage prüfen, was für Ihre VIN noch offen ist
+- Ein Rückruf wird abgeschlossen, sobald das Logbuch die Reparatur zeigt
+
+Entdecken
+- Preisguides, direkt auf Ihr genaues Fahrzeug geöffnet, plus die Werte, die Sie über die Zeit notieren
+- Teile und Werkzeug für das Fällige, beliebte Upgrades, Besitzerclubs und Foren
+- Werkstätten, mobile Mechaniker und Aufbereiter in Ihrer Nähe
+
+Ihre Daten bleiben Ihre
+- Kein Konto und keine Werbung
+- Ihr Logbuch bleibt auf Ihrem Telefon
+- Jeden Eintrag als Tabelle (CSV) exportieren, kostenlos
+
+Pro
+Ihre ersten zwei Fahrzeuge bleiben für immer kostenlos, mit unbegrenzten Einträgen, Erinnerungen, Rückrufen und Export. Pro bringt alle Ihre Fahrzeuge, ein sauberes Service Record PDF für Käufer oder Werkstatt und eine Aufschlüsselung, wohin das Geld geht, einschließlich Ihrer echten Kosten pro Meile. Pro gibt es monatlich oder jährlich mit einer Woche kostenloser Testphase für berechtigte neue Abonnenten oder als einmaligen Kauf.
+
+Die Pläne sind allgemeine Richtwerte für den normalen Gebrauch. Betriebsanleitung und eine qualifizierte Fachwerkstatt gehen vor.

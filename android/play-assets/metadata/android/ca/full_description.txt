@@ -1,0 +1,37 @@
+Tots els vehicles, un sol quadern. Cotxes, camions, motos, vaixells, autocaravanes, avions, quads i el tallagespa: tria el tipus i es crea el seu calendari de manteniment, amb milles per al camió i hores de motor per al vaixell.
+
+Sap què toca fer
+- Oli, pneumàtics, frens, filtres, fluids i inspeccions, amb intervals habituals que pots editar
+- Dates estimades segons el que condueixes de debò, no només el calendari
+- Avisos una setmana abans i el mateix dia, més un recordatori de cap de setmana per al que estigui vençut
+- Els dies de circuit, els passos d'aigua i les sortides amb pols avancen les feines que toquen
+
+Anota-ho en segons
+- Manteniment, reparacions, arranjaments per crida a revisió, millores, esdeveniments i repostatges, cadascun per separat
+- Data, lectura, cost, taller o per compte teu, i notes
+- Historial complet de tots els vehicles, per mesos
+- Factures, fotos i documents guardats amb cada visita o amb el vehicle
+- Un segon comptador per a hores del generador, hores de circuit o milles de ruta
+- Guarda un vaixell o una moto durant la temporada i els avisos es posen en pausa
+- Importa el teu historial des de Fuelly, Drivvo, Simply Auto o un full de càlcul
+- Widget a la pantalla d'inici amb el que vence a continuació
+
+Crides a revisió de seguretat
+- Descodifica un VIN i consulta les crides a revisió amb les dades públiques de la NHTSA dels EUA
+- Comprova què continua obert per al teu VIN a la consulta oficial de la NHTSA
+- Una crida a revisió es tanca quan el registre mostra la reparació
+
+Explora
+- Guies de preus obertes amb el teu vehicle exacte, a més dels valors que vagis anotant
+- Recanvis i eines per al que toca, millores populars, clubs de propietaris i fòrums
+- Tallers, mecànics a domicili i centres d'estètica prop teu
+
+Les teves dades són teves
+- Sense compte i sense anuncis
+- El teu registre es queda al telèfon
+- Exporta totes les entrades a un full de càlcul (CSV), gratis
+
+Pro
+Els teus dos primers vehicles són gratuïts per sempre, amb registres, avisos, crides a revisió i exportació il·limitats. Pro afegeix tots els vehicles que tinguis, un Service Record PDF net per a un comprador o un taller, i un desglossament d'on se'n va els diners, inclòs el teu cost real per milla. Pro està disponible en mode mensual o anual amb una setmana de prova gratuïta per a nous subscriptors elegibles, o com a compra única.
+
+Els calendaris són una guia general per a un ús normal. Primer van el manual del propietari i un mecànic qualificat.

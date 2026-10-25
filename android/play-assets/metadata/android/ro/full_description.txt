@@ -1,0 +1,37 @@
+Fiecare vehicul, un singur jurnal. Mașini, camioane, motociclete, bărci, rulote, avioane, ATV-uri și mașina de tuns iarba: alege tipul și i se creează programul de întreținere, cu mile pentru camion și ore de funcționare pentru barcă.
+
+Știe ce urmează
+- Ulei, anvelope, frâne, filtre, lichide și inspecții, cu intervale tipice pe care le poți edita
+- Date estimate după cât conduci de fapt, nu doar după calendar
+- Mementouri cu o săptămână înainte și în ziua scadenței, plus o notificare de weekend pentru tot ce e întârziat
+- Zilele pe circuit, trecerile prin apă și plimbările prăfuite aduc mai devreme lucrările potrivite
+
+Notează în câteva secunde
+- Întreținere, reparații, remedieri din rapel, modificări, evenimente și alimentări, fiecare separat
+- Data, citirea, costul, service sau făcut de tine, și note
+- Istoric complet pentru toate vehiculele, pe luni
+- Chitanțe, fotografii și documente păstrate la fiecare vizită sau la vehicul
+- Un al doilea contor pentru orele generatorului, orele pe circuit sau milele de traseu
+- Pune o barcă sau o motocicletă la păstrare pentru sezon și mementourile se opresc
+- Importă istoricul din Fuelly, Drivvo, Simply Auto sau dintr-o foaie de calcul
+- Widget pentru ecranul principal cu ce urmează
+
+Rapeluri de siguranță
+- Decodează un VIN și vezi rapelurile din datele publice ale NHTSA din SUA
+- Verifică ce e încă deschis pentru VIN-ul tău în căutarea NHTSA
+- Un rapel se închide când jurnalul arată remedierea
+
+Explorează
+- Ghiduri de prețuri deschise pentru vehiculul tău exact, plus valorile pe care le notezi în timp
+- Piese și unelte pentru ce urmează, upgrade-uri populare, cluburi de proprietari și forumuri
+- Service-uri, mecanici mobili și spălătorii auto în apropiere
+
+Datele tale rămân ale tale
+- Fără cont și fără reclame
+- Jurnalul rămâne pe telefonul tău
+- Exportă fiecare intrare într-o foaie de calcul (CSV), gratuit
+
+Pro
+Primele tale două vehicule sunt gratuite pentru totdeauna, cu înregistrări, mementouri, rapeluri și export nelimitate. Pro adaugă toate vehiculele pe care le ai, un Service Record PDF curat pentru un cumpărător sau un service și o defalcare a banilor cheltuiți, inclusiv costul tău real pe milă. Pro este disponibil lunar sau anual, cu o săptămână de probă gratuită pentru noii abonați eligibili, sau ca achiziție unică.
+
+Programele sunt orientări generale pentru utilizarea normală. Cartea tehnică și un mecanic calificat au prioritate.

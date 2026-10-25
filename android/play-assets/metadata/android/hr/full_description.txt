@@ -1,0 +1,37 @@
+Svako vozilo, jedan dnevnik. Automobili, kamioni, motocikli, brodovi, kamp-kućice, zrakoplovi, četverocikli i kosilica: odaberite vrstu i plan održavanja se izrađuje za vas, s miljama za kamion i motornim satima za brod.
+
+Zna što je na redu
+- Ulje, gume, kočnice, filtri, tekućine i pregledi, s uobičajenim intervalima koje možete uređivati
+- Rokovi procijenjeni prema tome koliko stvarno vozite, a ne samo prema kalendaru
+- Podsjetnici tjedan dana ranije i na dan roka, uz vikend obavijest za sve što kasni
+- Dani na stazi, gaženje vode i prašnjave vožnje ubrzavaju prave poslove
+
+Unesite u nekoliko sekundi
+- Održavanje, popravci, popravci zbog opoziva, preinake, događaji i točenja goriva, sve zasebno
+- Datum, očitanje, trošak, servis ili vlastiti rad i bilješke
+- Cijela povijest svih vozila po mjesecima
+- Računi, fotografije i dokumenti pohranjeni uz svaki posjet ili uz vozilo
+- Drugo brojilo za sate agregata, sate na stazi ili milje na stazama
+- Brod ili motocikl spremite za sezonu i podsjetnici se pauziraju
+- Uvezite povijest iz aplikacija Fuelly, Drivvo, Simply Auto ili iz proračunske tablice
+- Widget za početni zaslon s onim što je sljedeće na redu
+
+Sigurnosni opozivi
+- Dekodirajte VIN i prikažite opozive iz javnih podataka američke NHTSA
+- Provjerite što je za vaš VIN još otvoreno u pretraživanju same NHTSA
+- Opoziv se zatvara kad dnevnik pokaže popravak
+
+Istražite
+- Cjenovni vodiči otvoreni za vaše točno vozilo te vrijednosti koje bilježite tijekom vremena
+- Dijelovi i alat za ono što je na redu, popularne nadogradnje, klubovi vlasnika i forumi
+- Servisi, mobilni mehaničari i autopraonice u vašoj blizini
+
+Vaši podaci ostaju vaši
+- Bez računa i bez oglasa
+- Vaš dnevnik ostaje na vašem telefonu
+- Izvezite svaki unos u proračunsku tablicu (CSV), besplatno
+
+Pro
+Prva dva vozila besplatna su zauvijek, uz neograničeno bilježenje, podsjetnike, opozive i izvoz. Pro dodaje sva vaša vozila, uredan Service Record PDF za kupca ili servis te raspodjelu troškova, uključujući vaš stvarni trošak po milji. Pro je dostupan mjesečno ili godišnje s tjednim besplatnim probnim razdobljem za prihvatljive nove pretplatnike ili kao jednokratna kupnja.
+
+Planovi su opće smjernice za uobičajenu uporabu. Prednost imaju priručnik vlasnika i kvalificirani mehaničar.

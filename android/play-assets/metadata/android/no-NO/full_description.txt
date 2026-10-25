@@ -1,0 +1,37 @@
+Alle kjøretøy, én loggbok. Biler, lastebiler, motorsykler, båter, bobiler, fly, ATV-er og gressklipperen: velg typen, så bygges vedlikeholdsplanen for den, med miles for lastebilen og motortimer for båten.
+
+Den vet hva som skal gjøres
+- Olje, dekk, bremser, filtre, væsker og kontroller, med typiske intervaller du kan endre
+- Datoer anslått ut fra hvor mye du faktisk kjører, ikke bare kalenderen
+- Påminnelser en uke før og på dagen, pluss et helgevarsel for alt som er forfalt
+- Banedager, vadinger og støvete turer flytter de riktige jobbene fram
+
+Logg det på sekunder
+- Vedlikehold, reparasjoner, utbedringer etter tilbakekalling, modifikasjoner, hendelser og fylleturer, hver for seg
+- Dato, avlesning, kostnad, verksted eller gjort selv, og notater
+- Full historikk for alle kjøretøy, måned for måned
+- Kvitteringer, bilder og dokumenter lagret ved hvert besøk eller ved kjøretøyet
+- En ekstra teller for generatortimer, banetimer eller stimiles
+- Sett en båt eller motorsykkel på lager for sesongen, så pauses påminnelsene
+- Importer historikken din fra Fuelly, Drivvo, Simply Auto eller et regneark
+- Widget til startskjermen med det som skal gjøres neste gang
+
+Sikkerhetstilbakekallinger
+- Dekod et VIN og se tilbakekallinger fra åpne data hos den amerikanske NHTSA
+- Sjekk hva som fortsatt er åpent for ditt VIN i NHTSAs eget oppslag
+- En tilbakekalling lukkes når loggen viser utbedringen
+
+Utforsk
+- Prisguider åpnet på akkurat ditt kjøretøy, pluss verdiene du noterer over tid
+- Deler og verktøy til det som skal gjøres, populære oppgraderinger, eierklubber og forum
+- Verksteder, mobile mekanikere og bilpleiere i nærheten
+
+Dataene dine er dine
+- Ingen konto og ingen annonser
+- Loggen blir på telefonen din
+- Eksporter hver oppføring til et regneark (CSV), gratis
+
+Pro
+De to første kjøretøyene dine er gratis for alltid, med ubegrenset logging, påminnelser, tilbakekallinger og eksport. Pro legger til alle kjøretøyene du eier, en ryddig Service Record PDF til en kjøper eller et verksted og en oversikt over hvor pengene går, inkludert din reelle kostnad per mile. Pro finnes månedlig eller årlig med en ukes gratis prøveperiode for kvalifiserte nye abonnenter, eller som et engangskjøp.
+
+Planene er generell veiledning for vanlig bruk. Instruksjonsboken og en kvalifisert mekaniker kommer først.

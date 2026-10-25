@@ -1,0 +1,37 @@
+Jokainen ajoneuvo, yksi päiväkirja. Autot, kuorma-autot, moottoripyörät, veneet, asuntoautot, lentokoneet, mönkijät ja ruohonleikkuri: valitse tyyppi, niin sille rakennetaan huoltosuunnitelma, mailit kuorma-autolle ja moottoritunnit veneelle.
+
+Se tietää, mikä on erääntymässä
+- Öljy, renkaat, jarrut, suodattimet, nesteet ja tarkastukset, tyypillisillä väleillä, joita voit muokata
+- Päivämäärät arvioidaan sen mukaan, kuinka paljon oikeasti ajat, ei pelkän kalenterin mukaan
+- Muistutukset viikkoa ennen ja päivänä, sekä viikonloppuviesti kaikesta myöhästyneestä
+- Ratapäivät, vesiylitykset ja pölyiset ajot tuovat oikeat työt aiemmaksi
+
+Kirjaa sekunneissa
+- Huollot, korjaukset, takaisinkutsukorjaukset, muutokset, tapahtumat ja tankkaukset, kukin erikseen
+- Päivämäärä, lukema, kustannus, korjaamo tai itse tehty, ja muistiinpanot
+- Kaikkien ajoneuvojen koko historia kuukausittain
+- Kuitit, kuvat ja asiakirjat tallessa jokaisen käynnin tai ajoneuvon yhteydessä
+- Toinen mittari generaattoritunneille, ratatunneille tai maastomaileille
+- Laita vene tai moottoripyörä talvisäilöön kaudeksi, niin muistutukset tauolle
+- Tuo historiasi Fuellystä, Drivvosta, Simply Autosta tai taulukosta
+- Aloitusnäytön widget seuraavasta erääntyvästä asiasta
+
+Turvallisuuteen liittyvät takaisinkutsut
+- Pura VIN ja listaa takaisinkutsut Yhdysvaltain NHTSA:n julkisesta datasta
+- Katso, mikä on yhä avoinna VIN-tunnuksellasi NHTSA:n omassa haussa
+- Takaisinkutsu suljetaan, kun lokissa näkyy korjaus
+
+Tutustu
+- Hinta-oppaat avautuvat juuri sinun ajoneuvollesi, sekä arvot, joita kirjaat ajan mittaan
+- Osat ja työkalut erääntyvään työhön, suositut päivitykset, omistajakerhot ja keskustelupalstat
+- Korjaamot, liikkuvat asentajat ja autonhoitoliikkeet lähelläsi
+
+Tietosi pysyvät sinun
+- Ei tiliä eikä mainoksia
+- Lokisi pysyy puhelimessasi
+- Vie jokainen merkintä taulukkoon (CSV), ilmaiseksi
+
+Pro
+Kaksi ensimmäistä ajoneuvoasi ovat ilmaisia ikuisesti, rajattomalla kirjaamisella, muistutuksilla, takaisinkutsuilla ja viennillä. Pro lisää kaikki omistamasi ajoneuvot, siistin Service Record PDF:n ostajalle tai korjaamolle sekä erittelyn siitä, mihin rahat menevät, mukaan lukien todellinen kustannuksesi mailia kohti. Pro on saatavilla kuukausi- tai vuositilauksena viikon ilmaisella kokeilulla oikeutetuille uusille tilaajille tai kertaostoksena.
+
+Suunnitelmat ovat yleinen ohje tavalliseen käyttöön. Käyttöohjekirja ja pätevä asentaja ovat etusijalla.

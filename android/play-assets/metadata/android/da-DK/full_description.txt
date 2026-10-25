@@ -1,0 +1,37 @@
+Ethvert køretøj, én logbog. Biler, lastbiler, motorcykler, både, autocampere, fly, ATV'er og plæneklipperen: vælg typen, så bygges dens vedligeholdelsesplan til dig, med miles til lastbilen og motortimer til båden.
+
+Den ved, hvad der skal gøres
+- Olie, dæk, bremser, filtre, væsker og eftersyn, med typiske intervaller, du kan redigere
+- Datoer anslået ud fra, hvor meget du faktisk kører, ikke kun kalenderen
+- Påmindelser en uge før og på dagen, plus en weekendbesked for alt, der er overskredet
+- Banedage, vadninger og støvede ture rykker de rigtige opgaver frem
+
+Log det på få sekunder
+- Vedligeholdelse, reparationer, tilbagekaldelsesrettelser, modifikationer, begivenheder og tankninger, hver for sig
+- Dato, aflæsning, pris, værksted eller selv gjort, og noter
+- Fuld historik for alle køretøjer, måned for måned
+- Kvitteringer, fotos og dokumenter gemt ved hvert besøg eller ved køretøjet
+- Endnu en tæller til generatortimer, banetimer eller stimiles
+- Læg en båd eller motorcykel på vinterlager for sæsonen, og påmindelserne holder pause
+- Importér din historik fra Fuelly, Drivvo, Simply Auto eller et regneark
+- Widget til startskærmen med det, der skal gøres næste gang
+
+Sikkerhedstilbagekaldelser
+- Afkod et VIN og se tilbagekaldelser fra de offentlige data hos den amerikanske NHTSA
+- Tjek, hvad der stadig er åbent for dit VIN, i NHTSA's eget opslag
+- En tilbagekaldelse lukkes, når loggen viser rettelsen
+
+Udforsk
+- Prisguider åbnet på netop dit køretøj, plus de værdier, du noterer over tid
+- Dele og værktøj til det, der skal gøres, populære opgraderinger, ejerklubber og fora
+- Værksteder, mobile mekanikere og bilplejere i nærheden
+
+Dine data er dine egne
+- Ingen konto og ingen reklamer
+- Din log bliver på din telefon
+- Eksportér alle poster til et regneark (CSV), gratis
+
+Pro
+Dine første to køretøjer er gratis for altid, med ubegrænset logning, påmindelser, tilbagekaldelser og eksport. Pro tilføjer alle de køretøjer, du ejer, en ren Service Record PDF til en køber eller et værksted og en opdeling af, hvor pengene går hen, inklusive dine reelle omkostninger pr. mile. Pro fås månedligt eller årligt med en uges gratis prøveperiode for kvalificerede nye abonnenter eller som et enkeltkøb.
+
+Planerne er generel vejledning til almindelig brug. Instruktionsbogen og en kvalificeret mekaniker kommer først.

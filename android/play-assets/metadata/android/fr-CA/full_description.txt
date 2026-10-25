@@ -1,0 +1,37 @@
+Tous vos véhicules, un seul carnet. Autos, camions, motos, bateaux, véhicules récréatifs, avions, VTT et la tondeuse : choisissez le type et son calendrier d'entretien se crée tout seul, en miles pour le camion et en heures moteur pour le bateau.
+
+Il sait ce qui est à faire
+- Huile, pneus, freins, filtres, liquides et inspections, avec des intervalles types que vous pouvez modifier
+- Échéances estimées selon votre usage réel, pas seulement le calendrier
+- Rappels une semaine avant et le jour même, plus une note la fin de semaine pour ce qui est en retard
+- Les journées sur piste, les traversées d'eau et les sorties poussiéreuses devancent les bons travaux
+
+Notez tout en quelques secondes
+- Entretien, réparations, correctifs de rappel, modifications, événements et pleins, chacun classé à part
+- Date, relevé, coût, garage ou à la maison, et notes
+- Historique complet de tous les véhicules, mois par mois
+- Factures, photos et documents rangés avec chaque visite ou avec le véhicule
+- Un second compteur pour les heures de la génératrice, de la piste ou les miles de sentier
+- Remisez un bateau ou une moto pour la saison et les rappels se mettent en pause
+- Importez votre historique depuis Fuelly, Drivvo, Simply Auto ou un chiffrier
+- Widget d'écran d'accueil avec la prochaine échéance
+
+Rappels de sécurité
+- Décodez un NIV (VIN) et listez les rappels grâce aux données publiques de la NHTSA américaine
+- Vérifiez ce qui reste ouvert pour votre VIN sur la recherche de la NHTSA elle-même
+- Un rappel se ferme quand le carnet montre la réparation
+
+Explorer
+- Guides de prix ouverts sur votre véhicule exact, avec les valeurs que vous notez au fil du temps
+- Pièces et outils pour ce qui est à faire, accessoires populaires, clubs de propriétaires et forums
+- Garages, mécaniciens mobiles et centres de nettoyage auto près de chez vous
+
+Vos données restent à vous
+- Aucun compte et aucune publicité
+- Votre carnet reste sur votre téléphone
+- Exportez chaque entrée vers un chiffrier (CSV), gratuitement
+
+Pro
+Vos deux premiers véhicules sont gratuits pour toujours, avec saisie, rappels, alertes de rappel et exportation illimités. Pro ajoute tous vos véhicules, un Service Record PDF soigné pour un acheteur ou un garage, et un sommaire de vos dépenses, avec votre coût réel au mile. Pro est offert en abonnement mensuel ou annuel avec une semaine d'essai gratuite pour les nouveaux abonnés admissibles, ou en achat unique.
+
+Les calendriers d'entretien sont des repères généraux pour un usage normal. Le guide du propriétaire et un mécanicien qualifié passent avant.

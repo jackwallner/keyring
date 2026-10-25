@@ -1,0 +1,37 @@
+Todos tus vehículos, una sola bitácora. Autos, camionetas, motos, lanchas, casas rodantes, aviones, cuatriciclos y la podadora: elige el tipo y se arma su programa de mantenimiento, con millas para la camioneta y horas de motor para la lancha.
+
+Sabe qué toca hacer
+- Aceite, llantas, frenos, filtros, fluidos e inspecciones, con intervalos típicos que puedes editar
+- Fechas estimadas según lo que realmente manejas, no solo el calendario
+- Recordatorios una semana antes y el mismo día, más un aviso de fin de semana por lo que esté vencido
+- Los días de pista, los cruces de agua y los paseos con polvo adelantan los trabajos que corresponden
+
+Regístralo en segundos
+- Mantenimiento, reparaciones, arreglos por retiro, modificaciones, eventos y cargas de combustible, cada uno por separado
+- Fecha, lectura, costo, taller o por tu cuenta, y notas
+- Historial completo de todos los vehículos, por mes
+- Recibos, fotos y documentos guardados con cada visita o con el vehículo
+- Un segundo medidor para horas del generador, horas de pista o millas de sendero
+- Guarda una lancha o una moto durante la temporada y los recordatorios se pausan
+- Importa tu historial desde Fuelly, Drivvo, Simply Auto o una hoja de cálculo
+- Widget en la pantalla de inicio con lo próximo que vence
+
+Retiros por seguridad
+- Decodifica un VIN y consulta los retiros con los datos públicos de la NHTSA de EE. UU.
+- Revisa lo que sigue abierto para tu VIN en la consulta oficial de la NHTSA
+- Un retiro se cierra cuando la bitácora muestra la reparación
+
+Explora
+- Guías de precios abiertas con tu vehículo exacto, además de los valores que anotes con el tiempo
+- Refacciones y herramientas para lo que toca, mejoras populares, clubes de dueños y foros
+- Talleres, mecánicos a domicilio y detallistas cerca de ti
+
+Tus datos son tuyos
+- Sin cuenta y sin anuncios
+- Tu bitácora se queda en tu teléfono
+- Exporta cada registro a una hoja de cálculo (CSV), gratis
+
+Pro
+Tus primeros dos vehículos son gratis para siempre, con registros, recordatorios, retiros y exportación ilimitados. Pro agrega todos los vehículos que tengas, un Service Record PDF limpio para un comprador o un taller, y un desglose de en qué se va el dinero, incluido tu costo real por milla. Pro está disponible de forma mensual o anual con una semana de prueba gratis para nuevos suscriptores elegibles, o como compra única.
+
+Los programas son una guía general para uso normal. Primero está el manual del propietario y un mecánico calificado.

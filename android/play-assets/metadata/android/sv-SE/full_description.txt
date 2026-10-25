@@ -1,0 +1,37 @@
+Alla fordon, en loggbok. Bilar, lastbilar, motorcyklar, båtar, husbilar, flygplan, fyrhjulingar och gräsklipparen: välj typ så byggs dess underhållsschema åt dig, med miles för lastbilen och motortimmar för båten.
+
+Den vet vad som är dags
+- Olja, däck, bromsar, filter, vätskor och besiktningar, med vanliga intervall som du kan ändra
+- Datum uppskattade efter hur mycket du faktiskt kör, inte bara kalendern
+- Påminnelser en vecka före och på dagen, plus en helgnotis för allt som är försenat
+- Banddagar, vadningar och dammiga turer flyttar fram rätt jobb
+
+Logga på några sekunder
+- Underhåll, reparationer, åtgärder efter återkallelse, modifieringar, händelser och tankningar, var och en för sig
+- Datum, mätarställning, kostnad, verkstad eller egen insats, och anteckningar
+- Hela historiken för alla fordon, månad för månad
+- Kvitton, foton och dokument sparade vid varje besök eller på fordonet
+- En andra mätare för generatortimmar, banatimmar eller stigmiles
+- Ställ in en båt eller motorcykel för säsongen så pausas påminnelserna
+- Importera din historik från Fuelly, Drivvo, Simply Auto eller ett kalkylblad
+- Widget för startskärmen med vad som är dags härnäst
+
+Säkerhetsåterkallelser
+- Avkoda ett VIN och lista återkallelser från den amerikanska myndigheten NHTSA:s öppna data
+- Se vad som fortfarande är öppet för ditt VIN i NHTSA:s egen sökning
+- En återkallelse stängs när loggen visar åtgärden
+
+Utforska
+- Prisguider som öppnas på just ditt fordon, plus de värden du antecknar över tid
+- Delar och verktyg för det som är dags, populära uppgraderingar, ägarklubbar och forum
+- Verkstäder, mobila mekaniker och bilvårdare nära dig
+
+Din data är din
+- Inget konto och inga annonser
+- Din logg stannar på din telefon
+- Exportera varje post till ett kalkylblad (CSV), gratis
+
+Pro
+Dina två första fordon är gratis för alltid, med obegränsad loggning, påminnelser, återkallelser och export. Pro lägger till alla fordon du äger, en prydlig Service Record PDF för en köpare eller en verkstad och en uppdelning av vart pengarna går, inklusive din verkliga kostnad per mile. Pro finns månadsvis eller årsvis med en veckas gratis provperiod för berättigade nya prenumeranter, eller som ett engångsköp.
+
+Schemana är allmän vägledning för normal användning. Instruktionsboken och en kvalificerad mekaniker går först.

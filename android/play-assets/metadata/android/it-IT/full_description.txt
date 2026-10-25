@@ -1,0 +1,37 @@
+Ogni veicolo, un solo registro. Auto, camion, moto, barche, camper, aerei, quad e il tosaerba: scegli il tipo e il suo piano di manutenzione si crea da solo, con le miglia per il camion e le ore motore per la barca.
+
+Sa cosa è in scadenza
+- Olio, gomme, freni, filtri, liquidi e controlli, con intervalli tipici che puoi modificare
+- Scadenze stimate in base a quanto guidi davvero, non solo al calendario
+- Promemoria una settimana prima e il giorno stesso, più un avviso nel weekend per ciò che è in ritardo
+- Giornate in pista, guadi e uscite polverose anticipano gli interventi giusti
+
+Registra in pochi secondi
+- Manutenzione, riparazioni, interventi per richiamo, modifiche, eventi e rifornimenti, ognuno a parte
+- Data, lettura, costo, officina o fai da te, e note
+- Storico completo di tutti i veicoli, mese per mese
+- Ricevute, foto e documenti conservati con ogni intervento o con il veicolo
+- Un secondo contatore per ore del generatore, ore in pista o miglia di sentiero
+- Metti a riposo una barca o una moto per la stagione e i promemoria si fermano
+- Importa lo storico da Fuelly, Drivvo, Simply Auto o da un foglio di calcolo
+- Widget nella schermata Home con la prossima scadenza
+
+Richiami di sicurezza
+- Decodifica un VIN ed elenca i richiami dai dati pubblici della NHTSA statunitense
+- Controlla cosa è ancora aperto per il tuo VIN sulla ricerca della NHTSA stessa
+- Un richiamo si chiude quando il registro mostra la riparazione
+
+Esplora
+- Guide ai prezzi aperte sul tuo veicolo esatto, più i valori che annoti nel tempo
+- Ricambi e attrezzi per ciò che è in scadenza, accessori più diffusi, club di proprietari e forum
+- Officine, meccanici a domicilio e centri di estetica auto vicino a te
+
+I tuoi dati restano tuoi
+- Nessun account e nessuna pubblicità
+- Il tuo registro resta sul telefono
+- Esporta ogni voce in un foglio di calcolo (CSV), gratis
+
+Pro
+I tuoi primi due veicoli sono gratuiti per sempre, con registrazioni, promemoria, richiami ed esportazione illimitati. Pro aggiunge tutti i veicoli che possiedi, un Service Record PDF pulito per un acquirente o un'officina, e un riepilogo di dove vanno i soldi, compreso il tuo costo reale per miglio. Pro è disponibile con abbonamento mensile o annuale con una settimana di prova gratuita per i nuovi abbonati idonei, oppure con acquisto singolo.
+
+I piani sono indicazioni generali per un uso normale. Prima vengono il libretto di uso e manutenzione e un meccanico qualificato.
