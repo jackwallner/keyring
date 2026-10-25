@@ -70,7 +70,7 @@ class CatalogParityTest {
 
     @Test fun swiftSourceHasTheExpectedLiteralCount() {
         // 161 literals on 2026-10-20; a change here means the Swift catalog moved and the Kotlin port must follow.
-        assertEquals(161, literals.size)
+        assertEquals(169, literals.size)
     }
 
     @Test fun everySwiftLiteralIsReachableOnAndroid() {

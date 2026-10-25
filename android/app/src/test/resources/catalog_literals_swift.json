@@ -1809,6 +1809,39 @@
    "unresolved": []
   },
   {
+   "key": "brakes",
+   "name": "Brake pads",
+   "detail": "Check the pad thickness. E-bikes are heavy and fast, so pads go quicker.",
+   "symbol": "exclamationmark.octagon",
+   "miles": 500.0,
+   "months": 6.0,
+   "gear": [
+    {
+     "title": "Disc brake pads",
+     "query": "bike disc brake pads"
+    }
+   ],
+   "group": "Brakes",
+   "unresolved": []
+  },
+  {
+   "key": "brakeFluid",
+   "name": "Hydraulic brake fluid",
+   "detail": "Check the level, and bleed it if the lever feels soft. Cable brakes skip this.",
+   "symbol": "drop.halffull",
+   "months": 12.0,
+   "isCore": false,
+   "difficulty": "moderate",
+   "gear": [
+    {
+     "title": "Brake bleed kit",
+     "query": "bike hydraulic brake bleed kit"
+    }
+   ],
+   "group": "Brakes",
+   "unresolved": []
+  },
+  {
    "key": "chain",
    "name": "Chain clean and lube",
    "detail": "A clean chain shifts better and lasts longer. More often in the wet.",
@@ -1819,37 +1852,42 @@
     {
      "title": "Chain lube",
      "query": "bike chain lube"
-    },
+    }
+   ],
+   "group": "Chain",
+   "unresolved": []
+  },
+  {
+   "key": "chainWear",
+   "name": "Check chain wear",
+   "detail": "A stretched chain wears out the cassette and chainrings. A checker tool takes seconds.",
+   "symbol": "ruler",
+   "miles": 500.0,
+   "months": 3.0,
+   "gear": [
     {
      "title": "Chain checker",
      "query": "bike chain wear checker"
     }
    ],
+   "group": "Chain",
    "unresolved": []
   },
   {
-   "key": "brakes",
-   "name": "Brake pads",
-   "detail": "E-bikes are heavy and fast, so pads go quicker.",
-   "symbol": "exclamationmark.octagon",
-   "miles": 500.0,
-   "months": 6.0,
+   "key": "chainReplace",
+   "name": "New chain",
+   "detail": "Typically every 2,000 to 3,000 miles, sooner on an e-bike. Go by the wear check.",
+   "symbol": "link.badge.plus",
+   "miles": 2500.0,
+   "isCore": false,
+   "difficulty": "moderate",
    "gear": [
     {
-     "title": "Disc brake pads",
-     "query": "e-bike disc brake pads"
+     "title": "Chain",
+     "query": "bike chain"
     }
    ],
-   "unresolved": []
-  },
-  {
-   "key": "tune",
-   "name": "Tune-up",
-   "detail": "Gears, cables, bolts and spokes checked over.",
-   "symbol": "wrench.adjustable",
-   "miles": 1000.0,
-   "months": 12.0,
-   "difficulty": "moderate",
+   "group": "Chain",
    "unresolved": []
   },
   {
@@ -1864,15 +1902,86 @@
      "query": "bike floor pump with gauge"
     }
    ],
+   "group": "Tires",
    "unresolved": []
   },
   {
    "key": "battery",
-   "name": "Battery care",
+   "name": "E-bike battery care",
    "detail": "Store around half charge in the cool and dry, and check the contacts.",
    "symbol": "battery.75",
    "months": 6.0,
    "isCore": false,
+   "group": "Battery",
+   "unresolved": []
+  },
+  {
+   "key": "powerMeter",
+   "name": "Charge the power meter",
+   "detail": "Or swap its coin cell. A dead one drops out mid-ride.",
+   "symbol": "bolt.circle",
+   "months": 1.0,
+   "isCore": false,
+   "group": "Battery",
+   "unresolved": []
+  },
+  {
+   "key": "shifting",
+   "name": "Charge electronic shifting",
+   "detail": "Di2, AXS and the like. A flat battery leaves you in one gear.",
+   "symbol": "battery.100.bolt",
+   "months": 1.0,
+   "isCore": false,
+   "group": "Battery",
+   "unresolved": []
+  },
+  {
+   "key": "tune",
+   "name": "Tune-up and safety check",
+   "detail": "Gears, cables, bolts, spokes and bearings checked over, by you or a mechanic.",
+   "symbol": "wrench.adjustable",
+   "miles": 1000.0,
+   "months": 12.0,
+   "difficulty": "moderate",
+   "group": "Checkup",
+   "unresolved": []
+  },
+  {
+   "key": "firmware",
+   "name": "Update firmware",
+   "detail": "Motors, displays, shifting and power meters all get updates through their apps.",
+   "symbol": "arrow.down.circle",
+   "months": 6.0,
+   "isCore": false,
+   "group": "Checkup",
+   "unresolved": []
+  },
+  {
+   "key": "barTape",
+   "name": "Replace bar tape",
+   "detail": "Drop bars only. Worn tape gets slippery in the wet.",
+   "symbol": "hand.raised",
+   "months": 12.0,
+   "isCore": false,
+   "gear": [
+    {
+     "title": "Bar tape",
+     "query": "bike handlebar tape"
+    }
+   ],
+   "group": "Other",
+   "unresolved": []
+  },
+  {
+   "key": "bottomBracket",
+   "name": "Grease the bottom bracket",
+   "detail": "Creaks or grit at the cranks mean it's due.",
+   "symbol": "gearshape",
+   "miles": 3000.0,
+   "months": 12.0,
+   "isCore": false,
+   "difficulty": "moderate",
+   "group": "Other",
    "unresolved": []
   },
   {

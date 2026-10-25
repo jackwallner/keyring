@@ -99,10 +99,10 @@ enum class VehicleKind(val title: String) {
 
         /** Groupings for the kind picker, so nineteen choices read as four. */
         val pickerSections: List<Pair<String, List<VehicleKind>>> = listOf(
-            "On the road" to listOf(car, suv, truck, van, motorcycle, scooter),
+            "On the road" to listOf(car, suv, truck, van, motorcycle, ebike, scooter),
             "Camping and towing" to listOf(rv, camper, trailer),
             "On the water and in the air" to listOf(boat, sailboat, personalWatercraft, aircraft),
-            "Off road and around home" to listOf(atv, snowmobile, tractor, ebike, golfCart, other),
+            "Off road and around home" to listOf(atv, snowmobile, tractor, golfCart, other),
         )
     }
 }

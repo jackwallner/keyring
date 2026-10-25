@@ -37,6 +37,8 @@ data class CatalogItem(
     val difficulty: Difficulty = Difficulty.diy,
     val gear: List<GearSuggestion> = emptyList(),
     val source: String? = null,
+    /** A heading the schedule sorts the job under ("Brakes", "Chain"). */
+    val group: String? = null,
 ) {
     /** The distance interval in the vehicle's own meter, or null when the job is time-only for it. */
     fun distanceInterval(meter: MeterUnit): Double? = when (meter) {
@@ -783,15 +785,26 @@ object MaintenanceCatalog {
     )
 
     val ebike: List<CatalogItem> = listOf(
+        CatalogItem(key = "brakes", name = "Brake pads", detail = "Check the pad thickness. E-bikes are heavy and fast, so pads go quicker.", symbol = "exclamationmark.octagon", miles = 500.0, months = 6,
+                    gear = listOf(GearSuggestion(title = "Disc brake pads", query = "bike disc brake pads")), group = "Brakes"),
+        CatalogItem(key = "brakeFluid", name = "Hydraulic brake fluid", detail = "Check the level, and bleed it if the lever feels soft. Cable brakes skip this.", symbol = "drop.halffull", months = 12, isCore = false, difficulty = Difficulty.moderate,
+                    gear = listOf(GearSuggestion(title = "Brake bleed kit", query = "bike hydraulic brake bleed kit")), group = "Brakes"),
         CatalogItem(key = "chain", name = "Chain clean and lube", detail = "A clean chain shifts better and lasts longer. More often in the wet.", symbol = "link", miles = 200.0, months = 1,
-                    gear = listOf(GearSuggestion(title = "Chain lube", query = "bike chain lube"),
-                           GearSuggestion(title = "Chain checker", query = "bike chain wear checker"))),
-        CatalogItem(key = "brakes", name = "Brake pads", detail = "E-bikes are heavy and fast, so pads go quicker.", symbol = "exclamationmark.octagon", miles = 500.0, months = 6,
-                    gear = listOf(GearSuggestion(title = "Disc brake pads", query = "e-bike disc brake pads"))),
-        CatalogItem(key = "tune", name = "Tune-up", detail = "Gears, cables, bolts and spokes checked over.", symbol = "wrench.adjustable", miles = 1_000.0, months = 12, difficulty = Difficulty.moderate),
+                    gear = listOf(GearSuggestion(title = "Chain lube", query = "bike chain lube")), group = "Chain"),
+        CatalogItem(key = "chainWear", name = "Check chain wear", detail = "A stretched chain wears out the cassette and chainrings. A checker tool takes seconds.", symbol = "ruler", miles = 500.0, months = 3,
+                    gear = listOf(GearSuggestion(title = "Chain checker", query = "bike chain wear checker")), group = "Chain"),
+        CatalogItem(key = "chainReplace", name = "New chain", detail = "Typically every 2,000 to 3,000 miles, sooner on an e-bike. Go by the wear check.", symbol = "link.badge.plus", miles = 2_500.0, isCore = false, difficulty = Difficulty.moderate,
+                    gear = listOf(GearSuggestion(title = "Chain", query = "bike chain")), group = "Chain"),
         CatalogItem(key = "tires", name = "Tire pressure and wear", detail = "Low pressure costs range and invites flats.", symbol = "circle.circle", months = 1,
-                    gear = listOf(GearSuggestion(title = "Floor pump with gauge", query = "bike floor pump with gauge"))),
-        CatalogItem(key = "battery", name = "Battery care", detail = "Store around half charge in the cool and dry, and check the contacts.", symbol = "battery.75", months = 6, isCore = false),
+                    gear = listOf(GearSuggestion(title = "Floor pump with gauge", query = "bike floor pump with gauge")), group = "Tires"),
+        CatalogItem(key = "battery", name = "E-bike battery care", detail = "Store around half charge in the cool and dry, and check the contacts.", symbol = "battery.75", months = 6, isCore = false, group = "Battery"),
+        CatalogItem(key = "powerMeter", name = "Charge the power meter", detail = "Or swap its coin cell. A dead one drops out mid-ride.", symbol = "bolt.circle", months = 1, isCore = false, group = "Battery"),
+        CatalogItem(key = "shifting", name = "Charge electronic shifting", detail = "Di2, AXS and the like. A flat battery leaves you in one gear.", symbol = "battery.100.bolt", months = 1, isCore = false, group = "Battery"),
+        CatalogItem(key = "tune", name = "Tune-up and safety check", detail = "Gears, cables, bolts, spokes and bearings checked over, by you or a mechanic.", symbol = "wrench.adjustable", miles = 1_000.0, months = 12, difficulty = Difficulty.moderate, group = "Checkup"),
+        CatalogItem(key = "firmware", name = "Update firmware", detail = "Motors, displays, shifting and power meters all get updates through their apps.", symbol = "arrow.down.circle", months = 6, isCore = false, group = "Checkup"),
+        CatalogItem(key = "barTape", name = "Replace bar tape", detail = "Drop bars only. Worn tape gets slippery in the wet.", symbol = "hand.raised", months = 12, isCore = false,
+                    gear = listOf(GearSuggestion(title = "Bar tape", query = "bike handlebar tape")), group = "Other"),
+        CatalogItem(key = "bottomBracket", name = "Grease the bottom bracket", detail = "Creaks or grit at the cranks mean it's due.", symbol = "gearshape", miles = 3_000.0, months = 12, isCore = false, difficulty = Difficulty.moderate, group = "Other"),
     )
 
     val electricGolfCart: List<CatalogItem> = listOf(

@@ -9,64 +9,42 @@ struct ScheduleView: View {
 
     var body: some View {
         let dues = garage.dues(for: vehicle)
+        let catalog = vehicle.catalogItems
         let enabledKeys = Set(vehicle.enabledTasks.compactMap(\.catalogKey))
-        let available = vehicle.catalogItems.filter { !enabledKeys.contains($0.key) }
+        let available = catalog.filter { !enabledKeys.contains($0.key) }
+        let groups = Self.groups(catalog: catalog)
         List {
-            Section {
-                ForEach(dues) { due in
-                    NavigationLink {
-                        TaskDetailView(vehicle: vehicle, taskID: due.taskID)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack {
-                                StatusDot(status: due.result.status)
-                                Text(due.name).font(.body.weight(.medium))
-                            }
-                            Text(due.intervalText(auxName: vehicle.auxMeterName))
-                                .font(.footnote)
-                                .foregroundStyle(Theme.secondaryInk)
-                        }
+            if groups.isEmpty {
+                Section {
+                    ForEach(dues) { dueRow($0) }
+                        .onDelete { remove(offsets: $0, from: dues) }
+                } header: {
+                    Text("On the schedule")
+                }
+                if !available.isEmpty {
+                    Section("Add from the catalog") {
+                        ForEach(available) { addRow($0) }
                     }
                 }
-                .onDelete { offsets in
-                    for index in offsets {
-                        if let task = vehicle.enabledTasks.first(where: { $0.id == dues[index].taskID }) { garage.remove(task) }
-                    }
-                }
-            } header: {
-                Text("On the schedule")
-            } footer: {
-                Text("Intervals are typical figures for normal use, not your manufacturer's. Check your owner's manual and change any of them to match.")
-            }
-
-            if !available.isEmpty {
-                Section("Add from the catalog") {
-                    ForEach(available) { item in
-                        Button {
-                            garage.addCatalogItems([item], to: vehicle)
-                            Haptics.success()
-                        } label: {
-                            HStack(spacing: Theme.sm) {
-                                Image(systemName: item.symbol)
-                                    .foregroundStyle(Theme.brass)
-                                    .frame(width: 28)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(item.name).foregroundStyle(Theme.ink)
-                                    Text(item.intervalText(on: vehicle))
-                                        .font(.footnote)
-                                        .foregroundStyle(Theme.secondaryInk)
-                                }
-                                Spacer()
-                                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.brass)
-                            }
+            } else {
+                // Each heading holds its scheduled jobs, then the ones that can be added.
+                ForEach(groups, id: \.self) { group in
+                    let scheduled = dues.filter { self.group(of: $0, catalog: catalog) == group }
+                    let addable = available.filter { ($0.group ?? Self.otherGroup) == group }
+                    if !scheduled.isEmpty || !addable.isEmpty {
+                        Section(group) {
+                            ForEach(scheduled) { dueRow($0) }
+                                .onDelete { remove(offsets: $0, from: scheduled) }
+                            ForEach(addable) { addRow($0) }
                         }
-                        .accessibilityLabel("Add \(item.name)")
                     }
                 }
             }
 
             Section {
                 Button { addingCustom = true } label: { Label("Create your own job", systemImage: "plus") }
+            } footer: {
+                Text("Intervals are typical figures for normal use, not your manufacturer's. Check your owner's manual and change any of them to match.")
             }
         }
         .paperBackground()
@@ -74,6 +52,68 @@ struct ScheduleView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { EditButton() }
         .sheet(isPresented: $addingCustom) { TaskEditor(vehicle: vehicle, task: nil) }
+    }
+
+    static let otherGroup = "Other"
+
+    /// The kind's headings in `MaintenanceCatalog.groupOrder`, with Other last
+    /// for your own jobs.
+    static func groups(catalog: [CatalogItem]) -> [String] {
+        let present = Set(catalog.compactMap(\.group))
+        guard !present.isEmpty else { return [] }
+        let known = MaintenanceCatalog.groupOrder.filter(present.contains)
+        let unknown = present.subtracting(known).subtracting([otherGroup]).sorted()
+        return known + unknown + [otherGroup]
+    }
+
+    /// A job you created, or one the catalog no longer lists, files under Other.
+    private func group(of due: TaskDue, catalog: [CatalogItem]) -> String {
+        let key = vehicle.enabledTasks.first { $0.id == due.taskID }?.catalogKey
+        return catalog.first { $0.key == key }?.group ?? Self.otherGroup
+    }
+
+    private func remove(offsets: IndexSet, from dues: [TaskDue]) {
+        for index in offsets {
+            if let task = vehicle.enabledTasks.first(where: { $0.id == dues[index].taskID }) { garage.remove(task) }
+        }
+    }
+
+    private func dueRow(_ due: TaskDue) -> some View {
+        NavigationLink {
+            TaskDetailView(vehicle: vehicle, taskID: due.taskID)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    StatusDot(status: due.result.status)
+                    Text(due.name).font(.body.weight(.medium))
+                }
+                Text(due.intervalText(auxName: vehicle.auxMeterName))
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+            }
+        }
+    }
+
+    private func addRow(_ item: CatalogItem) -> some View {
+        Button {
+            garage.addCatalogItems([item], to: vehicle)
+            Haptics.success()
+        } label: {
+            HStack(spacing: Theme.sm) {
+                Image(systemName: item.symbol)
+                    .foregroundStyle(Theme.brass)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name).foregroundStyle(Theme.ink)
+                    Text(item.intervalText(on: vehicle))
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                Spacer()
+                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.brass)
+            }
+        }
+        .accessibilityLabel("Add \(item.name)")
     }
 }
 

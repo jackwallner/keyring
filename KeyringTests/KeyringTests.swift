@@ -1142,3 +1142,26 @@ final class RoadsideTests: XCTestCase {
         XCTAssertTrue(bare.absoluteString.hasSuffix("truck"))
     }
 }
+
+final class OnboardingPlanTests: XCTestCase {
+    func testPlannedVehiclesCrossOffOnePerOwned() {
+        let stored = PlannedVehicles.stored([.car, .car, .boat])
+        XCTAssertEqual(PlannedVehicles.remaining(stored, owned: [.car, .truck]), [.car, .boat])
+        XCTAssertEqual(PlannedVehicles.remaining(stored, owned: [.car, .car, .boat]), [])
+        XCTAssertEqual(PlannedVehicles.kinds(PlannedVehicles.removing(.car, from: stored)), [.car, .boat])
+        XCTAssertEqual(PlannedVehicles.kinds("car,nonsense,boat"), [.car, .boat])
+    }
+
+    func testBikeScheduleGroupsInRiderOrder() {
+        let items = MaintenanceCatalog.items(for: .ebike, powertrain: VehicleKind.ebike.defaultPowertrain)
+        XCTAssertEqual(ScheduleView.groups(catalog: items), ["Brakes", "Chain", "Tires", "Battery", "Checkup", "Other"])
+        XCTAssertEqual(Set(items.filter(\.isCore).map(\.key)), ["brakes", "chain", "chainWear", "tires", "tune"])
+        XCTAssertEqual(ScheduleView.groups(catalog: MaintenanceCatalog.items(for: .car, powertrain: .gasoline)), [])
+    }
+
+    func testEbikeSitsAboveScooter() {
+        let road = VehicleKind.pickerSections[0].kinds
+        XCTAssertLessThan(road.firstIndex(of: .ebike)!, road.firstIndex(of: .scooter)!)
+        XCTAssertEqual(VehicleKind.pickerSections.flatMap(\.kinds).count, VehicleKind.allCases.count)
+    }
+}

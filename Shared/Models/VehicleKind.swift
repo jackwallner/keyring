@@ -176,10 +176,10 @@ enum VehicleKind: String, CaseIterable, Identifiable, Codable, Sendable {
 
     /// Groupings for the kind picker, so nineteen choices read as four.
     static let pickerSections: [(title: String, kinds: [VehicleKind])] = [
-        ("On the road", [.car, .suv, .truck, .van, .motorcycle, .scooter]),
+        ("On the road", [.car, .suv, .truck, .van, .motorcycle, .ebike, .scooter]),
         ("Camping and towing", [.rv, .camper, .trailer]),
         ("On the water and in the air", [.boat, .sailboat, .personalWatercraft, .aircraft]),
-        ("Off road and around home", [.atv, .snowmobile, .tractor, .ebike, .golfCart, .other]),
+        ("Off road and around home", [.atv, .snowmobile, .tractor, .golfCart, .other]),
     ]
 }
 

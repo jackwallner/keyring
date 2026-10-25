@@ -108,6 +108,8 @@ object Symbols {
         "exclamationmark.octagon" to Icons.Outlined.Warning, "aqi.medium" to Icons.Outlined.Air, "wind" to Icons.Outlined.Air,
         "minus.plus.batteryblock" to Icons.Outlined.BatteryChargingFull, "battery.75" to Icons.Outlined.BatteryChargingFull,
         "battery.50" to Icons.Outlined.BatteryChargingFull, "link" to Icons.Outlined.Link,
+        "link.badge.plus" to Icons.Outlined.Link, "battery.100.bolt" to Icons.Outlined.BatteryChargingFull,
+        "arrow.down.circle" to Icons.Outlined.Build, "hand.raised" to Icons.Outlined.Build,
         "windshield.front.and.wiper" to Icons.Outlined.CleaningServices, "bubbles.and.sparkles" to Icons.Outlined.CleaningServices,
         "sun.max" to Icons.Outlined.WbSunny, "sparkles" to Icons.Outlined.AutoAwesome, "scissors" to Icons.Outlined.ContentCut,
         "powerplug" to Icons.Outlined.Power, "lifepreserver" to Icons.Outlined.Security,
