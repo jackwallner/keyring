@@ -490,15 +490,22 @@ struct OnboardingView: View {
         Task {
             defer { purchasing = false }
             let outcome = await store.purchase(package)
+            errorText = Self.purchaseError(outcome, storeError: store.errorMessage)
             switch outcome {
             case .purchased: finish()
-            case .pending: errorText = ConversionCopy.purchasePendingMessage
+            case .pending: break
             case .cancelled: break
             case nil:
-                // RevenueCat isn't running (a simulator) or the purchase
-                // failed; the full paywall shows plans and the reason.
-                if store.errorMessage == nil { showingPaywall = true }
+                if errorText == nil { showingPaywall = true }
             }
+        }
+    }
+
+    static func purchaseError(_ outcome: PurchaseState?, storeError: String?) -> String? {
+        switch outcome {
+        case .pending: ConversionCopy.purchasePendingMessage
+        case nil: storeError
+        default: nil
         }
     }
 

@@ -594,6 +594,68 @@ final class ImportTests: XCTestCase {
     }
 }
 
+final class ProAutofillTests: XCTestCase {
+    func testRequestedImageResumesOnceAfterProActivates() {
+        let image = Data([1, 2, 3])
+        var request = ProAutofillRequest(image: image)
+        XCTAssertEqual(request.take(isPro: true), image)
+        XCTAssertNil(request.take(isPro: true))
+    }
+
+    func testDismissalWithoutProClearsTheRequest() {
+        var request = ProAutofillRequest(image: Data([1, 2, 3]))
+        XCTAssertNil(request.take(isPro: false))
+        XCTAssertNil(request.take(isPro: true))
+    }
+
+    func testProActivationWithoutARequestDoesNotScan() {
+        var request = ProAutofillRequest()
+        XCTAssertNil(request.take(isPro: true))
+    }
+
+    func testResumedPumpScanKeepsEnteredFiguresAndGrade() {
+        let scanned = PumpFields(volume: 12, unitPrice: 4, total: 48, grade: .premium)
+        let current = PumpFields(volume: 10, unitPrice: 3, total: 30, grade: .regular)
+        let fields = scanned.fillingMissing(in: current)
+        XCTAssertNil(fields.volume)
+        XCTAssertNil(fields.unitPrice)
+        XCTAssertNil(fields.total)
+        XCTAssertNil(fields.grade)
+    }
+
+    func testResumedPumpScanFillsOnlyMissingFigures() {
+        let scanned = PumpFields(volume: 12, unitPrice: 4, total: 48)
+        let fields = scanned.fillingMissing(in: PumpFields(total: 50))
+        XCTAssertEqual(fields.volume, 12)
+        XCTAssertEqual(fields.unitPrice, 4)
+        XCTAssertNil(fields.total)
+    }
+}
+
+@MainActor
+final class OnboardingPurchaseTests: XCTestCase {
+    func testPurchaseFailureReachesThePage() {
+        for eligible in [true, false] {
+            let message = ConversionCopy.purchaseFailedMessage(eligibleForTrial: eligible)
+            XCTAssertEqual(OnboardingView.purchaseError(nil, storeError: message), message)
+        }
+    }
+
+    func testPendingPurchaseKeepsItsDistinctMessage() {
+        XCTAssertEqual(OnboardingView.purchaseError(.pending, storeError: "Old error"),
+                       ConversionCopy.purchasePendingMessage)
+    }
+
+    func testCancelledOrSuccessfulPurchaseDoesNotShowAFailure() {
+        XCTAssertNil(OnboardingView.purchaseError(.cancelled, storeError: "Old error"))
+        XCTAssertNil(OnboardingView.purchaseError(.purchased, storeError: "Old error"))
+    }
+
+    func testUnavailablePurchasesLeaveThePaywallFallbackAvailable() {
+        XCTAssertNil(OnboardingView.purchaseError(nil, storeError: nil))
+    }
+}
+
 final class ParserTests: XCTestCase {
     func testReceiptParsing() {
         let lines = [

@@ -31,6 +31,7 @@ struct FuelLogView: View {
     @State private var pumpNote: String?
     @State private var dashNote: String?
     @State private var showingPaywall = false
+    @State private var autofillRequest = ProAutofillRequest()
     @State private var confirmingJump = false
     @State private var loaded = false
     @State private var baseline: Snapshot?
@@ -84,7 +85,10 @@ struct FuelLogView: View {
                 }
                 .ignoresSafeArea()
             }
-            .sheet(isPresented: $showingPaywall) { PaywallView(focus: .receiptScan) }
+            .sheet(isPresented: $showingPaywall, onDismiss: {
+                guard let image = autofillRequest.take(isPro: store.isPro) else { return }
+                Task { await fillFromPump(image, preservingValues: true) }
+            }) { PaywallView(focus: .receiptScan) }
             .confirmationDialog("Save at \(Format.reading(reading ?? 0, vehicle.meter))?", isPresented: $confirmingJump, titleVisibility: .visible) {
                 Button("Save at \(Format.reading(reading ?? 0, vehicle.meter))", action: save)
                 Button("Fix it", role: .cancel) {}
@@ -106,7 +110,10 @@ struct FuelLogView: View {
                 photoRow(draft.pumpPhotos, busy: readingPump, busyText: "Reading the pump", note: pumpNote) { draft.pumpPhotos.remove(at: $0) }
             }
             if !store.isPro, !draft.pumpPhotos.isEmpty {
-                Button { showingPaywall = true } label: {
+                Button {
+                    autofillRequest.image = draft.pumpPhotos.first
+                    showingPaywall = true
+                } label: {
                     HStack {
                         Label("Fill in from the photo", systemImage: "text.viewfinder")
                         Spacer()
@@ -344,10 +351,7 @@ struct FuelLogView: View {
         case .pump:
             draft.pumpPhotos.append(data)
             guard store.isPro else { return }
-            readingPump = true
-            let fields = await PumpReader.read(data, unit: unit)
-            readingPump = false
-            apply(fields)
+            await fillFromPump(data)
         case .dash:
             draft.meterPhotos.append(data)
             readingDash = true
@@ -361,6 +365,16 @@ struct FuelLogView: View {
                 dashNote = "Couldn't pick out the \(meterWord). The photo is saved; type the number above."
             }
         }
+    }
+
+    private func fillFromPump(_ image: Data, preservingValues: Bool = false) async {
+        readingPump = true
+        var fields = await PumpReader.read(image, unit: unit)
+        readingPump = false
+        if preservingValues {
+            fields = fields.fillingMissing(in: PumpFields(volume: volume, unitPrice: price, total: total, grade: draft.grade))
+        }
+        apply(fields)
     }
 
     private func apply(_ fields: PumpFields) {

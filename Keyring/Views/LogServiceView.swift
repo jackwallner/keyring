@@ -28,6 +28,7 @@ struct LogServiceView: View {
     @State private var receiptItems: [PhotosPickerItem] = []
     @State private var showingScanner = false
     @State private var showingPaywall = false
+    @State private var autofillRequest = ProAutofillRequest()
     @State private var readingReceipt = false
     @State private var receiptNote: String?
     @State private var addingCustom = false
@@ -131,7 +132,10 @@ struct LogServiceView: View {
                 }
                 .ignoresSafeArea()
             }
-            .sheet(isPresented: $showingPaywall) { PaywallView(focus: .receiptScan) }
+            .sheet(isPresented: $showingPaywall, onDismiss: {
+                guard let image = autofillRequest.take(isPro: store.isPro) else { return }
+                Task { await fillFromReceipt(image) }
+            }) { PaywallView(focus: .receiptScan) }
             .fileImporter(isPresented: $importingFile, allowedContentTypes: [.pdf, .image], allowsMultipleSelection: true) { result in
                 guard case let .success(urls) = result else { return }
                 draft.files += urls.compactMap(PickedFile.read)
@@ -450,7 +454,10 @@ struct LogServiceView: View {
                 Text(receiptNote).font(.footnote).foregroundStyle(Theme.secondaryInk)
             }
             if !store.isPro, !draft.receipts.isEmpty {
-                Button { showingPaywall = true } label: {
+                Button {
+                    autofillRequest.image = draft.receipts.first
+                    showingPaywall = true
+                } label: {
                     HStack {
                         Label("Fill in from the receipt", systemImage: "text.viewfinder")
                         Spacer()
@@ -591,8 +598,12 @@ struct LogServiceView: View {
             receiptNote = nil
             return
         }
+        await fillFromReceipt(images[0])
+    }
+
+    private func fillFromReceipt(_ image: Data) async {
         readingReceipt = true
-        let (fields, text) = await ReceiptReader.readWithText(images[0])
+        let (fields, text) = await ReceiptReader.readWithText(image)
         readingReceipt = false
         var filled: [String] = []
         if (cost ?? 0) == 0, let total = fields.total { cost = total; filled.append("total") }

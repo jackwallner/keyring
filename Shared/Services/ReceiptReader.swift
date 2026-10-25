@@ -2,6 +2,16 @@ import Foundation
 import UIKit
 import Vision
 
+/// The image requested before the paywall opened, consumed once it closes.
+struct ProAutofillRequest {
+    var image: Data?
+
+    mutating func take(isPro: Bool) -> Data? {
+        defer { image = nil }
+        return isPro ? image : nil
+    }
+}
+
 /// Reads a shop receipt on the device: the total, the date, the mileage and
 /// the shop's name. Nothing leaves the phone. Every field it fills is shown
 /// for the owner to check, never saved silently.
