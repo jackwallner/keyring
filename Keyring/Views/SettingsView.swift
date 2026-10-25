@@ -14,6 +14,9 @@ struct SettingsView: View {
 
     @State private var name = ""
     @State private var garageName = ""
+    @State private var savedName = ""
+    @State private var savedGarageName = ""
+    @FocusState private var editingText: Bool
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
     @State private var reminderHour = 9
     @State private var showingPaywall = false
@@ -37,16 +40,15 @@ struct SettingsView: View {
                 LabeledContent("Your name") {
                     TextField("For entries you log", text: $name)
                         .multilineTextAlignment(.trailing)
-                        .onSubmit { garage.setOwnerName(name) }
+                        .focused($editingText)
+                        .onSubmit(saveText)
                 }
                 if let own = garage.ownGarage {
                     LabeledContent("Garage name") {
                         TextField("Our garage", text: $garageName)
                             .multilineTextAlignment(.trailing)
-                            .onSubmit {
-                                own.name = garageName.trimmed.nilIfEmpty ?? "Our garage"
-                                garage.saveVehicleEdits()
-                            }
+                            .focused($editingText)
+                            .onSubmit(saveText)
                     }
                 }
                 Button { showingFamily = true } label: {
@@ -158,6 +160,14 @@ struct SettingsView: View {
         }
         .paperBackground()
         .navigationTitle("Settings")
+        .toolbar {
+            if hasUnsavedText {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save", action: saveText)
+                        .accessibilityIdentifier("settings.save")
+                }
+            }
+        }
         .sheet(isPresented: $showingPaywall) { PaywallView() }
         .sheet(isPresented: $showingFamily) { NavigationStack { FamilyView() } }
         .sheet(item: $exportFile) { file in ShareSheet(items: [file.url]) }
@@ -165,16 +175,29 @@ struct SettingsView: View {
         .task {
             name = garage.ownerName ?? ""
             garageName = garage.ownGarage?.name ?? ""
+            savedName = name
+            savedGarageName = garageName
             reminderHour = ReminderScheduler.shared.reminderHour
             await refreshNotifications()
         }
-        .onDisappear {
-            garage.setOwnerName(name)
-            if let own = garage.ownGarage, own.name != garageName.trimmed, !garageName.trimmed.isEmpty {
-                own.name = garageName.trimmed
-                garage.saveVehicleEdits()
-            }
+        .onDisappear { if hasUnsavedText { saveText() } }
+    }
+
+    private var hasUnsavedText: Bool {
+        name.trimmed != savedName.trimmed || (garage.ownGarage != nil && garageName.trimmed != savedGarageName.trimmed)
+    }
+
+    private func saveText() {
+        garage.setOwnerName(name)
+        if let own = garage.ownGarage {
+            own.name = garageName.trimmed.nilIfEmpty ?? "Our garage"
+            garageName = own.name ?? garageName
+            garage.saveVehicleEdits()
         }
+        savedName = name
+        savedGarageName = garageName
+        editingText = false
+        Haptics.success()
     }
 
     @ViewBuilder

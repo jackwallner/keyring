@@ -9,6 +9,8 @@ struct AddVehicleFlow: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
 
+    /// A kind already picked in onboarding skips straight to the details.
+    var startingKind: VehicleKind?
     var onFinish: ((Vehicle) -> Void)?
 
     @State private var draft = NewVehicle()
@@ -24,11 +26,7 @@ struct AddVehicleFlow: View {
                 switch step {
                 case .kind:
                     KindPicker { kind in
-                        draft.kind = kind
-                        draft.powertrain = kind.defaultPowertrain
-                        draft.meter = Locale.current.measurementSystem == .metric && kind.defaultMeter == .miles ? .kilometers : kind.defaultMeter
-                        draft.tint = freshTint(for: kind)
-                        withAnimation(.snappy) { step = .details }
+                        withAnimation(.snappy) { pick(kind) }
                     }
                 case .details:
                     VehicleDetailsForm(draft: $draft, destination: $destination, destinations: destinations) {
@@ -53,6 +51,17 @@ struct AddVehicleFlow: View {
             }
         }
         .interactiveDismissDisabled(step != .kind)
+        .onAppear {
+            if let startingKind, step == .kind, draft.make.isEmpty { pick(startingKind) }
+        }
+    }
+
+    private func pick(_ kind: VehicleKind) {
+        draft.kind = kind
+        draft.powertrain = kind.defaultPowertrain
+        draft.meter = Locale.current.measurementSystem == .metric && kind.defaultMeter == .miles ? .kilometers : kind.defaultMeter
+        draft.tint = freshTint(for: kind)
+        step = .details
     }
 
     /// The first few core jobs, plus any seasonal one (winterize, layup),

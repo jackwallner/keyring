@@ -26,6 +26,15 @@ struct KeyringApp: App {
         ]
         ConversionDiagnostics.recordAppOpen()
         ReviewPrompter.recordLaunch()
+        #if DEBUG
+        // A first install: onboarding, then the garage it plans.
+        if ProcessInfo.processInfo.arguments.contains("-Onboarding") {
+            AppGroup.defaults.set(false, forKey: AppGroup.Key.hasCompletedSetup)
+            AppGroup.defaults.removeObject(forKey: AppGroup.Key.plannedVehicles)
+            // A `-DemoPro` run caches Pro; a first install has none.
+            AppGroup.defaults.set(false, forKey: AppGroup.Key.cachedPro)
+        }
+        #endif
     }
 
     var body: some Scene {

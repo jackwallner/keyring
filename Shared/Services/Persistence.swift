@@ -21,11 +21,11 @@ import UIKit
 final class Persistence: @unchecked Sendable {
     static let shared = Persistence(cloudKit: Persistence.processWantsCloudKit, inMemory: Persistence.startsEmpty)
 
-    /// `-EmptyLog` and `-SeedDemo` (DEBUG): a fresh in-memory store, for the
-    /// first-install paths a reviewer sees and for screenshot fixtures.
+    /// `-EmptyLog`, `-Onboarding` and `-SeedDemo` (DEBUG): a fresh in-memory
+    /// store, for the first-install paths a reviewer sees and for screenshot fixtures.
     private static var startsEmpty: Bool {
         #if DEBUG
-        ProcessInfo.processInfo.arguments.contains("-EmptyLog") || ProcessInfo.processInfo.arguments.contains("-SeedDemo")
+        ["-EmptyLog", "-Onboarding", "-SeedDemo"].contains(where: ProcessInfo.processInfo.arguments.contains)
         #else
         false
         #endif

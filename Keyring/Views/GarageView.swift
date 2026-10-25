@@ -10,8 +10,10 @@ struct GarageView: View {
     @ObservedObject private var router = NotificationRouter.shared
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    @AppStorage(AppGroup.Key.plannedVehicles, store: AppGroup.defaults) private var planned = ""
+
     @State private var path = NavigationPath()
-    @State private var showingAdd = false
+    @State private var adding: AddRequest?
     @State private var showingPaywall = false
     @State private var showingFamily = false
     @State private var logging: LogRequest?
@@ -25,7 +27,9 @@ struct GarageView: View {
     private var content: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Theme.md) {
-                if garage.vehicles.isEmpty {
+                if garage.vehicles.isEmpty, !plannedSlots.isEmpty {
+                    plannedCards.padding(.top, Theme.md)
+                } else if garage.vehicles.isEmpty {
                     EmptyStateView(
                         symbol: "car.2",
                         title: "Your garage is empty",
@@ -60,7 +64,7 @@ struct GarageView: View {
                             }
                         }
                     }
-                    addButton
+                    if plannedSlots.isEmpty { addButton } else { plannedCards }
                     InsightsTeaser()
                     if !garage.retiredVehicles.isEmpty {
                         NavigationLink {
@@ -114,7 +118,7 @@ struct GarageView: View {
                     .accessibilityIdentifier("garage.add")
             }
         }
-        .sheet(isPresented: $showingAdd) { AddVehicleFlow() }
+        .sheet(item: $adding) { request in AddVehicleFlow(startingKind: request.kind) }
         .sheet(isPresented: $showingPaywall) { PaywallView(focus: .unlimitedVehicles) }
         .sheet(isPresented: $showingFamily) { NavigationStack { FamilyView() } }
         .sheet(item: $logging) { request in LogServiceView(vehicle: request.vehicle, preselected: request.preselected) }
@@ -122,7 +126,9 @@ struct GarageView: View {
             routeScreenshot()
             if AppGroup.defaults.bool(forKey: AppGroup.Key.pendingFirstVehicle) {
                 AppGroup.defaults.set(false, forKey: AppGroup.Key.pendingFirstVehicle)
-                if garage.vehicles.isEmpty, !ScreenshotConfig.isEnabled { showingAdd = true }
+                // A sheet asked for while onboarding fades out never shows.
+                try? await Task.sleep(for: .milliseconds(600))
+                if garage.vehicles.isEmpty, !ScreenshotConfig.isEnabled { startAdding(plannedSlots.first) }
             }
         }
     }
@@ -268,12 +274,60 @@ struct GarageView: View {
         withAnimation(.snappy) { garage.move(vehicle, to: index) }
     }
 
-    private func addVehicle() {
+    /// Vehicles picked in onboarding and not added yet.
+    private var plannedSlots: [VehicleKind] {
+        PlannedVehicles.remaining(planned, owned: garage.vehicles.filter { !garage.isShared($0) }.map(\.kind))
+    }
+
+    /// One card per planned vehicle; past the free limit they carry Pro.
+    private var plannedCards: some View {
+        ForEach(Array(plannedSlots.enumerated()), id: \.offset) { index, kind in
+            let locked = !store.isPro && garage.ownedVehicleCount + index >= ProFeature.freeVehicleLimit
+            Button { startAdding(kind) } label: {
+                HStack(spacing: Theme.sm) {
+                    Image(systemName: kind.symbol).frame(width: 28)
+                    Text("Add your \(kind.slotName)")
+                    Spacer(minLength: Theme.xs)
+                    if locked {
+                        Text("PRO")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Theme.onAction)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Theme.brass, in: Capsule())
+                    } else {
+                        Image(systemName: "plus")
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.secondaryInk)
+                .padding(.horizontal, Theme.md)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                        .strokeBorder(Theme.hairline, style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
+                )
+            }
+            .buttonStyle(PressableStyle())
+            .contextMenu {
+                Button(role: .destructive) {
+                    withAnimation(.snappy) { planned = PlannedVehicles.removing(kind, from: planned) }
+                } label: {
+                    Label("Remove", systemImage: "minus.circle")
+                }
+            }
+            .accessibilityIdentifier("garage.planned.\(kind.rawValue)")
+        }
+    }
+
+    private func addVehicle() { startAdding(nil) }
+
+    private func startAdding(_ kind: VehicleKind?) {
         Haptics.tap()
         if !store.isPro && garage.ownedVehicleCount >= ProFeature.freeVehicleLimit {
             showingPaywall = true
         } else {
-            showingAdd = true
+            adding = AddRequest(kind: kind)
         }
     }
 
@@ -289,11 +343,17 @@ struct GarageView: View {
         case "family":
             showingFamily = true
         case "add":
-            showingAdd = true
+            adding = AddRequest(kind: nil)
         default:
             break
         }
     }
+}
+
+/// Opens the add flow, on a kind when one was planned in onboarding.
+private struct AddRequest: Identifiable {
+    let id = UUID()
+    let kind: VehicleKind?
 }
 
 /// A vehicle's recall list, pushed from the garage or a notification.
@@ -483,4 +543,9 @@ struct RetiredVehiclesView: View {
         let status = vehicle.soldDate.map { "Sold " + $0.formatted(.dateTime.month(.abbreviated).year()) } ?? "Retired"
         return [vehicle.descriptor.nilIfEmpty, status].compactMap { $0 }.joined(separator: " · ")
     }
+}
+
+private extension VehicleKind {
+    /// "boat", "tractor / mower", but "SUV" and "ATV / UTV" stay capitalized.
+    var slotName: String { title == title.uppercased() ? title : title.lowercased() }
 }

@@ -73,6 +73,10 @@ struct VehicleDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit") { editing = true }
             }
+            // iOS 26 would draw Edit and More in one glass pill, read as one button.
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
             ToolbarItem(placement: .topBarTrailing) { moreMenu }
         }
         .navigationDestination(isPresented: $checkingTrip) { TripCheckView(vehicle: vehicle) }

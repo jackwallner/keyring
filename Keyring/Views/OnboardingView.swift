@@ -1,8 +1,8 @@
 import RevenueCat
 import SwiftUI
 
-/// Four pages: what the app is, how it knows what's due, logging together,
-/// and the Pro trial. The bottom bar keeps one geometry on every page, so
+/// Five pages: what the app is, what's in the garage, how it knows what's
+/// due, logging together, and the Pro trial, pitched to the garage. The bottom bar keeps one geometry on every page, so
 /// the main button never moves under a thumb.
 struct OnboardingView: View {
     @EnvironmentObject private var garage: GarageStore
@@ -18,17 +18,23 @@ struct OnboardingView: View {
     @State private var joining = false
     @State private var showingPaywall = false
     @State private var pageHeight: CGFloat = 0
+    /// One entry per vehicle, in the order they were tapped.
+    @State private var picked: [VehicleKind] = []
     @FocusState private var nameFocused: Bool
 
-    private let lastPage = 3
+    private let familyPage = 3
+    private let lastPage = 4
+
+    static let fleetKinds: [VehicleKind] = [.car, .truck, .suv, .van, .motorcycle, .ebike, .boat, .rv, .camper, .atv, .tractor, .aircraft]
 
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $page) {
                 welcome.tag(0)
-                schedule.tag(1)
-                family.tag(2)
-                trial.tag(3)
+                fleet.tag(1)
+                schedule.tag(2)
+                family.tag(familyPage)
+                trial.tag(lastPage)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { pageHeight = $0 }
@@ -92,6 +98,86 @@ struct OnboardingView: View {
         }
     }
 
+    private var fleet: some View {
+        pageLayout {
+            Text("What's in\nyour garage?")
+                .font(Theme.title(pageTitleSize))
+                .foregroundStyle(Theme.ink)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Theme.stackGap), count: dynamicTypeSize.isAccessibilitySize ? 2 : 3), spacing: Theme.stackGap) {
+                ForEach(Self.fleetKinds) { kindTile($0) }
+            }
+        }
+    }
+
+    /// Each tap adds one; the minus takes one back.
+    private func kindTile(_ kind: VehicleKind) -> some View {
+        let count = picked.filter { $0 == kind }.count
+        let tint = VehicleTint.defaultTint(for: kind)
+        return Button {
+            Haptics.selected()
+            picked.append(kind)
+        } label: {
+            VStack(spacing: Theme.xs) {
+                Image(systemName: kind.symbol)
+                    .font(.system(size: 24))
+                    .foregroundStyle(count > 0 ? tint.foreground : tint.isLight ? Theme.brass : tint.color)
+                    .frame(height: 28)
+                Text(kind.title)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(count > 0 ? tint.foreground : Theme.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, Theme.xs)
+            .frame(maxWidth: .infinity, minHeight: compact ? 66 : 80)
+            .background(count > 0 ? tint.color : Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: count > 0 ? 0 : 0.5))
+        }
+        .buttonStyle(PressableStyle())
+        .overlay(alignment: .topTrailing) {
+            if count > 1 {
+                Text("\(count)")
+                    .font(.caption.weight(.bold).monospacedDigit())
+                    .foregroundStyle(Theme.onAction)
+                    .frame(minWidth: 24, minHeight: 24)
+                    .background(Theme.ink, in: Capsule())
+                    .offset(x: 6, y: -6)
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            if count > 0 {
+                Button { removeOne(kind) } label: {
+                    Image(systemName: "minus")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 24, height: 24)
+                        .background(Theme.paper, in: Circle())
+                        .overlay(Circle().strokeBorder(Theme.hairline))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: -16, y: -16)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(kind.title)
+        .accessibilityValue(count > 0 ? "\(count)" : "")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { picked.append(kind) }
+        .accessibilityAdjustableAction { direction in
+            if direction == .increment { picked.append(kind) } else { removeOne(kind) }
+        }
+        .accessibilityIdentifier("onboarding.kind.\(kind.rawValue)")
+    }
+
+    private func removeOne(_ kind: VehicleKind) {
+        guard let index = picked.lastIndex(of: kind) else { return }
+        Haptics.selected()
+        picked.remove(at: index)
+    }
+
     private var schedule: some View {
         pageLayout {
             VStack(spacing: 0) {
@@ -149,22 +235,34 @@ struct OnboardingView: View {
         }
     }
 
+    /// More vehicles than the free tier holds: the page leads with them.
+    private var overLimit: Bool { !store.isPro && picked.count > ProFeature.freeVehicleLimit }
+
     private var trial: some View {
         pageLayout {
-            Image(systemName: "book.closed.fill")
-                .font(.system(size: compact ? 28 : 36, weight: .semibold))
-                .foregroundStyle(Theme.brass)
-                .frame(width: compact ? 64 : 84, height: compact ? 64 : 84)
-                .background(Theme.brassSoft, in: Circle())
-                .frame(maxWidth: .infinity)
-            Text(store.isPro ? "Pro is on your account" : trialTitle)
+            if overLimit {
+                fleetTags
+            } else {
+                Image(systemName: "book.closed.fill")
+                    .font(.system(size: compact ? 28 : 36, weight: .semibold))
+                    .foregroundStyle(Theme.brass)
+                    .frame(width: compact ? 64 : 84, height: compact ? 64 : 84)
+                    .background(Theme.brassSoft, in: Circle())
+                    .frame(maxWidth: .infinity)
+            }
+            Text(store.isPro ? "Pro is on your account" : overLimit ? "Free covers \(ProFeature.freeVehicleLimit) of your \(picked.count)" : trialTitle)
                 .font(Theme.title(compact ? 28 : 32))
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
+                .accessibilityIdentifier("onboarding.trialTitle")
             VStack(alignment: .leading, spacing: Theme.sm) {
-                benefit("Your first two vehicles are free, forever")
-                benefit("Pro adds every vehicle you own")
+                if overLimit {
+                    benefit("All \(picked.count) in one log")
+                } else {
+                    benefit("Your first two vehicles are free, forever")
+                    benefit("Pro adds every vehicle you own")
+                }
                 benefit("Service Record PDF for buyers and shops")
                 benefit("Receipts fill in the total, date and shop")
                 benefit("Spending by vehicle, job and month")
@@ -195,6 +293,44 @@ struct OnboardingView: View {
     private var trialTitle: String {
         if let package = onboardingPackage, store.isEligibleForIntroOffer(package) { return "Try Pro free for a week" }
         return "Vehicle Maintenance Log Pro"
+    }
+
+    /// The picked vehicles as small tags, the first two marked free. Past
+    /// five, the rest fold into a count.
+    private var fleetTags: some View {
+        let shown = picked.count > 5 ? Array(picked.prefix(4)) : picked
+        return HStack(alignment: .top, spacing: Theme.xs) {
+            ForEach(Array(shown.enumerated()), id: \.offset) { index, kind in
+                let tint = VehicleTint.defaultTint(for: kind)
+                let free = index < ProFeature.freeVehicleLimit
+                VStack(spacing: 4) {
+                    Image(systemName: kind.symbol)
+                        .font(.system(size: 22))
+                        .foregroundStyle(tint.foreground)
+                        .frame(width: 56, height: 56)
+                        .background(tint.color, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Text(free ? "Free" : "Pro")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(free ? Theme.good : Theme.brass)
+                }
+            }
+            if shown.count < picked.count {
+                VStack(spacing: 4) {
+                    Text("+\(picked.count - shown.count)")
+                        .font(.headline)
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 56, height: 56)
+                        .background(Theme.raised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Text("Pro")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.brass)
+                }
+            }
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(ProFeature.freeVehicleLimit) free, \(picked.count - ProFeature.freeVehicleLimit) with Pro")
     }
 
     private func benefit(_ text: String) -> some View {
@@ -272,9 +408,10 @@ struct OnboardingView: View {
         .padding(.bottom, 10)
     }
 
-    /// The free way in, worded as a start rather than an escape.
+    /// The free way in. Other fleet apps say "Get Started"; here "Not now"
+    /// reads as the trial waiting rather than a second front door.
     private var softExit: some View {
-        Button("Get Started", action: finish)
+        Button("Not now", action: finish)
             .font(.subheadline.weight(.medium))
             .foregroundStyle(Theme.secondaryInk)
             .frame(height: 30)
@@ -338,7 +475,7 @@ struct OnboardingView: View {
     // MARK: - Actions
 
     private func primary() {
-        if page == 2 { garage.setOwnerName(name) }
+        if page == familyPage { garage.setOwnerName(name) }
         guard onTrialPage else {
             withAnimation(.snappy) { page += 1 }
             return
@@ -377,9 +514,40 @@ struct OnboardingView: View {
     private func finish() {
         if !name.trimmed.isEmpty { garage.setOwnerName(name) }
         garage.ensureOwnGarage()
-        // The garage opens straight into adding the first vehicle.
+        // The garage opens straight into adding the first vehicle, and keeps
+        // a card for each of the rest.
+        AppGroup.defaults.set(PlannedVehicles.stored(picked), forKey: AppGroup.Key.plannedVehicles)
         AppGroup.defaults.set(true, forKey: AppGroup.Key.pendingFirstVehicle)
         hasCompletedSetup = true
+    }
+}
+
+/// The vehicles picked in onboarding that aren't in the garage yet, stored as
+/// comma-separated kinds with one entry per vehicle.
+enum PlannedVehicles {
+    static func kinds(_ stored: String) -> [VehicleKind] {
+        stored.split(separator: ",").compactMap { VehicleKind(rawValue: String($0)) }
+    }
+
+    static func stored(_ kinds: [VehicleKind]) -> String {
+        kinds.map(\.rawValue).joined(separator: ",")
+    }
+
+    /// Planned kinds still to add, each owned vehicle crossing off one of its kind.
+    static func remaining(_ stored: String, owned: [VehicleKind]) -> [VehicleKind] {
+        var left = owned
+        return kinds(stored).filter { kind in
+            guard let index = left.firstIndex(of: kind) else { return true }
+            left.remove(at: index)
+            return false
+        }
+    }
+
+    /// Drops one planned vehicle of this kind.
+    static func removing(_ kind: VehicleKind, from stored: String) -> String {
+        var all = kinds(stored)
+        if let index = all.lastIndex(of: kind) { all.remove(at: index) }
+        return self.stored(all)
     }
 }
 

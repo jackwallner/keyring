@@ -275,6 +275,96 @@ final class SmokeUITests: XCTestCase {
         attach("white-garage")
     }
 
+    /// A fresh install picks four vehicles: the trial page leads with the two
+    /// free ones, "Not now" opens the add flow on the first kind, and the
+    /// garage keeps a card for each of the rest.
+    func testOnboardingOverFreeLimit() {
+        app.launchArguments = ["-Onboarding"]
+        app.launch()
+        onboardingNext()
+        for kind in ["car", "car", "boat", "tractor"] { app.buttons["onboarding.kind.\(kind)"].tap() }
+        attach("onboarding-fleet")
+        for _ in 0..<3 { onboardingNext() }
+        XCTAssertEqual(app.staticTexts["onboarding.trialTitle"].label, "Free covers 2 of your 4")
+        Thread.sleep(forTimeInterval: 1)
+        attach("onboarding-trial-over")
+        app.buttons["Not now"].tap()
+        XCTAssertTrue(app.navigationBars.buttons["Back"].waitForExistence(timeout: 5), "Add flow didn't skip the kind step")
+        attach("onboarding-add-car")
+        app.navigationBars.buttons["Back"].tap()
+        app.navigationBars.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["garage.planned.boat"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["garage.planned.tractor"].exists)
+        XCTAssertEqual(app.buttons.matching(identifier: "garage.planned.car").count, 2)
+        attach("onboarding-garage-planned")
+    }
+
+    func testOnboardingWithinFreeLimit() {
+        app.launchArguments = ["-Onboarding"]
+        app.launch()
+        onboardingNext()
+        app.buttons["onboarding.kind.truck"].tap()
+        for _ in 0..<3 { onboardingNext() }
+        XCTAssertFalse(app.staticTexts["onboarding.trialTitle"].label.hasPrefix("Free covers"))
+        Thread.sleep(forTimeInterval: 1)
+        attach("onboarding-trial-within")
+        app.buttons["Not now"].tap()
+        XCTAssertTrue(app.navigationBars.buttons["Back"].waitForExistence(timeout: 5))
+    }
+
+    func testSettingsNameSaves() {
+        launch("settings")
+        expectTitle("Settings", timeout: 10)
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["settings.save"].exists)
+        field.tap()
+        field.typeText("x")
+        let save = app.buttons["settings.save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 3), "No Save while the name is edited")
+        attach("settings-save")
+        save.tap()
+        XCTAssertFalse(save.waitForExistence(timeout: 2), "Save stayed after saving")
+    }
+
+    /// A bike from onboarding lands on a schedule split into rider headings.
+    func testBikeScheduleGroups() {
+        app.launchArguments = ["-Onboarding"]
+        app.launch()
+        onboardingNext()
+        app.buttons["onboarding.kind.ebike"].tap()
+        for _ in 0..<3 { onboardingNext() }
+        app.buttons["Not now"].tap()
+        let make = app.textFields["Make"]
+        XCTAssertTrue(make.waitForExistence(timeout: 5))
+        make.tap()
+        make.typeText("Trek")
+        tapButton("Continue")
+        let finish = app.buttons["vehicle.finish"]
+        scrollTo(finish)
+        finish.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let dontAllow = springboard.buttons["Don’t Allow"]
+        if dontAllow.waitForExistence(timeout: 3) { dontAllow.tap() }
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Trek")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.tap()
+        tapButton("Schedule")
+        for heading in ["Brakes", "Chain", "Tires"] {
+            let element = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", heading)).firstMatch
+            XCTAssertTrue(element.waitForExistence(timeout: 5), "Missing heading \(heading)")
+        }
+        attach("bike-schedule-top")
+        app.swipeUp()
+        attach("bike-schedule-bottom")
+    }
+
+    private func onboardingNext() {
+        let next = app.buttons["onboarding.continue"]
+        XCTAssertTrue(next.waitForExistence(timeout: 10))
+        next.tap()
+    }
+
     private func attach(_ name: String) {
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = name
