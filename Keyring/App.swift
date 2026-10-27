@@ -356,23 +356,8 @@ private struct VehicleDetailPane: View {
                 Color.clear.paperBackground()
             }
         }
-        .horizontalBars()
         .overlay(alignment: .leading) {
             Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
-        }
-    }
-}
-
-private extension View {
-    /// Keeps the phone's horizontal bars in the trailing pane. iOS 27.1
-    /// otherwise moves its toolbar, with the status bar, into a column on the
-    /// inner display's trailing edge, over the vehicle's cards.
-    @ViewBuilder
-    func horizontalBars() -> some View {
-        if #available(iOS 27.1, *) {
-            toolbarVerticalBehavior(.disabled)
-        } else {
-            self
         }
     }
 }

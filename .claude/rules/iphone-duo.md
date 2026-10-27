@@ -28,10 +28,13 @@ paths:
   `paneTabBar` (opaque, same tabs) as a bottom `safeAreaInset`, so every list
   scrolls its last row clear of it and nothing shows through. The bar spans
   the leading pane only.
-- The trailing pane keeps horizontal bars (`toolbarVerticalBehavior(.disabled)`,
-  iOS 27.1). Without it the status bar and the vehicle's Edit, More, back and
-  + buttons sat in a column on the display's trailing edge, over the hero card
-  and list rows (run 2, 2026-10-27). Apply it only to that pane.
+- iOS 27.1 puts the inner display's status bar and the trailing pane's toolbar
+  (More, back, +) in a column on the display's trailing edge and insets the
+  pane's trailing safe area for it. The vehicle pane must respect that inset:
+  ignoring it (run 2, 2026-10-27) slid the hero card and rows under the
+  column's buttons. `toolbarVerticalBehavior(.disabled)` is not the fix: it
+  letterboxed the whole scene with white 42 pt strips at both display edges
+  and narrowed the leading pane (run 3).
 - `paneTabBar` is topped by a 20 pt page-coloured fade inside the inset, so a
   key tag scrolling under the bar dissolves instead of being sliced mid-glyph.
 - Folded, iOS 27.1 draws its own vertical rail (status bar, tabs, toolbar) on
