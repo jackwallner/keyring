@@ -10,7 +10,7 @@ Service, fuel and recalls for every vehicle
 
 The truck, your partner's SUV, the teen's first car, the boat and the mower. Vehicle Maintenance Log is a shared service log app for all of them that tells you what is due next.
 
-[Download on the App Store](https://apps.apple.com/app/id6823808045)
+[Download on the App Store](https://apps.apple.com/app/id6823808045?pt=128748779&ct=jw-vehicle-maintenance-log-home&mt=8)
 
 2019 Toyota Tacoma**The Tacoma**48,210 mi
 Oil and filter · due in 3 weeks, by your pace
