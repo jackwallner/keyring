@@ -40,7 +40,7 @@ paths:
   traps on first touch; `CloudKitEntitlement.isPresent` keeps them local-only.
 - Captures: `gh-sim all --device 'iPhone Duo' --args "-SeedDemo -DemoPro"` plus
   one `--screen "-DuoScreen <s>"` per surface: `garage`, `schedule` (Rebel's
-  grouped schedule), `explore` (RAV4), `history` (History tab, Lake boat),
+  maintenance), `explore` (RAV4), `history` (History tab, Lake boat),
   `build` (Tacoma's build list pushed in the pane). `DuoScreen` lives in
   `ScreenshotConfig` (DEBUG) and maps to the existing `-ScreenshotRoute`
   behaviour through `ScreenshotConfig.route`. Never `--url`: iOS 27.1 raises an
