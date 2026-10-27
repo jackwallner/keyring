@@ -1,0 +1,26 @@
+xcode 27.1, iPhone Duo on iOS-27-1, runner 3 cores
+xcodegen ready in 0s
+built Keyring in 61s
+tests: Passed, 121 passed, 0 failed, 0 skipped
+tests passed in 535s
+booted in 3s
+launched com.jackwallner.keyring 12s after the build
+screenshot shots/launch-outer.png (1398x2034)
+screenshot shots/screen1-DuoScreen-garage-outer.png (1398x2034)
+screenshot shots/screen2-DuoScreen-schedule-outer.png (1398x2034)
+screenshot shots/screen3-DuoScreen-explore-outer.png (1398x2034)
+screenshot shots/screen4-DuoScreen-history-outer.png (1398x2034)
+screenshot shots/screen5-DuoScreen-build-outer.png (1398x2034)
+unfolded, inner display drawing after 5s
+screenshot shots/launch-inner.png (2853x2007)
+screen 1, inner display drawing after 5s
+screenshot shots/screen1-DuoScreen-garage-inner.png (2853x2007)
+screen 2, inner display drawing after 5s
+screenshot shots/screen2-DuoScreen-schedule-inner.png (2853x2007)
+screen 3, inner display drawing after 10s
+screenshot shots/screen3-DuoScreen-explore-inner.png (2853x2007)
+screen 4, inner display drawing after 5s
+screenshot shots/screen4-DuoScreen-history-inner.png (2853x2007)
+screen 5, inner display drawing after 10s
+screenshot shots/screen5-DuoScreen-build-inner.png (2853x2007)
+app still running at the end
