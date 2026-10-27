@@ -1,0 +1,4 @@
+Pannenhilfe: Versicherungs- und Pannenhilfenummern bei jedem Fahrzeug speichern und mit einem Tippen anrufen.
+Anleitungen: Hilfe für gängige Arbeiten in Eigenregie an genau deinem Fahrzeug.
+Fahrräder bekommen einen Plan nach Bremsen, Kette, Reifen und Akku.
+Dazu Fehlerbehebungen beim Scannen von Belegen und bei Mitteilungen.

@@ -1,0 +1,4 @@
+Asistencia vial: guarda los teléfonos del seguro y de asistencia vial con cada vehículo y llama con un toque.
+Cómo hacerlo: guías para trabajos comunes que puedes hacer tú mismo en tu vehículo.
+Las bicicletas tienen un calendario agrupado por frenos, cadena, llantas y batería.
+Además, correcciones en el escaneo de recibos y las notificaciones.

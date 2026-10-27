@@ -1,0 +1,4 @@
+Segélyszolgálat: tárold a biztosító és az autómentő számát minden járműnél, és hívd egy koppintással.
+Útmutatók: gyakori, saját kezűleg elvégezhető munkák a te járművedre.
+A kerékpárok ütemterve fékek, lánc, gumik és akkumulátor szerint csoportosít.
+Valamint javítások a nyugtaszkennelésben és az értesítésekben.

@@ -1,0 +1,4 @@
+Asistență rutieră: păstrează numerele asigurării și ale asistenței rutiere la fiecare vehicul și sună cu o atingere.
+Ghiduri: instrucțiuni pentru lucrări obișnuite pe care le faci singur la vehiculul tău.
+Bicicletele au un program grupat pe frâne, lanț, anvelope și baterie.
+Plus remedieri pentru scanarea bonurilor și notificări.
