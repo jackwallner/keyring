@@ -284,7 +284,19 @@ struct MainTabView: View {
             .tag(tab)
     }
 
+    /// Topped by a short fade, so a card scrolling toward the bar dissolves
+    /// into the page instead of being sliced at its edge. The fade is part of
+    /// the inset, so the last row still scrolls clear of it.
     private var paneTabBar: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [Theme.paper.opacity(0), Theme.paper], startPoint: .top, endPoint: .bottom)
+                .frame(height: Theme.lg)
+                .allowsHitTesting(false)
+            paneTabButtons
+        }
+    }
+
+    private var paneTabButtons: some View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases, id: \.self) { item in
                 let isSelected = tab == item
@@ -339,16 +351,28 @@ private struct VehicleDetailPane: View {
         NavigationStack {
             if let vehicle = pane.vehicle(in: garage.vehicles) {
                 VehicleDetailView(vehicle: vehicle)
-                    // The inner display's status column insets only the
-                    // trailing edge, which would push every card off centre.
-                    .ignoresSafeArea(.container, edges: .trailing)
                     .id(vehicle.objectID)
             } else {
                 Color.clear.paperBackground()
             }
         }
+        .horizontalBars()
         .overlay(alignment: .leading) {
             Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
+        }
+    }
+}
+
+private extension View {
+    /// Keeps the phone's horizontal bars in the trailing pane. iOS 27.1
+    /// otherwise moves its toolbar, with the status bar, into a column on the
+    /// inner display's trailing edge, over the vehicle's cards.
+    @ViewBuilder
+    func horizontalBars() -> some View {
+        if #available(iOS 27.1, *) {
+            toolbarVerticalBehavior(.disabled)
+        } else {
+            self
         }
     }
 }

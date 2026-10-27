@@ -28,8 +28,16 @@ paths:
   `paneTabBar` (opaque, same tabs) as a bottom `safeAreaInset`, so every list
   scrolls its last row clear of it and nothing shows through. The bar spans
   the leading pane only.
-- The inner display's status column insets only the trailing edge; the pane's
-  vehicle ignores that inset horizontally so its cards stay centred.
+- The trailing pane keeps horizontal bars (`toolbarVerticalBehavior(.disabled)`,
+  iOS 27.1). Without it the status bar and the vehicle's Edit, More, back and
+  + buttons sat in a column on the display's trailing edge, over the hero card
+  and list rows (run 2, 2026-10-27). Apply it only to that pane.
+- `paneTabBar` is topped by a 20 pt page-coloured fade inside the inset, so a
+  key tag scrolling under the bar dissolves instead of being sliced mid-glyph.
+- Folded, iOS 27.1 draws its own vertical rail (status bar, tabs, toolbar) on
+  the outer display's trailing edge. That is the system default and unchanged.
+- Unsigned simulator builds (gh-sim) have no iCloud entitlement and CloudKit
+  traps on first touch; `CloudKitEntitlement.isPresent` keeps them local-only.
 - Captures: `gh-sim all --device 'iPhone Duo' --args "-SeedDemo -DemoPro"` plus
   one `--screen "-DuoScreen <s>"` per surface: `garage`, `schedule` (Rebel's
   grouped schedule), `explore` (RAV4), `history` (History tab, Lake boat),
