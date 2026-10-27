@@ -30,8 +30,14 @@ final class SharingService: ObservableObject {
 
     var ckContainer: CKContainer { CKContainer(identifier: AppGroup.cloudKitContainerID) }
 
+    /// Signed in to iCloud, and this build is allowed to ask.
+    func accountAvailable() async -> Bool {
+        guard CloudKitEntitlement.isPresent else { return false }
+        return (try? await ckContainer.accountStatus()) == .available
+    }
+
     func refresh() async {
-        iCloudAvailable = (try? await ckContainer.accountStatus()) == .available
+        iCloudAvailable = await accountAvailable()
         guard let garage = store.ownGarage, persistence.cloudKitEnabled else {
             share = nil
             return
@@ -86,7 +92,7 @@ final class SharingService: ObservableObject {
     /// or the Camera lands in `accept(_:)` instead.
     func join(pasted text: String) async throws {
         guard let url = ShareInvite.url(in: text) else { throw JoinError.notAnInvite }
-        guard (try? await ckContainer.accountStatus()) == .available else { throw JoinError.iCloudUnavailable }
+        guard await accountAvailable() else { throw JoinError.iCloudUnavailable }
         let metadata: CKShare.Metadata
         do {
             metadata = try await ckContainer.shareMetadata(for: url)

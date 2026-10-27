@@ -63,6 +63,7 @@ final class Persistence: @unchecked Sendable {
     private static var processWantsCloudKit: Bool {
         #if DEBUG
         return Bundle.main.bundleIdentifier == AppGroup.bundleID && !ProcessInfo.processInfo.arguments.contains("-NoCloudKit")
+            && CloudKitEntitlement.isPresent
         #else
         return Bundle.main.bundleIdentifier == AppGroup.bundleID
         #endif

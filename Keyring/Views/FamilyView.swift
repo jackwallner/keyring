@@ -240,7 +240,7 @@ struct FamilyView: View {
         preparing = true
         errorMessage = nil
         defer { preparing = false }
-        guard (try? await sharing.ckContainer.accountStatus()) == .available else {
+        guard await sharing.accountAvailable() else {
             errorMessage = "Sign in to iCloud on this iPhone (Settings > your name) to invite anyone."
             return
         }
