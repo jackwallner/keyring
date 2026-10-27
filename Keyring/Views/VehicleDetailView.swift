@@ -98,7 +98,7 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $importing) { ImportView(preselected: vehicle) }
         .sheet(isPresented: $storing) { StorageSheet(vehicle: vehicle) }
         .task(id: recallKey) {
-            if !routed, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") {
+            if !routed, let route = ScreenshotConfig.route {
                 routed = true
                 if route == "record" { showingRecord = true }
                 if route == "fuel" { fueling = true }
@@ -119,7 +119,7 @@ struct VehicleDetailView: View {
             await loadRecalls()
             loadedRecallKey = recallKey
             // The recall banner can land above Explore once it loads.
-            switch ScreenshotConfig.value(after: "-ScreenshotRoute") {
+            switch ScreenshotConfig.route {
             case "explore":
                 try? await Task.sleep(for: .milliseconds(300))
                 proxy.scrollTo("explore", anchor: .top)

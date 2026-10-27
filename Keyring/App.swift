@@ -186,35 +186,169 @@ struct RootView: View {
 }
 
 struct MainTabView: View {
-    enum Tab: Hashable { case garage, history, settings }
+    enum Tab: Hashable, CaseIterable {
+        case garage, history, settings
 
+        var title: LocalizedStringKey {
+            switch self {
+            case .garage: "Garage"
+            case .history: "History"
+            case .settings: "Settings"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .garage: "car.fill"
+            case .history: "book.closed.fill"
+            case .settings: "gearshape.fill"
+            }
+        }
+    }
+
+    @EnvironmentObject private var garage: GarageStore
     @State private var tab: Tab = MainTabView.initialTab
     @ObservedObject private var router = NotificationRouter.shared
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var paneGeometry = PaneGeometry(width: 0, fold: nil)
+    @State private var vehiclePane = VehiclePane()
+
+    /// Unfolded, the selected vehicle gets its own pane beside the tabs.
+    private var split: UnfoldedSplit? {
+        UnfoldedSplit.make(
+            width: paneGeometry.width,
+            isRegularWidth: horizontalSizeClass == .regular,
+            fold: paneGeometry.fold
+        )
+    }
+
+    /// Each unfolded pane is phone-width, so its screen lays out as on a phone.
+    private var paneSizeClass: UserInterfaceSizeClass? {
+        split == nil ? horizontalSizeClass : .compact
+    }
 
     var body: some View {
-        TabView(selection: $tab) {
-            GarageView()
-                .tabItem { Label("Garage", systemImage: "car.fill") }
-                .tag(Tab.garage)
-            NavigationStack { HistoryView() }
-                .tabItem { Label("History", systemImage: "book.closed.fill") }
-                .tag(Tab.history)
-            NavigationStack { SettingsView() }
-                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
-                .tag(Tab.settings)
+        // One tree for both poses: folding only changes frames, so the tabs keep
+        // their navigation and scroll position.
+        ZStack(alignment: .topLeading) {
+            tabs
+                .environment(\.horizontalSizeClass, paneSizeClass)
+                .environment(split == nil ? nil : vehiclePane)
+                .frame(maxWidth: split?.primaryWidth ?? .infinity, maxHeight: .infinity)
+
+            if let split {
+                VehicleDetailPane(pane: vehiclePane)
+                    .environment(\.horizontalSizeClass, .compact)
+                    .frame(width: split.secondaryWidth)
+                    .frame(maxHeight: .infinity)
+                    .padding(.leading, split.secondaryX)
+            }
         }
+        .background(Theme.paper.ignoresSafeArea())
+        .onGeometryChange(for: PaneGeometry.self) { proxy in
+            PaneGeometry(width: proxy.size.width, fold: proxy.verticalFold())
+        } action: { paneGeometry = $0 }
         .onReceive(router.$destination.compactMap { $0 }) { _ in tab = .garage }
         .sheet(item: Binding(
             get: { router.importFile.map(SharedFile.init(url:)) },
             set: { if $0 == nil { router.importFile = nil } }
         )) { file in ImportView(fileURL: file.url) }
+        #if DEBUG
+        .task(id: garage.vehicles.count) {
+            guard vehiclePane.selectedID == nil, let screen = DuoScreen.current,
+                  garage.vehicles.indices.contains(screen.vehicleIndex) else { return }
+            vehiclePane.selectedID = garage.vehicles[screen.vehicleIndex].objectID
+        }
+        #endif
+    }
+
+    private var tabs: some View {
+        TabView(selection: $tab) {
+            page(.garage) { GarageView() }
+            page(.history) { NavigationStack { HistoryView() } }
+            page(.settings) { NavigationStack { SettingsView() } }
+        }
+    }
+
+    /// One tab's screen. Unfolded, the system's floating glass bar would let
+    /// rows show through it, so the leading pane hides it for an opaque bar of
+    /// the same tabs. That bar is a safe-area inset, so every list scrolls its
+    /// last row clear of it.
+    private func page<Content: View>(_ tab: Tab, @ViewBuilder content: () -> Content) -> some View {
+        content()
+            .toolbar(split == nil ? .automatic : .hidden, for: .tabBar)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if split != nil { paneTabBar }
+            }
+            .tabItem { Label(tab.title, systemImage: tab.systemImage) }
+            .tag(tab)
+    }
+
+    private var paneTabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases, id: \.self) { item in
+                let isSelected = tab == item
+                Button {
+                    tab = item
+                } label: {
+                    VStack(spacing: 3) {
+                        // A fixed icon box keeps every label on one baseline.
+                        Image(systemName: item.systemImage)
+                            .font(.system(size: 19, weight: .semibold))
+                            .frame(height: 24)
+                        Text(item.title)
+                            .font(.caption2.weight(.semibold))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(isSelected ? Theme.brass : Theme.secondaryInk)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, Theme.xs)
+        .padding(.top, Theme.xs)
+        .padding(.bottom, Theme.xxs)
+        .background(Theme.surface.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) {
+            Rectangle().fill(Theme.hairline).frame(height: 1)
+        }
     }
 
     static var initialTab: Tab {
+        #if DEBUG
+        if let screen = DuoScreen.current { return screen.tab }
+        #endif
         switch ScreenshotConfig.value(after: "-ScreenshotRoute") {
-        case "history": .history
-        case "settings": .settings
-        default: .garage
+        case "history": return .history
+        case "settings": return .settings
+        default: return .garage
+        }
+    }
+}
+
+/// The trailing pane on the unfolded Duo: the vehicle picked in Garage, or the
+/// first one until a tag is tapped.
+private struct VehicleDetailPane: View {
+    let pane: VehiclePane
+    @EnvironmentObject private var garage: GarageStore
+
+    var body: some View {
+        NavigationStack {
+            if let vehicle = pane.vehicle(in: garage.vehicles) {
+                VehicleDetailView(vehicle: vehicle)
+                    // The inner display's status column insets only the
+                    // trailing edge, which would push every card off centre.
+                    .ignoresSafeArea(.container, edges: .trailing)
+                    .id(vehicle.objectID)
+            } else {
+                Color.clear.paperBackground()
+            }
+        }
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
         }
     }
 }

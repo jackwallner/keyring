@@ -9,6 +9,8 @@ struct GarageView: View {
     @EnvironmentObject private var sharing: SharingService
     @ObservedObject private var router = NotificationRouter.shared
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Set only on the unfolded Duo, where a vehicle opens beside the garage.
+    @Environment(VehiclePane.self) private var pane: VehiclePane?
 
     @AppStorage(AppGroup.Key.plannedVehicles, store: AppGroup.defaults) private var planned = ""
 
@@ -19,6 +21,8 @@ struct GarageView: View {
     @State private var logging: LogRequest?
     @State private var showingAllAttention = false
     @State private var routedScreenshot = false
+    /// The vehicle last pushed, handed to the trailing pane when the Duo opens.
+    @State private var pushedVehicle: NSManagedObjectID?
 
     var body: some View {
         NavigationStack(path: $path) { content }
@@ -46,10 +50,7 @@ struct GarageView: View {
                             Eyebrow(text: section.title).padding(.top, Theme.xs)
                         }
                         ForEach(section.vehicles) { vehicle in
-                            NavigationLink(value: vehicle.objectID) {
-                                VehicleCard(vehicle: vehicle)
-                            }
-                            .buttonStyle(PressableStyle())
+                            vehicleLink(vehicle)
                             .contextMenu {
                                 Button { logging = LogRequest(vehicle: vehicle) } label: { Label("Log service", systemImage: "plus.circle") }
                                 if garage.vehicles.count > 1, let index = garage.vehicles.firstIndex(of: vehicle) {
@@ -87,6 +88,7 @@ struct GarageView: View {
         .navigationDestination(for: NSManagedObjectID.self) { id in
             if let vehicle = garage.vehicles.first(where: { $0.objectID == id }) ?? garage.retiredVehicles.first(where: { $0.objectID == id }) {
                 VehicleDetailView(vehicle: vehicle)
+                    .onAppear { pushedVehicle = id }
             }
         }
         .navigationDestination(for: RecallRoute.self) { route in
@@ -99,9 +101,19 @@ struct GarageView: View {
             guard let vehicle = garage.vehicles.first(where: { $0.id == destination.vehicleID }) else { return }
             logging = nil
             var route = NavigationPath()
-            route.append(vehicle.objectID)
+            if let pane {
+                pane.select(vehicle)
+            } else {
+                route.append(vehicle.objectID)
+            }
             if destination.showsRecalls { route.append(RecallRoute(vehicle: vehicle.objectID)) }
             path = route
+        }
+        // Opening the Duo moves a pushed vehicle into its pane beside the garage.
+        .onChange(of: pane != nil) { _, isSplit in
+            guard isSplit, let pane, let pushedVehicle, !path.isEmpty else { return }
+            pane.selectedID = pushedVehicle
+            path = NavigationPath()
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -134,6 +146,31 @@ struct GarageView: View {
     }
 
     private var largeText: Bool { dynamicTypeSize.isAccessibilitySize }
+
+    /// Pushes the vehicle, or on the unfolded Duo opens it in the trailing pane
+    /// and rings its tag.
+    @ViewBuilder
+    private func vehicleLink(_ vehicle: Vehicle) -> some View {
+        if let pane {
+            let selected = pane.vehicle(in: garage.vehicles)?.objectID == vehicle.objectID
+            Button { pane.select(vehicle) } label: {
+                VehicleCard(vehicle: vehicle)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 27, style: .continuous)
+                            .strokeBorder(Theme.brass, lineWidth: 2.5)
+                            .padding(-5)
+                            .opacity(selected ? 1 : 0)
+                    }
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityAddTraits(selected ? .isSelected : [])
+        } else {
+            NavigationLink(value: vehicle.objectID) {
+                VehicleCard(vehicle: vehicle)
+            }
+            .buttonStyle(PressableStyle())
+        }
+    }
 
     private var sections: [(title: String, vehicles: [Vehicle])] {
         var result: [(String, [Vehicle])] = []
@@ -332,12 +369,18 @@ struct GarageView: View {
     }
 
     private func routeScreenshot() {
-        guard !routedScreenshot, let route = ScreenshotConfig.value(after: "-ScreenshotRoute") else { return }
+        guard !routedScreenshot, let route = ScreenshotConfig.route else { return }
         routedScreenshot = true
-        let first = garage.vehicles.first
+        var first = garage.vehicles.first
+        #if DEBUG
+        if let screen = DuoScreen.current, garage.vehicles.indices.contains(screen.vehicleIndex) {
+            first = garage.vehicles[screen.vehicleIndex]
+        }
+        #endif
         switch route {
         case "vehicle", "explore", "record", "fuel", "fuelcard", "build", "pace", "recalls", "roadside", "howto":
-            if let first { path.append(first.objectID) }
+            // Unfolded, the vehicle is already open in its pane.
+            if let first, pane == nil { path.append(first.objectID) }
         case "log":
             logging = first.map { LogRequest(vehicle: $0) }
         case "family":
