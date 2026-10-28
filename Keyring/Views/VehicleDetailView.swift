@@ -467,7 +467,7 @@ struct VehicleDetailView: View {
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2, reservesSpace: true)
             }
             .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
             .card()
