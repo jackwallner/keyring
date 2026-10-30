@@ -43,7 +43,7 @@ struct SettingsView: View {
                         .focused($editingText)
                         .onSubmit(saveText)
                 }
-                if let own = garage.ownGarage {
+                if garage.ownGarage != nil {
                     LabeledContent("Garage name") {
                         TextField("Our garage", text: $garageName)
                             .multilineTextAlignment(.trailing)
