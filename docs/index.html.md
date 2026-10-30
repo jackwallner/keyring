@@ -95,4 +95,4 @@ Two vehicles are free for good, with unlimited logging, fill-ups and mpg, remind
 
 No. Your garage is stored on your iPhone and in your own iCloud, and sharing uses Apple's iCloud sharing.
 
-© 2026 Jack Wallner · Last updated .
+© 2026 Jack Wallner · Last updated . [Best car maintenance tracker app](https://jackwallner.com/ios/vehicle-maintenance-log/best-car-maintenance-app.html)

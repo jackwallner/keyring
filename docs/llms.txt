@@ -6,6 +6,10 @@
 
 - [Vehicle Maintenance Log: Car Service and MPG Tracker](https://jackwallner.com/ios/vehicle-maintenance-log/index.html.md): Vehicle Maintenance Log is a shared service and fuel log app for every family vehicle, from cars and trucks to boats and RVs. Schedules, reminders and mpg.
 
+## Guides
+
+- [Best Car Maintenance Tracker App for iPhone: 5 Compared](https://jackwallner.com/ios/vehicle-maintenance-log/best-car-maintenance-app.html.md): Five iPhone car maintenance tracker apps compared: service reminders, mpg, recalls and sharing a garage with family. Ratings as of October 2026.
+
 ## Optional
 
 - [Privacy Policy (Android): Vehicle Maintenance Log](https://jackwallner.github.io/keyring/android-privacy.html.md): How Vehicle Maintenance Log for Android handles your data.
