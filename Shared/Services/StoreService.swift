@@ -90,13 +90,6 @@ extension Package {
         return "\(storeProduct.localizedPriceString) / \(period.value) \(unit)"
     }
 
-    /// Per-week equivalent of the recurring price, shown on the annual card so
-    /// the headline yearly figure feels small.
-    var pricePerWeekLabel: String? {
-        guard storeProduct.subscriptionPeriod != nil else { return nil }
-        return storeProduct.localizedPricePerWeek
-    }
-
     var introOfferLabel: String? {
         guard let intro = storeProduct.introductoryDiscount, intro.paymentMode == .freeTrial else {
             return nil
@@ -204,7 +197,6 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
     }
 
     var yearlyPackage: Package? { packages.first { $0.planKind == .yearly } }
-    var lifetimePackage: Package? { packages.first { $0.planKind == .lifetime } }
 
     func isEligibleForIntroOffer(_ package: Package) -> Bool {
         guard package.introOfferLabel != nil else { return false }
@@ -215,17 +207,6 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
     func eligibleIntroLabel(for package: Package) -> String? {
         guard isEligibleForIntroOffer(package) else { return nil }
         return package.introOfferLabel
-    }
-
-    /// True when the yearly plan can honestly be pitched as a free trial.
-    var canPitchFreeTrial: Bool {
-        guard let yearly = yearlyPackage else { return false }
-        return isEligibleForIntroOffer(yearly)
-    }
-
-    /// Short CTA for locked capsule surfaces.
-    var shortConversionCTALabel: String {
-        ConversionCopy.shortCTALabel(eligibleForTrial: canPitchFreeTrial)
     }
 
     @discardableResult

@@ -18,12 +18,6 @@ enum ConversionCopy {
         "Continue with Pro"
     }
 
-    /// Short capsule CTA on locked rows. These sit far from any price and only
-    /// route to a purchase surface, so they stay neutral for the same reason.
-    static func shortCTALabel(eligibleForTrial: Bool) -> String {
-        "Continue with Pro"
-    }
-
     /// Apple 3.1.2(c): the amount the user will actually be billed, phrased as a
     /// commitment rather than a rate ("$14.99 / year" -> "$14.99 per year").
     /// Every purchase surface renders this as its largest pricing element.
@@ -51,14 +45,6 @@ enum ConversionCopy {
             return "\(priceLabel) after the \(trialLabel.lowercased()). \(renewClause)"
         }
         return "\(priceLabel). \(renewClause)"
-    }
-
-    /// Compact disclosure for the trial offer sheet footer.
-    static func sheetDisclosure(trialLabel: String?, priceLabel: String, eligibleForTrial: Bool) -> String {
-        if eligibleForTrial, let trialLabel, !trialLabel.isEmpty {
-            return "\(priceLabel) after the \(trialLabel.lowercased()). Auto-renews unless cancelled at least 24 hours before the trial ends."
-        }
-        return "\(priceLabel). Auto-renews unless cancelled 24h before the period ends."
     }
 
     /// Cancel / failure copy never blames a "trial" the user wasn't eligible for.
