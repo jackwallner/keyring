@@ -1,4 +1,3 @@
-import SafariServices
 import SwiftUI
 import UIKit
 
@@ -349,16 +348,6 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
-}
-
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        SFSafariViewController(url: url)
-    }
-
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
 /// A file the share sheet hands around, made identifiable for `.sheet(item:)`.
