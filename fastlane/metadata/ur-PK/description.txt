@@ -19,5 +19,5 @@ Vehicle Maintenance Log آپ کے خاندان کی ہر گاڑی کے لیے ا
 
 نظام الاوقات عام رہنمائی ہیں۔ اپنے مالک کی ہدایت پر عمل کریں اور کسی مستند مکینک سے مشورہ کریں۔ یہ سرکاری ہوائی جہاز یا جہاز کی لاگ بک نہیں ہے۔
 
-رازداری کی پالیسی: https://jackwallner.github.io/keyring/privacy-policy.html
+رازداری کی پالیسی: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 استعمال کی شرائط: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

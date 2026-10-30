@@ -19,5 +19,5 @@ Las suscripciones mensuales y anuales incluyen cada una una prueba gratuita de u
 
 Los horarios son una guía general. Siga el manual del propietario y consulte a un mecánico calificado. Este no es un cuaderno de bitácora oficial de aeronaves o embarcaciones.
 
-Política de privacidad: https://jackwallner.github.io/keyring/privacy-policy.html
+Política de privacidad: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Condiciones de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

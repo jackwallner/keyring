@@ -19,5 +19,5 @@ Vehicle Maintenance Log хранит одну общую историю обсл
 
 Расписания являются общими рекомендациями. Следуйте руководству пользователя и проконсультируйтесь с квалифицированным механиком. Это не официальный бортовой журнал самолета или судна.
 
-Политика конфиденциальности: https://jackwallner.github.io/keyring/privacy-policy.html
+Политика конфиденциальности: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Условия использования: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

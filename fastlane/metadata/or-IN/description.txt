@@ -19,5 +19,5 @@ Vehicle Maintenance Log ଆପଣଙ୍କ ପରିବାରର ପ୍ରତ୍
 
 କାର୍ଯ୍ୟଗୁଡ଼ିକ ହେଉଛି ସାଧାରଣ ମାର୍ଗଦର୍ଶିକା | ଆପଣଙ୍କର ମାଲିକଙ୍କ ମାନୁଆଲ୍ ଅନୁସରଣ କରନ୍ତୁ ଏବଂ ଜଣେ ଯୋଗ୍ୟ ମେକାନିକ୍ ସହିତ ପରାମର୍ଶ କରନ୍ତୁ | ଏହା ଏକ ସରକାରୀ ବିମାନ କିମ୍ବା ଜାହାଜ ଲଗବୁକ୍ ନୁହେଁ |
 
-ଗୋପନୀୟତା ନୀତି: https://jackwallner.github.io/keyring/privacy-policy.html
+ଗୋପନୀୟତା ନୀତି: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ବ୍ୟବହାର ସର୍ତ୍ତାବଳୀ: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

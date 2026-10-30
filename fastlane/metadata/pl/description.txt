@@ -19,5 +19,5 @@ Każda subskrypcja miesięczna i roczna obejmuje tygodniowy bezpłatny okres pr�
 
 Harmonogramy stanowią ogólne wytyczne. Postępuj zgodnie z instrukcją obsługi i skonsultuj się z wykwalifikowanym mechanikiem. To nie jest oficjalny dziennik pokładowy statku powietrznego ani statku.
 
-Polityka prywatności: https://jackwallner.github.io/keyring/privacy-policy.html
+Polityka prywatności: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Warunki korzystania: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

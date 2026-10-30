@@ -19,5 +19,5 @@ Les abonnements mensuels et annuels incluent chacun un essai gratuit d'une semai
 
 Les horaires sont des indications générales. Suivez votre manuel du propriétaire et consultez un mécanicien qualifié. Il ne s’agit pas d’un journal de bord officiel d’un avion ou d’un navire.
 
-Politique de confidentialité : https://jackwallner.github.io/keyring/privacy-policy.html
+Politique de confidentialité : https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

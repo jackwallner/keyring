@@ -19,5 +19,5 @@ Vehicle Maintenance Log는 자동차, 트럭, 오토바이, 보트, 항공기, R
 
 일정은 일반적인 지침입니다. 사용 설명서를 따르고 자격을 갖춘 정비사에게 문의하십시오. 이것은 공식 항공기나 선박 일지가 아닙니다.
 
-개인 정보 보호 정책: https://jackwallner.github.io/keyring/privacy-policy.html
+개인 정보 보호 정책: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 이용약관: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

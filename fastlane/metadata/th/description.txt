@@ -19,5 +19,5 @@ Vehicle Maintenance Log เก็บประวัติการบริก�
 
 กำหนดการเป็นแนวทางทั่วไป ปฏิบัติตามคู่มือสำหรับเจ้าของรถและปรึกษาช่างที่มีคุณสมบัติ นี่ไม่ใช่สมุดบันทึกเครื่องบินหรือเรืออย่างเป็นทางการ
 
-นโยบายความเป็นส่วนตัว: https://jackwallner.github.io/keyring/privacy-policy.html
+นโยบายความเป็นส่วนตัว: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 เงื่อนไขการใช้งาน: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

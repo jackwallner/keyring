@@ -19,5 +19,5 @@ Månatliga och årliga prenumerationer inkluderar var och en en veckas gratis pr
 
 Schema är allmän vägledning. Följ din bruksanvisning och rådfråga en kvalificerad mekaniker. Detta är inte en officiell loggbok för flygplan eller fartyg.
 
-Sekretesspolicy: https://jackwallner.github.io/keyring/privacy-policy.html
+Sekretesspolicy: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Användarvillkor: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

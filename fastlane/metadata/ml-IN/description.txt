@@ -19,5 +19,5 @@ Vehicle Maintenance Log നിങ്ങളുടെ കുടുംബത്ത�
 
 ഷെഡ്യൂളുകൾ പൊതുവായ മാർഗ്ഗനിർദ്ദേശമാണ്. നിങ്ങളുടെ ഉടമയുടെ മാനുവൽ പിന്തുടരുക, യോഗ്യതയുള്ള ഒരു മെക്കാനിക്കിനെ സമീപിക്കുക. ഇതൊരു ഔദ്യോഗിക വിമാനമോ കപ്പൽ ലോഗ്ബുക്കോ അല്ല.
 
-സ്വകാര്യതാ നയം: https://jackwallner.github.io/keyring/privacy-policy.html
+സ്വകാര്യതാ നയം: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ഉപയോഗ നിബന്ധനകൾ: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

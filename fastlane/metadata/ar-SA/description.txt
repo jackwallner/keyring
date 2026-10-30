@@ -19,5 +19,5 @@
 
 الجداول الزمنية هي التوجيهات العامة. اتبع دليل المالك الخاص بك واستشر ميكانيكيًا مؤهلًا. هذا ليس سجلًا رسميًا للطائرات أو السفن.
 
-سياسة الخصوصية: https://jackwallner.github.io/keyring/privacy-policy.html
+سياسة الخصوصية: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 شروط الاستخدام: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

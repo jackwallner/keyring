@@ -19,5 +19,5 @@ Vehicle Maintenance Log आपके परिवार के स्वाम�
 
 अनुसूचियाँ सामान्य मार्गदर्शन हैं। अपने मालिक के मैनुअल का पालन करें और एक योग्य मैकेनिक से परामर्श लें। यह कोई आधिकारिक विमान या पोत लॉगबुक नहीं है।
 
-गोपनीयता नीति: https://jackwallner.github.io/keyring/privacy-policy.html
+गोपनीयता नीति: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 उपयोग की शर्तें: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -19,5 +19,5 @@ Langganan bulanan dan tahunan masing-masing termasuk percubaan percuma selama se
 
 Jadual adalah panduan umum. Ikut manual pemilik anda dan berunding dengan mekanik yang bertauliah. Ini bukan buku log kapal terbang atau kapal rasmi.
 
-Dasar Privasi: https://jackwallner.github.io/keyring/privacy-policy.html
+Dasar Privasi: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Syarat Penggunaan: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

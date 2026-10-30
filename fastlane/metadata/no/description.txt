@@ -19,5 +19,5 @@ Månedlige og årlige abonnementer inkluderer hver en ukes gratis prøveperiode 
 
 Tidsplaner er generell veiledning. Følg brukerhåndboken og kontakt en kvalifisert mekaniker. Dette er ikke en offisiell loggbok for fly eller fartøy.
 
-Personvernerklæring: https://jackwallner.github.io/keyring/privacy-policy.html
+Personvernerklæring: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Vilkår for bruk: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

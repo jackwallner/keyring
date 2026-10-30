@@ -19,5 +19,5 @@ Vehicle Maintenance Log আপনার পরিবারের মালিক
 
 সময়সূচী হল সাধারণ নির্দেশিকা। আপনার মালিকের ম্যানুয়াল অনুসরণ করুন এবং একজন যোগ্যতাসম্পন্ন মেকানিকের সাথে পরামর্শ করুন। এটি একটি অফিসিয়াল বিমান বা জাহাজের লগবুক নয়।
 
-গোপনীয়তা নীতি: https://jackwallner.github.io/keyring/privacy-policy.html
+গোপনীয়তা নীতি: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ব্যবহারের শর্তাবলী: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

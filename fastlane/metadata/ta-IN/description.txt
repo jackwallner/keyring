@@ -19,5 +19,5 @@ Vehicle Maintenance Log உங்கள் குடும்பம் வைத
 
 அட்டவணைகள் பொதுவான வழிகாட்டுதல்கள். உங்கள் உரிமையாளரின் கையேட்டைப் பின்பற்றி, தகுதியான மெக்கானிக்கை அணுகவும். இது அதிகாரப்பூர்வ விமானம் அல்லது கப்பல் பதிவு புத்தகம் அல்ல.
 
-தனியுரிமைக் கொள்கை: https://jackwallner.github.io/keyring/privacy-policy.html
+தனியுரிமைக் கொள்கை: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 பயன்பாட்டு விதிமுறைகள்: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

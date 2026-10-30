@@ -19,5 +19,5 @@ Vehicle Maintenance Log ನಿಮ್ಮ ಕುಟುಂಬ ಹೊಂದಿರು
 
 ವೇಳಾಪಟ್ಟಿಗಳು ಸಾಮಾನ್ಯ ಮಾರ್ಗದರ್ಶನ. ನಿಮ್ಮ ಮಾಲೀಕರ ಕೈಪಿಡಿಯನ್ನು ಅನುಸರಿಸಿ ಮತ್ತು ಅರ್ಹ ಮೆಕ್ಯಾನಿಕ್ ಅನ್ನು ಸಂಪರ್ಕಿಸಿ. ಇದು ಅಧಿಕೃತ ವಿಮಾನ ಅಥವಾ ಹಡಗಿನ ಲಾಗ್‌ಬುಕ್ ಅಲ್ಲ.
 
-ಗೌಪ್ಯತಾ ನೀತಿ: https://jackwallner.github.io/keyring/privacy-policy.html
+ಗೌಪ್ಯತಾ ನೀತಿ: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ಬಳಕೆಯ ನಿಯಮಗಳು: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

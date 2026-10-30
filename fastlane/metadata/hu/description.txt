@@ -19,5 +19,5 @@ A havi és éves előfizetések egyhetes ingyenes próbaidőszakot tartalmaznak 
 
 A menetrendek általános iránymutatások. Kövesse a használati útmutatót, és forduljon szakképzett szerelőhöz. Ez nem egy hivatalos repülőgép- vagy hajónapló.
 
-Adatvédelmi szabályzat: https://jackwallner.github.io/keyring/privacy-policy.html
+Adatvédelmi szabályzat: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Felhasználási feltételek: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

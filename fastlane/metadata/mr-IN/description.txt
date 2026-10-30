@@ -19,5 +19,5 @@ Vehicle Maintenance Log तुमच्या कुटुंबाच्या 
 
 वेळापत्रक सामान्य मार्गदर्शन आहे. तुमच्या मालकाच्या मॅन्युअलचे अनुसरण करा आणि पात्र मेकॅनिकचा सल्ला घ्या. हे अधिकृत विमान किंवा जहाज लॉगबुक नाही.
 
-गोपनीयता धोरण: https://jackwallner.github.io/keyring/privacy-policy.html
+गोपनीयता धोरण: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 वापर अटी: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

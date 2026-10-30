@@ -19,5 +19,5 @@ Monats- und Jahresabonnements beinhalten jeweils eine einwöchige kostenlose Tes
 
 Zeitpläne sind allgemeine Orientierungshilfen. Befolgen Sie die Bedienungsanleitung und wenden Sie sich an einen qualifizierten Mechaniker. Dies ist kein offizielles Flugzeug- oder Schiffslogbuch.
 
-Datenschutzrichtlinie: https://jackwallner.github.io/keyring/privacy-policy.html
+Datenschutzrichtlinie: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Nutzungsbedingungen: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

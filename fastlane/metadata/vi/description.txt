@@ -19,5 +19,5 @@ Mỗi đăng ký hàng tháng và hàng năm đều bao gồm bản dùng thử 
 
 Lịch trình là hướng dẫn chung. Làm theo hướng dẫn sử dụng của chủ sở hữu và tham khảo ý kiến ​​​​của thợ cơ khí có trình độ. Đây không phải là nhật ký máy bay hoặc tàu thuyền chính thức.
 
-Chính sách bảo mật: https://jackwallner.github.io/keyring/privacy-policy.html
+Chính sách bảo mật: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Điều khoản sử dụng: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

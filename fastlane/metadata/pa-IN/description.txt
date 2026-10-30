@@ -19,5 +19,5 @@ Vehicle Maintenance Log ਤੁਹਾਡੇ ਪਰਿਵਾਰ ਦੀ ਮਾਲ�
 
 ਸਮਾਂ-ਸਾਰਣੀਆਂ ਆਮ ਮਾਰਗਦਰਸ਼ਨ ਹਨ। ਆਪਣੇ ਮਾਲਕ ਦੇ ਮੈਨੂਅਲ ਦੀ ਪਾਲਣਾ ਕਰੋ ਅਤੇ ਇੱਕ ਯੋਗ ਮਕੈਨਿਕ ਨਾਲ ਸਲਾਹ ਕਰੋ। ਇਹ ਕੋਈ ਅਧਿਕਾਰਤ ਜਹਾਜ਼ ਜਾਂ ਜਹਾਜ਼ ਦੀ ਲੌਗਬੁੱਕ ਨਹੀਂ ਹੈ।
 
-ਗੋਪਨੀਯਤਾ ਨੀਤੀ: https://jackwallner.github.io/keyring/privacy-policy.html
+ਗੋਪਨੀਯਤਾ ਨੀਤੀ: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ਵਰਤੋਂ ਦੀਆਂ ਸ਼ਰਤਾਂ: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -19,5 +19,5 @@
 
 Τα χρονοδιαγράμματα είναι γενική καθοδήγηση. Ακολουθήστε το εγχειρίδιο του ιδιοκτήτη σας και συμβουλευτείτε έναν εξειδικευμένο μηχανικό. Αυτό δεν είναι επίσημο ημερολόγιο αεροσκάφους ή σκάφους.
 
-Πολιτική Απορρήτου: https://jackwallner.github.io/keyring/privacy-policy.html
+Πολιτική Απορρήτου: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Όροι Χρήσης: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

@@ -19,5 +19,5 @@ Maandelijkse en jaarlijkse abonnementen omvatten elk een gratis proefperiode van
 
 Schema's zijn algemene richtlijnen. Volg uw gebruikershandleiding en raadpleeg een gekwalificeerde monteur. Dit is geen officieel vliegtuig- of vaartuiglogboek.
 
-Privacybeleid: https://jackwallner.github.io/keyring/privacy-policy.html
+Privacybeleid: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Gebruiksvoorwaarden: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

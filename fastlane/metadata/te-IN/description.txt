@@ -19,5 +19,5 @@ Vehicle Maintenance Log మీ కుటుంబం కలిగి ఉన్�
 
 షెడ్యూల్‌లు సాధారణ మార్గదర్శకత్వం. మీ యజమాని యొక్క మాన్యువల్‌ని అనుసరించండి మరియు అర్హత కలిగిన మెకానిక్‌ని సంప్రదించండి. ఇది అధికారిక విమానం లేదా నౌక లాగ్‌బుక్ కాదు.
 
-గోప్యతా విధానం: https://jackwallner.github.io/keyring/privacy-policy.html
+గోప్యతా విధానం: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ఉపయోగ నిబంధనలు: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

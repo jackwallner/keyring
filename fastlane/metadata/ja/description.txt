@@ -19,5 +19,5 @@ Vehicle Maintenance Log は、家族が所有するすべての車両 (乗用車
 
 スケジュールは一般的な目安です。オーナーズマニュアルに従い、資格のある整備士にご相談ください。これは公式の航空機または船舶の航海日誌ではありません。
 
-プライバシーポリシー: https://jackwallner.github.io/keyring/privacy-policy.html
+プライバシーポリシー: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 利用規約: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

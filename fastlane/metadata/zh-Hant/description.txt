@@ -19,5 +19,5 @@ Vehicle Maintenance Log 為您家庭擁有的每輛車存放一份共享服務�
 
 時間表是一般指導。請遵循使用手冊並諮詢合格的機械師。這不是官方的飛機或船隻航海日誌。
 
-隱私權政策：https://jackwallner.github.io/keyring/privacy-policy.html
+隱私權政策：https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 使用條款：https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

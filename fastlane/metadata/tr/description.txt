@@ -19,5 +19,5 @@ Aylık ve yıllık aboneliklerin her biri, uygun yeni aboneler için bir haftal�
 
 Programlar genel rehberlik niteliğindedir. Kullanım kılavuzunuzu takip edin ve kalifiye bir tamirciye danışın. Bu resmi bir uçak veya gemi kayıt defteri değildir.
 
-Gizlilik Politikası: https://jackwallner.github.io/keyring/privacy-policy.html
+Gizlilik Politikası: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Kullanım Koşulları: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

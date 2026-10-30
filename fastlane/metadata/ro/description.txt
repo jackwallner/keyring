@@ -19,5 +19,5 @@ Abonamentele lunare și anuale includ fiecare o perioadă de încercare gratuit�
 
 Programele sunt orientari generale. Urmați manualul de utilizare și consultați un mecanic calificat. Acesta nu este un jurnal oficial al aeronavei sau al navei.
 
-Politica de confidențialitate: https://jackwallner.github.io/keyring/privacy-policy.html
+Politica de confidențialitate: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Condiții de utilizare: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

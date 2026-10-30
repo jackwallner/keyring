@@ -19,5 +19,5 @@ Vehicle Maintenance Log зберігає одну спільну історію 
 
 Розклади є загальними рекомендаціями. Дотримуйтесь інструкції з експлуатації та зверніться до кваліфікованого механіка. Це не офіційний бортовий журнал літака чи судна.
 
-Політика конфіденційності: https://jackwallner.github.io/keyring/privacy-policy.html
+Політика конфіденційності: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Умови використання: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

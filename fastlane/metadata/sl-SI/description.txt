@@ -19,5 +19,5 @@ Vsaka mesečna in letna naročnina vključujeta enotedensko brezplačno preskusn
 
 Urniki so splošne smernice. Sledite navodilom za uporabo in se posvetujte s kvalificiranim mehanikom. To ni uradni ladijski dnevnik zrakoplova ali plovila.
 
-Politika zasebnosti: https://jackwallner.github.io/keyring/privacy-policy.html
+Politika zasebnosti: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Pogoji uporabe: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

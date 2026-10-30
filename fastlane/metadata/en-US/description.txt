@@ -1,4 +1,4 @@
-Vehicle Maintenance Log keeps one shared service history for every vehicle your family owns. The truck, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower live in one garage, and each one tells you what's due next.
+Vehicle Maintenance Log keeps one shared service history and MPG log for every vehicle your family owns, and tells you what's due next. The truck, the teen's first car, the boat, the motorcycle, the camper, the plane and the mower live in one garage. Two vehicles are free, and nobody needs an account.
 
 ONE GARAGE, THE WHOLE FAMILY
 Invite anyone with a link or a QR code. Everyone logs from their own iPhone, every phone shows the same history, and nobody needs an account. Reminders are set per phone, so one oil change doesn't ping the whole house.
@@ -44,5 +44,5 @@ Vehicle Maintenance Log Pro is available as an auto-renewing monthly or yearly s
 
 Recommended schedules are general guidance. Your owner's manual and a qualified mechanic come first. This app is not an official aircraft or vessel logbook.
 
-Privacy Policy: https://jackwallner.github.io/keyring/privacy-policy.html
+Privacy Policy: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

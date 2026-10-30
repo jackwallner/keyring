@@ -19,5 +19,5 @@ Monthly and yearly subscriptions each include a one-week free trial for eligible
 
 Schedules are general guidance. Follow your owner's manual and consult a qualified mechanic. This is not an official aircraft or vessel logbook.
 
-Privacy Policy: https://jackwallner.github.io/keyring/privacy-policy.html
+Privacy Policy: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

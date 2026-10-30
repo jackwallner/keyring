@@ -19,5 +19,5 @@ Vehicle Maintenance Log તમારા કુટુંબની માલિક
 
 સમયપત્રક સામાન્ય માર્ગદર્શન છે. તમારા માલિકની માર્ગદર્શિકા અનુસરો અને લાયક મિકેનિકની સલાહ લો. આ કોઈ સત્તાવાર વિમાન અથવા જહાજની લોગબુક નથી.
 
-ગોપનીયતા નીતિ: https://jackwallner.github.io/keyring/privacy-policy.html
+ગોપનીયતા નીતિ: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 ઉપયોગની શરતો: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

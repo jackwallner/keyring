@@ -19,5 +19,5 @@ Kuukausittaiset ja vuosittaiset tilaukset sisältävät kumpikin yhden viikon il
 
 Aikataulut ovat yleisohjeita. Noudata omistajan käsikirjaasi ja ota yhteyttä pätevään mekaanikkoon. Tämä ei ole virallinen lento- tai aluspäiväkirja.
 
-Tietosuojakäytäntö: https://jackwallner.github.io/keyring/privacy-policy.html
+Tietosuojakäytäntö: https://jackwallner.com/ios/vehicle-maintenance-log/privacy-policy.html
 Käyttöehdot: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
