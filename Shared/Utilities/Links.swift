@@ -19,10 +19,6 @@ enum AppLinks {
         URL(string: "mailto:\(supportEmail)?subject=Vehicle%20Maintenance%20Log%20feedback")!
     }
 
-    static func reportPhoto(id: String) -> URL {
-        URL(string: "mailto:\(supportEmail)?subject=Vehicle%20Maintenance%20Log%20photo%20report&body=Photo%20\(id)")!
-    }
-
     static var writeReview: URL {
         if let country = Locale.current.region?.identifier.lowercased(), country.count == 2 {
             return URL(string: "https://apps.apple.com/\(country)/app/id\(appStoreID)?action=write-review")!

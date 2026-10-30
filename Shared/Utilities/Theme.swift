@@ -17,7 +17,6 @@ enum Theme {
     static let margin: CGFloat = 20
     static let radius: CGFloat = 20
     static let smallRadius: CGFloat = 12
-    static let cardHeight: CGFloat = 212
 
     // MARK: Rhythm
 

@@ -22,8 +22,6 @@ struct ReceiptFields: Equatable, Sendable {
     var shop: String?
 
     var isEmpty: Bool { total == nil && date == nil && reading == nil && shop == nil }
-
-    var filledCount: Int { [total != nil, date != nil, reading != nil, shop != nil].filter { $0 }.count }
 }
 
 enum ReceiptReader {

@@ -14,8 +14,6 @@ struct PumpFields: Equatable, Sendable {
     var station: String?
     var date: Date?
 
-    var filledCount: Int { [volume != nil, unitPrice != nil, total != nil].filter { $0 }.count }
-
     /// A resumed scan fills empty fields without replacing the owner's values.
     func fillingMissing(in current: PumpFields) -> PumpFields {
         var fields = self

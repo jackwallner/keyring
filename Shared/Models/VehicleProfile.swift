@@ -34,8 +34,6 @@ struct VehicleProfile: Codable, Equatable, Sendable {
         odometerChanges.filter { $0.date <= date }.reduce(0) { $0 + $1.offset }
     }
 
-    var totalOffset: Double { odometerChanges.reduce(0) { $0 + $1.offset } }
-
     static func decode(_ json: String) -> VehicleProfile? {
         json.data(using: .utf8).flatMap { try? JSONDecoder().decode(VehicleProfile.self, from: $0) }
     }
