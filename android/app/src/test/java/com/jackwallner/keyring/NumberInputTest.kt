@@ -52,6 +52,13 @@ class NumberInputTest {
         assertEquals(123.4, typed("123.4", Locale.FRANCE)!!, 0.0)
     }
 
+    @Test fun nativeDigitsAndTheirMarksReadLikeLatinOnes() {
+        val arabic = Locale.forLanguageTag("ar-SA")
+        assertEquals(45_210.0, typed("\u0664\u0665\u066C\u0662\u0661\u0660", arabic)!!, 0.0)
+        assertEquals(59.99, typed("\u0665\u0669\u066B\u0669\u0669", arabic)!!, 0.0)
+        assertEquals(12.5, typed("\u0661\u0662,\u0665", Locale.GERMANY)!!, 0.0)
+    }
+
     @Test fun whatIsNotANumberIsNotOne() {
         for (text in listOf("", " ", "-", ",", "abc", "NaN", "Infinity", "-Infinity", "1e999")) {
             assertNull("'$text' read as a number", typed(text, Locale.US))
