@@ -47,6 +47,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jackwallner.keyring.model.DueStatus
+import com.jackwallner.keyring.model.NumberInput
 
 @Composable
 fun Eyebrow(text: String, color: Color = Keyring.colors.secondaryInk, modifier: Modifier = Modifier) {
@@ -219,5 +220,5 @@ fun Field(
     )
 }
 
-/** Parses what a person typed into a number: "45,210" and "45 210" both work. */
-fun parseNumber(text: String): Double? = text.replace(",", "").replace(" ", "").trim().toDoubleOrNull()
+/** Parses what a person typed into a number: "45,210", "45 210" and "59,99" all work, whichever decimal mark the keyboard types. */
+fun parseNumber(text: String): Double? = NumberInput.parse(text)

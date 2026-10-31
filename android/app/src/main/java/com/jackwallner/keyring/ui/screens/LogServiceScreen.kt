@@ -38,6 +38,7 @@ import com.jackwallner.keyring.data.FuelUnit
 import com.jackwallner.keyring.data.ServiceDraft
 import com.jackwallner.keyring.model.EntryKind
 import com.jackwallner.keyring.model.Format
+import com.jackwallner.keyring.model.NumberInput
 import com.jackwallner.keyring.model.UsageEvent
 import com.jackwallner.keyring.ui.LocalGraph
 import com.jackwallner.keyring.ui.LocalNavigator
@@ -58,7 +59,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-private fun Double.plain(): String = if (this % 1.0 == 0.0) toLong().toString() else "%.2f".format(this).trimEnd('0').trimEnd('.')
+private fun Double.plain(): String = NumberInput.plain(this)
 
 /** Log a visit: which jobs, when, at what reading and what it cost. Ported from `LogServiceView.swift` and `FuelLogView.swift`. */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
