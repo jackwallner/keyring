@@ -163,6 +163,7 @@ object ServiceImport {
             val dates = DateColumn(table.rows.map { cell(it, dateColumn) }, locale, zone, now)
             val thousandsDot = table.mapping[Field.odometer]?.let { column -> usesDotThousands(table.rows.map { cell(it, column) }) } ?: false
             val headerUnit = table.mapping[Field.odometer]?.let { unitFromHeader(table.headers[it]) }
+            val fromBackup = isBackup(table.headers)
             for (raw in table.rows) {
                 val date = dates.date(cell(raw, dateColumn))
                 if (date == null) {
@@ -172,7 +173,8 @@ object ServiceImport {
                 val value = { field: Field -> table.mapping[field]?.let { cell(raw, it).trim() } ?: "" }
                 val work = value(Field.work)
                 val rowKind = kind(value(Field.kind), work)
-                if (table.role == Role.SERVICE && rowKind != EntryKind.fuel && isExpense(work)) {
+                // Other apps' insurance and tolls aren't maintenance; a backup's own rows always are.
+                if (table.role == Role.SERVICE && rowKind != EntryKind.fuel && !fromBackup && isExpense(work)) {
                     skipped += 1
                     continue
                 }
@@ -261,11 +263,20 @@ object ServiceImport {
             .any { lower.contains(it) } && lower.length < 40 && lower.none { it.isDigit() })
     }
 
+    /** The leading columns of a backup from this app, which maps one to one. */
+    private val backupColumns = listOf("vehicle", "year", "make", "model", "date", "odometer", "unit", "type", "work")
+
+    /**
+     * A backup writes services, repairs and fill-ups into one table and tells them apart by its Type column.
+     * Its fuel columns are always present, so they say nothing about what the rows are.
+     */
+    private fun isBackup(headers: List<String>): Boolean = headers.map(::normalize).take(backupColumns.size) == backupColumns
+
     fun headerMapping(row: List<String>): Map<Field, Int>? {
         val normalized = row.map(::normalize)
         if (normalized.none { it.isNotEmpty() }) return null
         // A backup from this app maps one to one.
-        if (normalized.take(9) == listOf("vehicle", "year", "make", "model", "date", "odometer", "unit", "type", "work")) {
+        if (normalized.take(backupColumns.size) == backupColumns) {
             val mapping = mutableMapOf(Field.vehicle to 0, Field.year to 1, Field.make to 2, Field.model to 3, Field.date to 4,
                 Field.odometer to 5, Field.unit to 6, Field.kind to 7, Field.work to 8)
             for ((field, name) in listOf(Field.cost to "cost", Field.shop to "shop", Field.diy to "diy", Field.notes to "notes", Field.loggedBy to "loggedby",
@@ -307,6 +318,7 @@ object ServiceImport {
     }
 
     private fun role(title: String?, headers: List<String>): Role {
+        if (isBackup(headers)) return Role.SERVICE
         val lower = title?.lowercase() ?: ""
         if (listOf("fuel", "refuel", "gas", "fill").any { lower.contains(it) }) return Role.FUEL
         if (listOf("expense", "income", "route", "trip", "reminder").any { lower.contains(it) }) return Role.EXPENSE

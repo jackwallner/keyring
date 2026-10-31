@@ -170,6 +170,36 @@ class ImportAndExploreTest {
         assertEquals(38.42, rows[0].cost, 0.001)
     }
 
+    @Test fun aBackupReadsBackAsServicesRepairsAndFillUps() {
+        val store = store()
+        val car = store.addVehicle(NewVehicle(kind = VehicleKind.car, make = "Honda", model = "Civic", reading = 50_000.0))
+        val oil = store.tasks(store.vehicle(car.id)!!).first { it.catalogKey == "oil" }
+        val wash = store.tasks(store.vehicle(car.id)!!).first { it.catalogKey == "wash" }
+        store.log(ServiceDraft(reading = 49_800.0, taskIds = listOf(oil.id), cost = 59.99), car)
+        store.log(ServiceDraft(taskIds = listOf(wash.id)), car)
+        store.log(ServiceDraft(kind = EntryKind.repair, title = "Water pump", cost = 420.0), car)
+        store.log(ServiceDraft(kind = EntryKind.fuel, reading = 50_300.0, cost = 38.42,
+            fuelVolume = FuelUnit.GALLONS.toLiters(10.5), fuelUnitPrice = FuelUnit.GALLONS.toPerLiter(3.659)), car)
+        val csv = CSVExport.csv(store, listOf(store.vehicle(car.id)!!), unit = FuelUnit.GALLONS)
+        val result = ServiceImport.parse(csv, us)
+        assertEquals(listOf("Oil and filter", "Wash", "Water pump"), result.services.map { it.work }.sorted())
+        assertEquals(EntryKind.repair, result.services.first { it.work == "Water pump" }.kind)
+        assertEquals(1, result.fillUps.size)
+        assertEquals(0, result.skippedExpenses)
+    }
+
+    @Test fun anotherAppsInsuranceAndTollsAreStillSkipped() {
+        val file = """
+            Date,Odometer,Service,Cost
+            2025-01-10,28000,Oil change,59.99
+            2025-01-12,28010,Insurance,600.00
+            2025-01-13,28020,Wash,12.00
+        """.trimIndent()
+        val result = ServiceImport.parse(file, us)
+        assertEquals(listOf("Oil change"), result.services.map { it.work })
+        assertEquals(2, result.skippedExpenses)
+    }
+
     // MARK: - VIN check
 
     private fun recall(campaign: String) = Recall(campaign, "FUEL SYSTEM", "", "", "", null, false, false)
