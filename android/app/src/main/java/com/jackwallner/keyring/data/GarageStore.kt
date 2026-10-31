@@ -212,6 +212,9 @@ class GarageStore(
     // MARK: - Vehicles
 
     fun addVehicle(draft: NewVehicle, now: Instant = Instant.now()): Vehicle {
+        // The odometer is optional, so zero means it wasn't entered. Stored as a reading, the first real one months
+        // later would read as a drive from nothing: an absurd pace, and every job done since "overdue" by the whole odometer.
+        val hasStartingReading = draft.meter.hasReading && draft.reading > 0
         val vehicle = Vehicle(
             id = newId(),
             createdAt = now,
@@ -226,7 +229,7 @@ class GarageStore(
             vin = draft.vin.trim().uppercase().ifEmpty { null },
             plate = draft.plate.trim().uppercase().ifEmpty { null },
             reading = maxOf(0.0, draft.reading),
-            readingDate = if (draft.meter.hasReading) now else null,
+            readingDate = if (hasStartingReading) now else null,
             tint = draft.tint ?: com.jackwallner.keyring.model.VehicleTint.defaultTint(draft.kind),
             sortIndex = data.vehicles.size,
             yearlyUse = if (draft.meter.hasReading) maxOf(0.0, draft.yearlyUse) else 0.0,
@@ -235,7 +238,7 @@ class GarageStore(
             auxMeterName = draft.auxMeterName.trim().ifEmpty { null },
             auxMeter = draft.auxMeter.takeIf { it.hasReading } ?: MeterUnit.hours,
         )
-        val readings = if (draft.meter.hasReading) listOf(MeterReading(newId(), vehicle.id, now, vehicle.reading)) else emptyList()
+        val readings = if (hasStartingReading) listOf(MeterReading(newId(), vehicle.id, now, vehicle.reading)) else emptyList()
         val auxHours = vehicle.hasAuxMeter && vehicle.auxMeter == MeterUnit.hours
         val starting = vehicle.catalogItems.filter { it.isCore || (auxHours && it.auxHours != null) }
         val tasks = starting.mapIndexed { index, item ->
@@ -243,8 +246,9 @@ class GarageStore(
             val done = draft.lastDone[item.key]
             if (done != null) {
                 // A date in the last few weeks most likely came at today's reading; older ones leave the meter unknown.
+                // A job counted on the second meter can't borrow the main meter's figure.
                 val recent = now.toEpochMilli() - done.toEpochMilli() < 45L * 86_400_000L
-                task = task.copy(baselineDate = done, baselineReading = if (recent && draft.meter.hasReading) vehicle.reading else -1.0)
+                task = task.copy(baselineDate = done, baselineReading = if (recent && hasStartingReading && !task.usesAuxMeter) vehicle.reading else -1.0)
             }
             task
         }
