@@ -45,7 +45,7 @@ struct GarageView: View {
                 } else {
                     recallsCard
                     attention
-                    ForEach(sections, id: \.title) { section in
+                    ForEach(sections, id: \.id) { section in
                         if sections.count > 1 {
                             Eyebrow(text: section.title).padding(.top, Theme.xs)
                         }
@@ -172,19 +172,21 @@ struct GarageView: View {
         }
     }
 
-    private var sections: [(title: String, vehicles: [Vehicle])] {
-        var result: [(String, [Vehicle])] = []
+    /// Each garage under its name. The id is the garage itself, since two garages can share a name:
+    /// everyone's starts as "Our garage", and ForEach shows one group twice when ids repeat.
+    private var sections: [(id: String, title: String, vehicles: [Vehicle])] {
+        var result: [(String, String, [Vehicle])] = []
         if let own = garage.ownGarage {
             let mine = garage.vehicles.filter { $0.garage == own }
-            if !mine.isEmpty { result.append((own.displayName, mine)) }
+            if !mine.isEmpty { result.append((own.objectID.uriRepresentation().absoluteString, own.displayName, mine)) }
         }
         for joined in garage.joinedGarages {
             let theirs = garage.vehicles.filter { $0.garage == joined }
-            if !theirs.isEmpty { result.append((joined.displayName, theirs)) }
+            if !theirs.isEmpty { result.append((joined.objectID.uriRepresentation().absoluteString, joined.displayName, theirs)) }
         }
-        let placed = Set(result.flatMap(\.1).map(\.objectID))
+        let placed = Set(result.flatMap(\.2).map(\.objectID))
         let loose = garage.vehicles.filter { !placed.contains($0.objectID) }
-        if !loose.isEmpty { result.append(("Vehicles", loose)) }
+        if !loose.isEmpty { result.append(("vehicles", "Vehicles", loose)) }
         return result
     }
 

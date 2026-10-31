@@ -488,10 +488,13 @@ struct NumberField: View {
         }
     }
 
-    static func parse(_ text: String) -> Double? {
-        let cleaned = text.replacingOccurrences(of: Locale.current.groupingSeparator ?? ",", with: "")
-            .replacingOccurrences(of: Locale.current.decimalSeparator ?? ".", with: ".")
-            .filter { $0.isNumber || $0 == "." }
+    /// What was typed, in the digits and marks of `locale`. Native digits (Arabic-Indic, Persian) read like Latin ones:
+    /// `Double("٤٨٢١٠")` is nil, which cleared the field the moment it showed a figure the locale had formatted.
+    static func parse(_ text: String, locale: Locale = .current) -> Double? {
+        let cleaned = text.replacingOccurrences(of: locale.groupingSeparator ?? ",", with: "")
+            .replacingOccurrences(of: locale.decimalSeparator ?? ".", with: ".")
+            .compactMap { $0 == "." ? "." : $0.wholeNumberValue.map(String.init) }
+            .joined()
         return Double(cleaned)
     }
 

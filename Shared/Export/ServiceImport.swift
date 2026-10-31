@@ -6,7 +6,7 @@ import Foundation
 enum ServiceImport {
     enum Field: String, CaseIterable, Identifiable, Sendable {
         case date, odometer, work, cost, shop, notes, vehicle, kind, diy, loggedBy, unit, year, make, model
-        case volume, volumeUnit, unitPrice, grade, partial
+        case volume, volumeUnit, unitPrice, grade, partial, covered
 
         var id: String { rawValue }
 
@@ -31,6 +31,7 @@ enum ServiceImport {
             case .unitPrice: "Price per unit"
             case .grade: "Grade"
             case .partial: "Partial fill"
+            case .covered: "Covered jobs"
             }
         }
 
@@ -67,6 +68,7 @@ enum ServiceImport {
                               "pricegal", "pricel", "priceperl", "pricelitre", "priceliter"]
             case .grade: ["fueltype", "fuelgrade", "grade", "octane"]
             case .partial: ["partialfuelup", "partialfill", "partial", "partialrefuel", "partialrefueling"]
+            case .covered: ["coveredjobs"]
             }
         }
     }
@@ -129,6 +131,8 @@ enum ServiceImport {
         var year: Int?
         var make: String?
         var model: String?
+        /// The schedule items a Keyring backup says this visit covered, or nil when the file has no such column.
+        var coveredJobs: [String]? = nil
     }
 
     struct Result: Sendable {
@@ -243,6 +247,7 @@ enum ServiceImport {
                     model: value(.model).nilIfEmpty
                 )
                 nextID += 1
+                if let column = table.mapping[.covered] { row.coveredJobs = jobs(in: cell(raw, column)) }
                 if isFillUp { fill(&row, value: value, volumeHeader: table.mapping[.volume].map { table.headers[$0] }) }
                 if isFillUp { fillUps.append(row) } else { services.append(row) }
             }
@@ -255,6 +260,11 @@ enum ServiceImport {
             skippedExpenses: skipped,
             unreadable: unreadable
         )
+    }
+
+    /// "Oil and filter; Tire rotation": the jobs a backup's Covered jobs cell names.
+    private static func jobs(in cell: String) -> [String] {
+        cell.split(separator: ";").map { String($0).trimmed }.filter { !$0.isEmpty }
     }
 
     /// The notes column, then any extra columns, one per line.
@@ -318,7 +328,8 @@ enum ServiceImport {
         if normalized.starts(with: backupColumns) {
             var mapping: [Field: Int] = [.vehicle: 0, .year: 1, .make: 2, .model: 3, .date: 4, .odometer: 5, .unit: 6, .kind: 7, .work: 8]
             for (field, name) in [(Field.cost, "cost"), (.shop, "shop"), (.diy, "diy"), (.notes, "notes"), (.loggedBy, "loggedby"),
-                                  (.volume, "fuel"), (.volumeUnit, "fuelunit"), (.unitPrice, "priceperunit"), (.grade, "grade"), (.partial, "partialfill")] {
+                                  (.volume, "fuel"), (.volumeUnit, "fuelunit"), (.unitPrice, "priceperunit"), (.grade, "grade"), (.partial, "partialfill"),
+                                  (.covered, "coveredjobs")] {
                 if let column = normalized.firstIndex(of: name) { mapping[field] = column }
             }
             return mapping
