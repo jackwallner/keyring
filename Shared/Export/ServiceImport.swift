@@ -562,7 +562,8 @@ enum ServiceImport {
             for (rank, format) in Self.formats.enumerated() {
                 let formatter = DateFormatter()
                 formatter.locale = Locale(identifier: "en_US_POSIX")
-                formatter.timeZone = .current
+                // The same zone `date(from:)` puts noon in, so a day never slips.
+                formatter.timeZone = Calendar.current.timeZone
                 formatter.dateFormat = format
                 formatter.isLenient = false
                 let score = samples.filter { Self.plausible(formatter.date(from: $0)) }.count
