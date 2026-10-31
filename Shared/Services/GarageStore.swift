@@ -733,6 +733,9 @@ final class GarageStore: ObservableObject {
     func changeMeter(_ vehicle: Vehicle, to meter: MeterUnit) {
         let old = vehicle.meter
         guard old != meter else { return }
+        // A rollover or swap is a distance in the old unit, so it follows the readings.
+        var profile = vehicle.profile
+        let changes = profile.odometerChanges
         if let factor = old.convert(1, to: meter) {
             vehicle.reading *= factor
             for reading in vehicle.mainReadings { reading.value *= factor }
@@ -741,9 +744,16 @@ final class GarageStore: ObservableObject {
                 task.intervalDistance = Self.roundedInterval(task.intervalDistance * factor)
                 if task.baselineReading >= 0 { task.baselineReading *= factor }
             }
+            profile.odometerChanges = changes.map { change in
+                var scaled = change
+                scaled.lastShown *= factor
+                scaled.newShown *= factor
+                return scaled
+            }
         } else {
             vehicle.reading = 0
             vehicle.readingDate = nil
+            profile.odometerChanges = []
             for reading in vehicle.mainReadings { context.delete(reading) }
             for entry in vehicle.entries ?? [] { entry.reading = -1 }
             for task in vehicle.tasks ?? [] where !task.usesAuxMeter {
@@ -752,6 +762,7 @@ final class GarageStore: ObservableObject {
                 task.intervalDistance = item?.distanceInterval(for: meter) ?? 0
             }
         }
+        if !changes.isEmpty { vehicle.profile = profile }
         vehicle.meter = meter
         save()
     }
