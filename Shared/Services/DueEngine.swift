@@ -142,8 +142,12 @@ enum DueEngine {
     }
 
     private static func timeDue(after last: Date, input: DueInput, calendar: Calendar) -> Date? {
-        guard let due = calendar.date(byAdding: .month, value: input.intervalMonths, to: last) else { return nil }
-        guard input.calendarMonths, let month = calendar.dateInterval(of: .month, for: due) else { return due }
+        // A month is a Gregorian month however the phone counts them. The Islamic calendar a Saudi Arabia region
+        // shows has months of 29.5 days, which would bring "every 12 months" due 11 days early.
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        guard let due = gregorian.date(byAdding: .month, value: input.intervalMonths, to: last) else { return nil }
+        guard input.calendarMonths, let month = gregorian.dateInterval(of: .month, for: due) else { return due }
         return month.end.addingTimeInterval(-1)
     }
 

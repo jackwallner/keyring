@@ -36,6 +36,15 @@ files, not a template.
 - jmbp2 (8 GB): pass `-Dorg.gradle.jvmargs=-Xmx2560m -Pkotlin.compiler.execution.strategy=in-process` so Gradle,
   Kotlin and the 2 GB AVD fit together; the first boot ANRs SystemUI for about 10 minutes.
 
+## Input and saved state
+- Number fields parse through `model/NumberInput` (the phone's decimal mark decides: "59,99" and "12.500" both read right,
+  "45,210" stays 45210 in English). Never `toDoubleOrNull()` on typed text, and show an existing figure in an edit field with
+  `NumberInput.plain`, not a default-locale `format`.
+- The back stack is saved with the activity (`Navigator.Saver`), so a rotation or the system reclaiming the app returns to the
+  same screen with its `rememberSaveable` form. Every `Route` stays `Serializable`, and none may carry a large payload
+  (saved state is capped near 1 MB).
+- A backup's rows take their jobs from the Covered jobs column, by name; only files without it match jobs by title.
+
 ## Catalog parity
 - `MaintenanceCatalog.kt` is a mechanical conversion of `Shared/Catalog/MaintenanceCatalog.swift`. After any Swift
   catalog change run `python3 scripts/export-android-catalog.py` (writes
