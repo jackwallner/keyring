@@ -391,7 +391,11 @@ final class GarageStore: ObservableObject {
         vehicle.vin = draft.vin.trimmed.uppercased().nilIfEmpty
         vehicle.plate = draft.plate.trimmed.uppercased().nilIfEmpty
         vehicle.reading = max(0, draft.reading)
-        vehicle.readingDate = draft.meter.hasReading ? now : nil
+        // The odometer is optional, so zero means it wasn't entered. Stored as a
+        // reading, the first real one months later would read as a drive from
+        // nothing: an absurd pace, and every job done since "overdue" by the whole odometer.
+        let hasStartingReading = draft.meter.hasReading && draft.reading > 0
+        vehicle.readingDate = hasStartingReading ? now : nil
         vehicle.auxMeterName = draft.auxMeterName.trimmed.nilIfEmpty
         vehicle.auxMeter = draft.auxMeter
         var profile = VehicleProfile()
@@ -405,7 +409,7 @@ final class GarageStore: ObservableObject {
         vehicle.tint = draft.tint ?? .defaultTint(for: draft.kind)
         vehicle.sortIndex = Int16(clamping: (garage.vehicles?.count ?? 0))
         vehicle.garage = garage
-        if draft.meter.hasReading {
+        if hasStartingReading {
             let reading = MeterReading(context: context)
             persistence.place(reading, beside: garage, in: context)
             reading.id = UUID()
@@ -421,8 +425,9 @@ final class GarageStore: ObservableObject {
             if let date = draft.lastDone[item.key] {
                 task.baselineDate = date
                 // A date in the last few weeks most likely came at today's
-                // reading; older ones leave the meter unknown.
-                if now.timeIntervalSince(date) < 45 * 86_400, draft.meter.hasReading {
+                // reading; older ones leave the meter unknown. A job counted on
+                // the second meter can't borrow the main meter's figure.
+                if now.timeIntervalSince(date) < 45 * 86_400, hasStartingReading, !task.usesAuxMeter {
                     task.baselineReading = vehicle.reading
                 }
             }
@@ -770,6 +775,16 @@ final class GarageStore: ObservableObject {
                 vehicle.reading = latest.value
                 vehicle.readingDate = latest.date
             }
+        } else if isAux {
+            // Nothing else is saved, so the wrong figure can't stay as the vehicle's reading.
+            vehicle.auxReading = 0
+            vehicle.auxReadingDate = nil
+        } else {
+            let logged = (vehicle.entries ?? [])
+                .filter { $0.hasReading && $0.date != nil }
+                .max { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
+            vehicle.reading = logged?.reading ?? 0
+            vehicle.readingDate = logged?.date
         }
         save()
     }
