@@ -204,6 +204,7 @@ enum ServiceImport {
                 usesDotThousands(table.rows.map { cell($0, column) })
             } ?? false
             let headerUnit = table.mapping[.odometer].map { unit(fromHeader: table.headers[$0]) } ?? nil
+            let isBackup = Self.isBackup(table.headers)
             for raw in table.rows {
                 guard let date = dates.date(from: cell(raw, dateColumn)) else {
                     if raw.contains(where: { !$0.trimmed.isEmpty }) { unreadable += 1 }
@@ -212,7 +213,8 @@ enum ServiceImport {
                 let value = { (field: Field) -> String in table.mapping[field].map { cell(raw, $0).trimmed } ?? "" }
                 let work = value(.work)
                 let rowKind = kind(type: value(.kind), work: work)
-                if table.role == .service, rowKind != .fuel, isExpense(work) {
+                // Other apps' insurance and tolls aren't maintenance; a backup's own rows always are.
+                if table.role == .service, rowKind != .fuel, !isBackup, isExpense(work) {
                     skipped += 1
                     continue
                 }
@@ -299,11 +301,21 @@ enum ServiceImport {
             .contains { lower.contains($0) } && lower.count < 40 && !lower.contains(where: \.isNumber)
     }
 
+    /// The leading columns of a Keyring backup, which maps one to one.
+    private static let backupColumns = ["vehicle", "year", "make", "model", "date", "odometer", "unit", "type", "work"]
+
+    /// A backup writes services, repairs and fill-ups into one table and tells
+    /// them apart by its Type column. Its fuel columns are always present, so
+    /// they say nothing about what the rows are.
+    private static func isBackup(_ headers: [String]) -> Bool {
+        headers.map(normalize).starts(with: backupColumns)
+    }
+
     static func headerMapping(_ row: [String]) -> [Field: Int]? {
         let normalized = row.map(normalize)
         guard normalized.contains(where: { !$0.isEmpty }) else { return nil }
         // A Keyring export maps one to one.
-        if normalized.starts(with: ["vehicle", "year", "make", "model", "date", "odometer", "unit", "type", "work"]) {
+        if normalized.starts(with: backupColumns) {
             var mapping: [Field: Int] = [.vehicle: 0, .year: 1, .make: 2, .model: 3, .date: 4, .odometer: 5, .unit: 6, .kind: 7, .work: 8]
             for (field, name) in [(Field.cost, "cost"), (.shop, "shop"), (.diy, "diy"), (.notes, "notes"), (.loggedBy, "loggedby"),
                                   (.volume, "fuel"), (.volumeUnit, "fuelunit"), (.unitPrice, "priceperunit"), (.grade, "grade"), (.partial, "partialfill")] {
@@ -347,6 +359,7 @@ enum ServiceImport {
     }
 
     private static func role(title: String?, headers: [String]) -> Table.Role {
+        if isBackup(headers) { return .service }
         let lower = title?.lowercased() ?? ""
         if ["fuel", "refuel", "gas", "fill"].contains(where: lower.contains) { return .fuel }
         if ["expense", "income", "route", "trip", "reminder"].contains(where: lower.contains) { return .expense }
