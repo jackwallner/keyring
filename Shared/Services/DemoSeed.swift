@@ -128,6 +128,20 @@ enum DemoSeed {
         // The garage leads with one of each kind, so the first screen shows the range.
         for (index, vehicle) in [truck, bike, boat, plane, rav].enumerated() { vehicle.sortIndex = Int16(index) }
         store.save()
+        if ProcessInfo.processInfo.arguments.contains("-SeedSharedGarage") {
+            seedJoinedGarage(into: store, named: garage.displayName)
+        }
+    }
+
+    /// `-SeedSharedGarage`: a garage someone else shared, carrying the same name as this one, which is what two
+    /// people who never renamed their garage ("Our garage") have.
+    private static func seedJoinedGarage(into store: GarageStore, named name: String) {
+        let joined = Garage.make(in: store.context, name: name)
+        store.context.assign(joined, to: store.persistence.sharedStore)
+        store.addVehicle(
+            NewVehicle(kind: .car, powertrain: .gasoline, meter: .miles, year: 2018, make: "Honda", model: "Civic", nickname: "Dana's Civic", reading: 62_000, tint: .sky),
+            to: joined
+        )
     }
 
     private static func history(
