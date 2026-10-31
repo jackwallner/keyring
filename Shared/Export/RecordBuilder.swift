@@ -106,6 +106,9 @@ enum CSVExport {
         var lines = [header.map(escape).joined(separator: ",")]
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
+        // The formatter defaults to UTC, which writes an evening entry a day late.
+        // The day is the one the calendar the rest of the app uses puts it on.
+        formatter.timeZone = Calendar.current.timeZone
         for vehicle in vehicles {
             let tasks = vehicle.tasks ?? []
             for entry in vehicle.sortedEntries {
@@ -116,7 +119,7 @@ enum CSVExport {
                     vehicle.make ?? "",
                     vehicle.model ?? "",
                     entry.date.map(formatter.string(from:)) ?? "",
-                    entry.hasReading ? String(Int(entry.reading.rounded())) : "",
+                    entry.hasReading ? reading(entry.reading, vehicle.meter) : "",
                     vehicle.meter.short,
                     entry.kind.title,
                     entry.title ?? "",
@@ -135,6 +138,15 @@ enum CSVExport {
             }
         }
         return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Whole miles or kilometers; an hour meter keeps its tenths.
+    private static func reading(_ value: Double, _ meter: MeterUnit) -> String {
+        if meter == .hours {
+            let tenths = (value * 10).rounded() / 10
+            return String(format: tenths == tenths.rounded() ? "%.0f" : "%.1f", tenths)
+        }
+        return String(format: "%.0f", value.rounded())
     }
 
     private static func fuelFields(_ entry: ServiceEntry) -> [String] {
