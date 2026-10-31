@@ -581,7 +581,8 @@ class GarageStore(
                 outcome = outcome.copy(readings = outcome.readings + 1)
                 continue
             }
-            val taskIds = matchingTasks(row.work, vehicle)
+            // A backup names the jobs each visit covered. Anything else is matched by what the work is called.
+            val taskIds = row.coveredJobs?.let { matchingCoveredTasks(it, vehicle) } ?: matchingTasks(row.work, vehicle)
             val title = row.work.ifEmpty { if (taskIds.isEmpty()) "Service" else title(taskIds, vehicle) }
             if (!existing.add(serviceKey(row.date, title, row.cost))) {
                 outcome = outcome.copy(duplicates = outcome.duplicates + 1)
@@ -604,6 +605,20 @@ class GarageStore(
             readings = data.readings + newReadings,
         ))
         return outcome.copy(jobsUpdated = touched.size)
+    }
+
+    /**
+     * Schedule items a backup says a visit covered, by the job's name. A name this schedule lacks falls back to the
+     * catalog job it describes, so a backup still lands on a vehicle of another kind.
+     */
+    fun matchingCoveredTasks(jobs: List<String>, vehicle: Vehicle): List<String> {
+        val ids = mutableListOf<String>()
+        for (job in jobs) {
+            val wanted = job.trim().lowercase()
+            val exact = enabledTasks(vehicle).filter { it.name.lowercase() == wanted }.map { it.id }
+            for (id in exact.ifEmpty { matchingTasks(job, vehicle) }) if (id !in ids) ids += id
+        }
+        return ids
     }
 
     /** Schedule items a line of imported work covers: by catalog job, then by a custom item's own name. */

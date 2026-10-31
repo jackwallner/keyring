@@ -48,7 +48,8 @@ object ServiceImport {
         unitPrice("Price per unit", listOf("pricepergallon", "priceperliter", "priceperlitre", "priceperunit", "unitprice", "ppg", "fuelprice",
             "pricegal", "pricel", "priceperl", "pricelitre", "priceliter")),
         grade("Grade", listOf("fueltype", "fuelgrade", "grade", "octane")),
-        partial("Partial fill", listOf("partialfuelup", "partialfill", "partial", "partialrefuel", "partialrefueling"));
+        partial("Partial fill", listOf("partialfuelup", "partialfill", "partial", "partialrefuel", "partialrefueling")),
+        covered("Covered jobs", listOf("coveredjobs"));
 
         companion object {
             /** The columns a person might need to fix by hand. */
@@ -100,6 +101,8 @@ object ServiceImport {
         val year: Int? = null,
         val make: String? = null,
         val model: String? = null,
+        /** The schedule items a backup says this visit covered, or null when the file has no such column. */
+        val coveredJobs: List<String>? = null,
     )
 
     data class Result(
@@ -201,6 +204,7 @@ object ServiceImport {
                     year = value(Field.year).toIntOrNull()?.takeIf { it in 1900..2100 },
                     make = value(Field.make).ifEmpty { null },
                     model = value(Field.model).ifEmpty { null },
+                    coveredJobs = table.mapping[Field.covered]?.let { jobs(cell(raw, it)) },
                 )
                 nextId += 1
                 if (isFillUp) {
@@ -217,6 +221,9 @@ object ServiceImport {
     private val yes = setOf("yes", "y", "true", "1", "x")
 
     /** The notes column, then any extra columns, one per line. */
+    /** "Oil and filter; Tire rotation": the jobs a backup's Covered jobs cell names. */
+    private fun jobs(cell: String): List<String> = cell.split(';').map { it.trim() }.filter { it.isNotEmpty() }
+
     private fun notes(notes: String, extras: List<String>): String? =
         (listOf(notes).filter { it.isNotEmpty() } + extras).joinToString("\n").ifEmpty { null }
 
@@ -280,7 +287,8 @@ object ServiceImport {
             val mapping = mutableMapOf(Field.vehicle to 0, Field.year to 1, Field.make to 2, Field.model to 3, Field.date to 4,
                 Field.odometer to 5, Field.unit to 6, Field.kind to 7, Field.work to 8)
             for ((field, name) in listOf(Field.cost to "cost", Field.shop to "shop", Field.diy to "diy", Field.notes to "notes", Field.loggedBy to "loggedby",
-                Field.volume to "fuel", Field.volumeUnit to "fuelunit", Field.unitPrice to "priceperunit", Field.grade to "grade", Field.partial to "partialfill")) {
+                Field.volume to "fuel", Field.volumeUnit to "fuelunit", Field.unitPrice to "priceperunit", Field.grade to "grade", Field.partial to "partialfill",
+                Field.covered to "coveredjobs")) {
                 val column = normalized.indexOf(name)
                 if (column >= 0) mapping[field] = column
             }
