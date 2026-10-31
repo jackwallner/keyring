@@ -62,7 +62,7 @@ val LocalNavigator = staticCompositionLocalOf<Navigator> { error("No navigator")
 
 @Composable
 fun RootScreen(graph: AppGraph, openVehicle: String?, onOpened: () -> Unit) {
-    val navigator = remember {
+    val navigator = rememberSaveable(saver = Navigator.Saver) {
         Navigator().also { nav -> DebugLaunchOptions.startRoutes?.let { nav.reset(*it.toTypedArray()) } }
     }
     var onboarded by rememberSaveable { mutableStateOf(graph.hasOnboarded || graph.data.vehicles.isNotEmpty()) }

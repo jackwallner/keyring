@@ -2,10 +2,12 @@ package com.jackwallner.keyring.ui.nav
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.Saver
 import com.jackwallner.keyring.model.ProFeature
+import java.io.Serializable
 
-/** One screen in the stack. Mirrors the iOS navigation destinations. */
-sealed interface Route {
+/** One screen in the stack. Mirrors the iOS navigation destinations. Serializable so the stack can be saved with the activity. */
+sealed interface Route : Serializable {
     data object Garage : Route
     data object AddVehicle : Route
     data class Vehicle(val id: String) : Route
@@ -56,5 +58,16 @@ class Navigator(start: Route = Route.Garage) {
     fun reset(vararg routes: Route) {
         stack.clear()
         stack.addAll(if (routes.isEmpty()) listOf(Route.Garage) else routes.toList())
+    }
+
+    companion object {
+        /**
+         * The stack in the activity's saved state, so a rotation, a dark-mode switch or the system reclaiming the app
+         * comes back to the same screen with its form, instead of the garage.
+         */
+        val Saver: Saver<Navigator, ArrayList<Route>> = Saver(
+            save = { ArrayList(it.stack) },
+            restore = { saved -> Navigator().also { it.reset(*saved.toTypedArray()) } },
+        )
     }
 }

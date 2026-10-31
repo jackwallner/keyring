@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
             false -> enableEdgeToEdge(SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT), SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT))
             null -> enableEdgeToEdge()
         }
-        openVehicle = intent?.getStringExtra(EXTRA_VEHICLE)
+        // The launching notification's vehicle opens once; a recreated activity keeps the screen it was on.
+        if (savedInstanceState == null) openVehicle = intent?.getStringExtra(EXTRA_VEHICLE)
         lifecycleScope.launch { graph.store.start() }
         graph.reminders.refresh(graph.garage)
         setContent {
