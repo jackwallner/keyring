@@ -604,17 +604,25 @@ struct VehicleDetailsForm: View {
         (!draft.make.trimmed.isEmpty || !draft.model.trimmed.isEmpty || !draft.nickname.trimmed.isEmpty) && !yearOutOfRange
     }
 
-    /// Next year's models are on sale from late summer.
-    static let maxYear = Calendar.current.component(.year, from: .now) + 1
+    /// Next year's models are on sale from late summer. A model year is a Gregorian year whatever calendar the phone
+    /// shows: with the region set to Saudi Arabia (Islamic) or Thailand (Buddhist) the calendar's own year is 1448 or 2569.
+    static func latestModelYear(now: Date = .now) -> Int {
+        Calendar(identifier: .gregorian).component(.year, from: now) + 1
+    }
+
+    static let maxYear = latestModelYear()
+
+    /// Compared rather than built into a range, which traps when its top is below 1900.
+    static func isModelYear(_ year: Int) -> Bool { year >= 1900 && year <= maxYear }
 
     /// Typed but not a year the app can use, so it would otherwise be dropped quietly.
     private var yearOutOfRange: Bool {
         guard let yearValue else { return false }
-        return !(1900...Self.maxYear).contains(Int(yearValue))
+        return !Self.isModelYear(Int(yearValue))
     }
 
     private func commitNumbers() {
-        draft.year = yearValue.map { Int($0) }.flatMap { (1900...Self.maxYear).contains($0) ? $0 : nil } ?? 0
+        draft.year = yearValue.map { Int($0) }.flatMap { Self.isModelYear($0) ? $0 : nil } ?? 0
         draft.reading = reading ?? 0
     }
 

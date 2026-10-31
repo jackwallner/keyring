@@ -1181,7 +1181,8 @@ final class GarageStore: ObservableObject {
                 outcome.readings += 1
                 continue
             }
-            let taskIDs = matchingTasks(for: row.work, on: vehicle)
+            // A backup names the jobs each visit covered. Anything else is matched by what the work is called.
+            let taskIDs = row.coveredJobs.map { matchingTasks(named: $0, on: vehicle) } ?? matchingTasks(for: row.work, on: vehicle)
             let title = row.work.nilIfEmpty ?? (taskIDs.isEmpty ? "Service" : self.title(for: taskIDs, on: vehicle))
             guard existing.insert(serviceKey(row.date, title, row.cost)).inserted else {
                 outcome.duplicates += 1
@@ -1212,6 +1213,19 @@ final class GarageStore: ObservableObject {
         outcome.jobsUpdated = touched.count
         save()
         return outcome
+    }
+
+    /// Schedule items a backup says a visit covered, by the job's name. A name this schedule lacks falls back to the
+    /// catalog job it describes, so a backup still lands on a vehicle of another kind.
+    func matchingTasks(named jobs: [String], on vehicle: Vehicle) -> [UUID] {
+        var ids: [UUID] = []
+        for job in jobs {
+            let wanted = job.lowercased().trimmed
+            let exact = vehicle.enabledTasks.filter { $0.displayName.lowercased() == wanted }.compactMap(\.id)
+            let found = exact.isEmpty ? matchingTasks(for: job, on: vehicle) : exact
+            for id in found where !ids.contains(id) { ids.append(id) }
+        }
+        return ids
     }
 
     /// Schedule items a line of imported work covers: by catalog job, then by

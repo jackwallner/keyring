@@ -142,16 +142,27 @@ enum NHTSAClient {
         )
     }
 
-    static func recalls(year: Int, make: String, model: String) async throws -> [Recall] {
-        var components = URLComponents(string: "https://api.nhtsa.gov/recalls/recallsByVehicle")!
+    static let recallsEndpoint = URL(string: "https://api.nhtsa.gov/recalls/recallsByVehicle")!
+
+    /// One vehicle's recall list, asked for fresh. NHTSA sends no cache headers and `session` answers from its cache
+    /// whenever it holds an entry, so a list fetched once would come back unchanged forever and a new recall would
+    /// never show. The device keeps its own copy (`RecallWatcher.cached`) for when there is no connection.
+    static func recallsRequest(year: Int, make: String, model: String, endpoint: URL = recallsEndpoint) -> URLRequest {
+        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "make", value: make),
             URLQueryItem(name: "model", value: model),
             URLQueryItem(name: "modelYear", value: String(year)),
         ]
+        var request = URLRequest(url: components.url!)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        return request
+    }
+
+    static func recalls(year: Int, make: String, model: String, endpoint: URL = recallsEndpoint) async throws -> [Recall] {
         let data: Data
         do {
-            (data, _) = try await session.data(from: components.url!)
+            (data, _) = try await session.data(for: recallsRequest(year: year, make: make, model: model, endpoint: endpoint))
         } catch {
             throw LookupError.offline
         }

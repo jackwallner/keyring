@@ -41,6 +41,8 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.
 - Support/privacy/terms pages: `docs/` on GitHub Pages (`jackwallner.github.io/keyring`), mirrored to `jackwallner.com/ios/vehicle-maintenance-log/` (old `/ios/keyring/` redirects).
+- NHTSA sends no cache headers and `NHTSAClient.session` answers from its cache whenever it holds an entry, so recall lists go
+  through `NHTSAClient.recallsRequest` (`reloadIgnoringLocalCacheData`). Otherwise a vehicle's first list is the only one it sees.
 - Recalls: NHTSA's per-VIN repair status is behind reCAPTCHA, so `RecallMatcher` closes a recall from the log instead (a logged fix, or its NHTSA or maker code in an entry's notes or a saved receipt's OCR text).
 
 ---
