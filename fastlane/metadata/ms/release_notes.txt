@@ -1,4 +1,1 @@
-Bantuan jalan raya: simpan nombor insurans dan bantuan jalan raya bagi setiap kenderaan, hubungi dengan satu ketikan.
-Panduan: cara melakukan kerja penyelenggaraan sendiri untuk kenderaan anda.
-Basikal kini ada jadual mengikut brek, rantai, tayar dan bateri.
-Serta pembaikan untuk imbasan resit dan pemberitahuan.
+Penambahbaikan di sebalik tabir dan pembaikan pepijat supaya Vehicle Maintenance Log berjalan lancar. Terima kasih kerana berada di sini.

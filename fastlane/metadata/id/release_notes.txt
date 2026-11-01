@@ -1,4 +1,1 @@
-Bantuan darurat: simpan nomor asuransi dan bantuan darurat di setiap kendaraan, telepon dengan satu ketukan.
-Panduan: cara mengerjakan perawatan sendiri untuk kendaraan Anda.
-Sepeda kini punya jadwal per rem, rantai, ban, dan baterai.
-Plus perbaikan untuk pemindaian struk dan notifikasi.
+Peningkatan di balik layar dan perbaikan bug agar Vehicle Maintenance Log berjalan lancar. Terima kasih telah hadir.

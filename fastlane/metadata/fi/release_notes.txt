@@ -1,4 +1,1 @@
-Tiepalvelu: tallenna vakuutusyhtiön ja tiepalvelun numerot jokaiselle ajoneuvolle ja soita yhdellä napautuksella.
-Ohjeet: tee-se-itse-töiden ohjeet juuri sinun ajoneuvollesi.
-Pyörille aikataulu jarrujen, ketjun, renkaiden ja akun mukaan.
-Lisäksi korjauksia kuittien skannaukseen ja ilmoituksiin.
+Taustaparannuksia ja virhekorjauksia, jotta Vehicle Maintenance Log toimii sujuvasti. Kiitos, että olet mukana.

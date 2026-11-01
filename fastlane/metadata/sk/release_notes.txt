@@ -1,4 +1,1 @@
-Asistencia: majte pri každom vozidle čísla poisťovne a asistenčnej služby a volajte jedným ťuknutím.
-Návody: postupy pre bežnú údržbu svojpomocne pre vaše vozidlo.
-Bicykle majú plán rozdelený na brzdy, reťaz, pneumatiky a batériu.
-A opravy skenovania bločkov a upozornení.
+Vylepšenia na pozadí a opravy chýb, aby Vehicle Maintenance Log fungoval hladko. Ďakujeme, že ste tu.
