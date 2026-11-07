@@ -14,6 +14,17 @@ struct WidgetSnapshot: Codable, Sendable {
         var estimated: Bool
         /// "At 54,000 mi" for a job due by the meter with no date to show.
         var dueAt: String?
+
+        /// The status on `now`. The snapshot is written when the app runs, so a
+        /// due date that has come since then moves the job along.
+        func status(on now: Date) -> DueStatus {
+            let written = DueStatus(rawValue: statusRaw) ?? .ok
+            guard written != .overdue, let dueDate else { return written }
+            // Only the calendar is certain; an estimate from the pace is due about now.
+            if now >= dueDate { return estimated ? .dueSoon : .overdue }
+            if written == .ok, dueDate.timeIntervalSince(now) <= DueEngine.soonWindowDays * 86_400 { return .dueSoon }
+            return written
+        }
     }
 
     struct VehicleSummary: Codable, Hashable, Identifiable, Sendable {
@@ -57,11 +68,12 @@ struct WidgetSnapshot: Codable, Sendable {
         #endif
     }
 
-    /// Every job across the garage, most urgent first.
-    var upcoming: [(vehicle: VehicleSummary, item: Item)] {
+    /// Every job across the garage, most urgent first on `now`.
+    func upcoming(on now: Date) -> [(vehicle: VehicleSummary, item: Item)] {
         vehicles.flatMap { vehicle in vehicle.items.map { (vehicle, $0) } }
             .sorted {
-                if $0.item.statusRaw != $1.item.statusRaw { return $0.item.statusRaw < $1.item.statusRaw }
+                let lhs = $0.item.status(on: now), rhs = $1.item.status(on: now)
+                if lhs != rhs { return lhs < rhs }
                 return ($0.item.dueDate ?? .distantFuture) < ($1.item.dueDate ?? .distantFuture)
             }
     }

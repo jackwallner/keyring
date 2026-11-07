@@ -41,7 +41,7 @@ struct UpcomingWidgetView: View {
     let entry: UpcomingEntry
 
     var body: some View {
-        let items = entry.snapshot.upcoming
+        let items = entry.snapshot.upcoming(on: .now)
         Group {
             if items.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
@@ -72,7 +72,7 @@ struct UpcomingWidgetView: View {
                     .background(Color(hex: item.vehicle.tintHex), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                     .overlay { outline(item.vehicle.tintHex, RoundedRectangle(cornerRadius: 7, style: .continuous)) }
                 Spacer()
-                Circle().fill(color(item.item.statusRaw)).frame(width: 8, height: 8)
+                Circle().fill(color(item.item)).frame(width: 8, height: 8)
             }
             Spacer()
             Text(item.vehicle.name)
@@ -85,7 +85,7 @@ struct UpcomingWidgetView: View {
                 .lineLimit(2)
             Text(when(item.item))
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(color(item.item.statusRaw))
+                .foregroundStyle(color(item.item))
         }
     }
 
@@ -128,7 +128,7 @@ struct UpcomingWidgetView: View {
             Spacer()
             Text(when(item.item))
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(color(item.item.statusRaw))
+                .foregroundStyle(color(item.item))
                 .lineLimit(1)
         }
     }
@@ -142,8 +142,8 @@ struct UpcomingWidgetView: View {
         if let outline = VehicleTint.matching(hex: hex)?.outline { shape.strokeBorder(outline, lineWidth: 1) }
     }
 
-    private func color(_ raw: Int) -> Color {
-        switch DueStatus(rawValue: raw) {
+    private func color(_ item: WidgetSnapshot.Item) -> Color {
+        switch item.status(on: .now) {
         case .overdue: Theme.overdue
         case .dueSoon: Theme.dueSoon
         default: Theme.good
@@ -151,7 +151,7 @@ struct UpcomingWidgetView: View {
     }
 
     private func when(_ item: WidgetSnapshot.Item) -> String {
-        if item.statusRaw == DueStatus.overdue.rawValue { return "Overdue" }
+        if item.status(on: .now) == .overdue { return "Overdue" }
         guard let date = item.dueDate else { return item.dueAt ?? "Up to date" }
         let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
         let prefix = item.estimated ? "~" : ""
