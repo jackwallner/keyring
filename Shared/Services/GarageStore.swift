@@ -772,32 +772,43 @@ final class GarageStore: ObservableObject {
         return (value / step).rounded() * step
     }
 
-    /// Removes one saved reading; the vehicle falls back to the latest one left.
+    /// Removes one saved reading. When the vehicle's reading came from it, the
+    /// vehicle falls back to the highest reading left in its rows and log.
     func delete(_ reading: MeterReading) {
         guard let vehicle = reading.vehicle else { return }
         context.delete(reading)
         let isAux = reading.isAux
-        let remaining = (isAux ? vehicle.auxReadings : vehicle.mainReadings).filter { $0 != reading && !$0.isDeleted }
+        if !isAux {
+            if reading.value >= vehicle.reading { resetReadingToHighestKnown(vehicle) }
+            save()
+            return
+        }
+        let remaining = vehicle.auxReadings.filter { $0 != reading && !$0.isDeleted }
         if let latest = remaining.max(by: { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }) {
-            if isAux {
-                vehicle.auxReading = latest.value
-                vehicle.auxReadingDate = latest.date
-            } else {
-                vehicle.reading = latest.value
-                vehicle.readingDate = latest.date
-            }
-        } else if isAux {
+            vehicle.auxReading = latest.value
+            vehicle.auxReadingDate = latest.date
+        } else {
             // Nothing else is saved, so the wrong figure can't stay as the vehicle's reading.
             vehicle.auxReading = 0
             vehicle.auxReadingDate = nil
-        } else {
-            let logged = (vehicle.entries ?? [])
-                .filter { $0.hasReading && $0.date != nil }
-                .max { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
-            vehicle.reading = logged?.reading ?? 0
-            vehicle.readingDate = logged?.date
         }
         save()
+    }
+
+    /// The vehicle reads the highest figure a saved reading or a logged entry
+    /// still carries. Used when the one its reading came from is fixed or removed.
+    private func resetReadingToHighestKnown(_ vehicle: Vehicle) {
+        var points: [(value: Double, date: Date)] = vehicle.mainReadings.compactMap { reading in
+            guard !reading.isDeleted, let date = reading.date else { return nil }
+            return (reading.value, date)
+        }
+        points += (vehicle.entries ?? []).compactMap { entry in
+            guard !entry.isDeleted, entry.hasReading, let date = entry.date, date <= .now else { return nil }
+            return (entry.reading, date)
+        }
+        let highest = points.max { ($0.value, $0.date) < ($1.value, $1.date) }
+        vehicle.reading = highest?.value ?? 0
+        vehicle.readingDate = highest?.date
     }
 
     /// A reading far beyond the vehicle's pace is usually a typo: an extra digit.
@@ -841,6 +852,7 @@ final class GarageStore: ObservableObject {
     @discardableResult
     func log(_ draft: ServiceDraft, for vehicle: Vehicle, editing existing: ServiceEntry? = nil) -> ServiceEntry {
         let entry = existing ?? ServiceEntry(context: context)
+        let setTheReading = isSourceOfReading(existing, on: vehicle)
         if existing == nil {
             persistence.place(entry, beside: vehicle, in: context)
             entry.id = UUID()
@@ -882,7 +894,9 @@ final class GarageStore: ObservableObject {
             let attachment = makeDocument(file.name, data: file.data, beside: vehicle)
             attachment.entry = entry
         }
-        if let reading, reading > vehicle.reading, draft.date <= .now {
+        if setTheReading, (reading ?? -1) < vehicle.reading {
+            resetReadingToHighestKnown(vehicle)
+        } else if let reading, reading > vehicle.reading, draft.date <= .now {
             vehicle.reading = reading
             vehicle.readingDate = draft.date
         }
@@ -1010,6 +1024,7 @@ final class GarageStore: ObservableObject {
     @discardableResult
     func logFuel(_ draft: FuelDraft, for vehicle: Vehicle, editing existing: ServiceEntry? = nil) -> ServiceEntry {
         let entry = existing ?? ServiceEntry(context: context)
+        let setTheReading = isSourceOfReading(existing, on: vehicle)
         if existing == nil {
             persistence.place(entry, beside: vehicle, in: context)
             entry.id = UUID()
@@ -1039,12 +1054,21 @@ final class GarageStore: ObservableObject {
             attachment.data = data
             attachment.entry = entry
         }
-        if let reading, reading > vehicle.reading {
+        if setTheReading, (reading ?? -1) < vehicle.reading {
+            resetReadingToHighestKnown(vehicle)
+        } else if let reading, reading > vehicle.reading {
             vehicle.reading = reading
             vehicle.readingDate = draft.date
         }
         save()
         return entry
+    }
+
+    /// Whether the vehicle's reading is this entry's, so fixing or removing
+    /// the entry has to move it.
+    private func isSourceOfReading(_ entry: ServiceEntry?, on vehicle: Vehicle) -> Bool {
+        guard let entry, entry.hasReading, entry.vehicle == vehicle else { return false }
+        return entry.reading == vehicle.reading
     }
 
     /// Stations already used, most recent first, for one-tap entry.
@@ -1087,7 +1111,10 @@ final class GarageStore: ObservableObject {
     }
 
     func delete(_ entry: ServiceEntry) {
+        let vehicle = entry.vehicle
+        let setTheReading = vehicle.map { isSourceOfReading(entry, on: $0) } ?? false
         context.delete(entry)
+        if setTheReading, let vehicle { resetReadingToHighestKnown(vehicle) }
         save()
     }
 
