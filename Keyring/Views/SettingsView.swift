@@ -8,6 +8,7 @@ struct SettingsView: View {
     @EnvironmentObject private var sharing: SharingService
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage(AppGroup.Key.hideCosts, store: AppGroup.defaults) private var hideCosts = false
     @AppStorage(AppGroup.Key.appearance, store: AppGroup.defaults) private var appearance = Appearance.system.rawValue
@@ -179,6 +180,10 @@ struct SettingsView: View {
             savedGarageName = garageName
             reminderHour = ReminderScheduler.shared.reminderHour
             await refreshNotifications()
+        }
+        // Back from iPhone Settings, where notifications may have been turned on.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await refreshNotifications() } }
         }
         .onDisappear { if hasUnsavedText { saveText() } }
     }
