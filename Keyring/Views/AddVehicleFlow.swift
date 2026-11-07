@@ -836,7 +836,7 @@ struct EditVehicleView: View {
 
     private func save() {
         let powertrainChanged = vehicle.powertrain != draft.powertrain
-        let readingTyped = draft.reading != vehicle.shownReading
+        let readingTyped = Self.readingWasTyped(draft.reading, for: vehicle, meter: draft.meter)
         if !garage.isShared(vehicle) { garage.changeMeter(vehicle, to: draft.meter) }
         vehicle.powertrain = draft.powertrain
         vehicle.year = Int16(clamping: draft.year)
@@ -869,5 +869,12 @@ struct EditVehicleView: View {
         }
         Haptics.success()
         dismiss()
+    }
+
+    /// Switching miles and kilometers converts and rounds the odometer field,
+    /// which is not a typed reading: it would stamp one dated now.
+    static func readingWasTyped(_ figure: Double, for vehicle: Vehicle, meter: MeterUnit) -> Bool {
+        guard let converted = vehicle.meter.convert(vehicle.shownReading, to: meter) else { return true }
+        return figure != converted && figure != converted.rounded()
     }
 }
