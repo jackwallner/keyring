@@ -315,7 +315,7 @@ struct GarageView: View {
 
     /// Vehicles picked in onboarding and not added yet.
     private var plannedSlots: [VehicleKind] {
-        PlannedVehicles.remaining(planned, owned: garage.vehicles.filter { !garage.isShared($0) }.map(\.kind))
+        PlannedVehicles.remaining(planned, in: garage)
     }
 
     /// One card per planned vehicle; past the free limit they carry Pro.

@@ -550,6 +550,12 @@ enum PlannedVehicles {
         }
     }
 
+    /// A vehicle sold or retired was still added, so it keeps its slot crossed off.
+    @MainActor static func remaining(_ stored: String, in garage: GarageStore) -> [VehicleKind] {
+        let added = (garage.vehicles + garage.retiredVehicles).filter { !garage.isShared($0) }
+        return remaining(stored, owned: added.map(\.kind))
+    }
+
     /// Drops one planned vehicle of this kind.
     static func removing(_ kind: VehicleKind, from stored: String) -> String {
         var all = kinds(stored)
