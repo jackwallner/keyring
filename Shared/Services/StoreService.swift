@@ -254,18 +254,35 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
             }
             return .pending
         } catch {
-            let nsError = error as NSError
-            if nsError.code == ErrorCode.purchaseCancelledError.rawValue {
+            switch Self.state(forPurchaseError: error) {
+            case .cancelled:
                 errorMessage = ConversionCopy.purchaseCancelledMessage(
                     eligibleForTrial: isEligibleForIntroOffer(package)
                 )
                 return .cancelled
+            case .pending:
+                // Ask to Buy or a bank confirmation: nothing failed. Pro turns
+                // on through the delegate once it goes through.
+                errorMessage = nil
+                return .pending
+            default:
+                break
             }
             await refreshIntroEligibility()
             errorMessage = ConversionCopy.purchaseFailedMessage(
                 eligibleForTrial: isEligibleForIntroOffer(package)
             )
             return nil
+        }
+    }
+
+    /// RevenueCat throws for a StoreKit `.pending` result (Ask to Buy, a bank
+    /// confirmation) rather than returning it, so a thrown error is not always a failure.
+    nonisolated static func state(forPurchaseError error: Error) -> PurchaseState? {
+        switch (error as NSError).code {
+        case ErrorCode.purchaseCancelledError.rawValue: .cancelled
+        case ErrorCode.paymentPendingError.rawValue: .pending
+        default: nil
         }
     }
 
