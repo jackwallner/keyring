@@ -313,7 +313,7 @@ struct FuelLogView: View {
         case .price: fields.unitPrice
         case .total: fields.total
         }
-        guard let worked, worked > 0 else { return }
+        guard let worked = Format.bounded(worked), worked > 0 else { return }
         derived = (open, worked)
         set(open, worked)
     }

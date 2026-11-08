@@ -144,4 +144,18 @@ final class OdometerSourceTests: XCTestCase {
         XCTAssertEqual(vehicle.reading, 55_000)
         XCTAssertEqual(vehicle.readingDate, readingDate)
     }
+
+    // MARK: - Figures past any real one
+
+    /// A cost worked out from two huge figures used to be stored, then trap the next import into the vehicle.
+    func testACostPastAnyRealFigureIsNotStored() {
+        let store = makeStore()
+        let vehicle = car(in: store)
+        var draft = service(at: 50_100)
+        draft.cost = 1e21
+        let entry = store.log(draft, for: vehicle)
+        XCTAssertEqual(entry.cost, 0)
+        XCTAssertEqual(NumberField.display(1e19, allowsDecimal: false, isCurrency: true), "")
+        XCTAssertEqual(NumberField.display(1e19, allowsDecimal: false), "")
+    }
 }

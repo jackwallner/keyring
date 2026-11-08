@@ -502,7 +502,8 @@ struct NumberField: View {
 
     /// Grouped and, for money, led by the symbol; `parse` strips both back out.
     static func display(_ value: Double?, allowsDecimal: Bool, isCurrency: Bool = false, grouping: Bool = true, fractionDigits: Int = 2) -> String {
-        guard let value else { return "" }
+        // A figure worked out from two huge ones can pass `Int.max`, where `Int(_:)` traps.
+        guard let value = Format.bounded(value) else { return "" }
         if isCurrency {
             let digits = value == value.rounded()
                 ? Int(value).formatted()

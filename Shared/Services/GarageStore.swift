@@ -877,7 +877,7 @@ final class GarageStore: ObservableObject {
         if draft.kind != .mod { details.removedOn = nil }
         entry.details = details
         entry.title = draft.title.trimmed.nilIfEmpty ?? defaultTitle(for: draft, on: vehicle)
-        entry.cost = max(0, draft.cost)
+        entry.cost = Format.bounded(max(0, draft.cost)) ?? 0
         entry.shop = draft.isDIY ? nil : draft.shop.trimmed.nilIfEmpty
         entry.isDIY = draft.isDIY
         entry.notes = draft.notes.trimmed.nilIfEmpty
@@ -1040,7 +1040,7 @@ final class GarageStore: ObservableObject {
         entry.reading = reading ?? -1
         entry.fuelVolume = fields.volume.map(draft.unit.liters) ?? 0
         entry.fuelUnitPrice = fields.unitPrice.map(draft.unit.perLiter) ?? 0
-        entry.cost = max(0, fields.total ?? 0)
+        entry.cost = Format.bounded(max(0, fields.total ?? 0)) ?? 0
         entry.grade = draft.grade
         entry.fuelPartial = draft.partial
         entry.shop = draft.station.trimmed.nilIfEmpty
