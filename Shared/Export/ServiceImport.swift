@@ -472,7 +472,7 @@ enum ServiceImport {
         if thousandsDot {
             text.removeAll { $0 == "." }
             text = text.replacingOccurrences(of: ",", with: ".")
-            return Double(text)
+            return Format.bounded(Double(text))
         }
         let dot = text.lastIndex(of: ".")
         let comma = text.lastIndex(of: ",")
@@ -496,7 +496,7 @@ enum ServiceImport {
         default:
             break
         }
-        return Double(text)
+        return Format.bounded(Double(text))
     }
 
     /// True when every dotted value reads like "45.000" or "1.234.567".

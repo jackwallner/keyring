@@ -495,7 +495,7 @@ struct NumberField: View {
             .replacingOccurrences(of: locale.decimalSeparator ?? ".", with: ".")
             .compactMap { $0 == "." ? "." : $0.wholeNumberValue.map(String.init) }
             .joined()
-        return Double(cleaned)
+        return Format.bounded(Double(cleaned))
     }
 
     private static var symbol: String { Locale.current.currencySymbol ?? "$" }

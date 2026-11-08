@@ -2,6 +2,17 @@ import Foundation
 
 /// Every number and date the app shows, formatted one way.
 enum Format {
+    /// The largest figure a typed field or an import takes. Past `Int.max`,
+    /// showing it as a whole number traps, so a stray run of digits must
+    /// never be stored.
+    static let largestFigure: Double = 1e12
+
+    /// `value` when it is a real figure below `largestFigure`, else nil.
+    static func bounded(_ value: Double?) -> Double? {
+        guard let value, value.isFinite, abs(value) < largestFigure else { return nil }
+        return value
+    }
+
     static func reading(_ value: Double, _ meter: MeterUnit) -> String {
         switch meter {
         case .hours:
