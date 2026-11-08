@@ -92,7 +92,8 @@ struct AddVehicleFlow: View {
     }
 
     private func finish() {
-        let vehicle = garage.addVehicle(draft, to: destination)
+        // The picker shows the first garage until one is picked; add it there.
+        let vehicle = garage.addVehicle(draft, to: destination ?? (destinations.count > 1 ? destinations.first : nil))
         AppGroup.defaults.set(true, forKey: AppGroup.Key.hasCompletedSetup)
         Haptics.success()
         // Reminders are the point of a schedule, so ask right after the first
