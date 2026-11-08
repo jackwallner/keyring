@@ -1056,7 +1056,7 @@ final class GarageStore: ObservableObject {
         }
         if setTheReading, (reading ?? -1) < vehicle.reading {
             resetReadingToHighestKnown(vehicle)
-        } else if let reading, reading > vehicle.reading {
+        } else if let reading, reading > vehicle.reading, draft.date <= .now {
             vehicle.reading = reading
             vehicle.readingDate = draft.date
         }
