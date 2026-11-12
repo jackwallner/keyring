@@ -1,16 +1,16 @@
 # Best Car Maintenance Tracker App for iPhone: 5 Compared
 
-> Five iPhone car maintenance tracker apps compared: service reminders, mpg, recalls and sharing a garage with family. Ratings as of October 2026.
+> Five iPhone car maintenance tracker apps compared: service reminders, mpg, recalls and sharing a garage with family. Ratings as of November 2026.
 
 Web page: https://jackwallner.com/ios/vehicle-maintenance-log/best-car-maintenance-app.html
 
-## Best car maintenance tracker app for iPhone (October 2026)
+## Best car maintenance tracker app for iPhone (November 2026)
 
-By [Jack Wallner](https://jackwallner.com/). Last updated October 30, 2026.
+By [Jack Wallner](https://jackwallner.com/). Last updated November 11, 2026.
 
 A car maintenance tracker app logs service, tells you what is due next and usually tracks fuel. Best for one shared garage covering every vehicle in the family, from cars to boats, with a printable service record: Vehicle Maintenance Log & MPG. Best for service history, recalls and repair cost estimates tied to your car: CARFAX Car Care. Best for fuel economy history synced to a website: Fuelly. Best for fuel, expenses and cost per mile: Drivvo or My Car.
 
-**How we compared.** I read each App Store listing and pulled its rating and update date from Apple's public lookup on October 30, 2026 (US storefront), and took feature claims from the listings. I did not install the competing apps, so every claim about them comes from their listings. Jack Wallner makes Vehicle Maintenance Log & MPG, so read its entries with that in mind.
+**How we compared.** I read each App Store listing and pulled its rating and update date from Apple's public lookup on November 11, 2026 (US storefront), and took feature claims from the listings. I did not install the competing apps, so every claim about them comes from their listings. Jack Wallner makes Vehicle Maintenance Log & MPG, so read its entries with that in mind.
 
 ## How do the car maintenance apps compare?
 
@@ -18,13 +18,13 @@ Vehicle Maintenance Log & MPG shares one garage across a family, CARFAX Car Care
 
 | App | Best for | Fuel and mpg | Recalls | Family sharing | Rating (count) | Last updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Vehicle Maintenance Log & MPG | A shared garage for every vehicle, with schedules and a service record | Yes | Yes (NHTSA) | Yes | 5.00 (1) | Oct 23, 2026 |
-| CARFAX Car Care | Service history, alerts, recalls and repair cost estimates | Yes | Yes | Not stated in listing | 4.84 (128,485) | Oct 28, 2026 |
-| Fuelly: MPG & Service Tracker | Fuel economy history synced to Fuelly.com, plus service reminders | Yes | Not stated in listing | Not stated in listing | 4.74 (29,683) | Jun 3, 2024 |
-| Drivvo - Car Expense Tracker | Fuel log, expenses and cost per mile | Yes | Not stated in listing | Not stated in listing | 4.69 (979) | Oct 22, 2026 |
-| My Car - Vehicle Manager | A vehicle logbook with fuel, expenses and mileage, on phone and web | Yes | Not stated in listing | Yes | 4.70 (1,176) | Oct 22, 2026 |
+| Vehicle Maintenance Log & MPG | A shared garage for every vehicle, with schedules and a service record | Yes | Yes (NHTSA) | Yes | 5.00 (1) | Nov 10, 2026 |
+| CARFAX Car Care | Service history, alerts, recalls and repair cost estimates | Yes | Yes | Not stated in listing | 4.84 (128,820) | Oct 28, 2026 |
+| Fuelly: MPG & Service Tracker | Fuel economy history synced to Fuelly.com, plus service reminders | Yes | Not stated in listing | Not stated in listing | 4.74 (29,732) | Jun 3, 2024 |
+| Drivvo - Car Expense Tracker | Fuel log, expenses and cost per mile | Yes | Not stated in listing | Not stated in listing | 4.69 (983) | Nov 6, 2026 |
+| My Car - Vehicle Manager | A vehicle logbook with fuel, expenses and mileage, on phone and web | Yes | Not stated in listing | Yes | 4.70 (1,182) | Nov 6, 2026 |
 
-Ratings and update dates come from Apple's App Store lookup on October 30, 2026. Vehicle Maintenance Log & MPG is new and has only one rating, so its score says little yet. "Not stated" means the listing does not say.
+Ratings and update dates come from Apple's App Store lookup on November 11, 2026. Vehicle Maintenance Log & MPG is new and has only one rating, so its score says little yet. "Not stated" means the listing does not say.
 
 ## Vehicle Maintenance Log & MPG
 
