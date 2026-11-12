@@ -87,7 +87,16 @@ struct ServiceRecordView: View {
         info.jobName = "\(vehicle.displayName) service record"
         controller.printInfo = info
         controller.printingItem = pdf
-        controller.present(animated: true)
+        // On iPad the print panel is a popover and needs somewhere to point.
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first
+        if UIDevice.current.userInterfaceIdiom == .pad, let window {
+            let anchor = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 1, height: 1)
+            controller.present(from: anchor, in: window, animated: true)
+        } else {
+            controller.present(animated: true)
+        }
     }
 }
 

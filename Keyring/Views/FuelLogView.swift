@@ -134,7 +134,7 @@ struct FuelLogView: View {
             Text("Pump")
         } footer: {
             Text(store.isPro
-                 ? "The app reads the \(unit.plural.lowercased()), price and total on this iPhone. Check what it fills in."
+                 ? "The app reads the \(unit.plural.lowercased()), price and total on this \(DeviceName.current). Check what it fills in."
                  : "The photo is always saved. With Pro, the \(unit.plural.lowercased()), price and total fill in by themselves.")
         }
     }

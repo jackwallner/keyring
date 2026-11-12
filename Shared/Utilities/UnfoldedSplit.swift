@@ -2,7 +2,7 @@ import CoreData
 import CoreGraphics
 import SwiftUI
 
-/// Pane frames for the unfolded iPhone Duo: the tabs on the leading side of the
+/// Pane frames for the unfolded iPhone Duo and for iPad: the tabs on the leading side of the
 /// fold, the selected vehicle on the trailing side, so no card straddles the
 /// crease. `nil` keeps the single column (every ordinary iPhone, the folded
 /// Duo, and the unfolded Duo held in portrait, where each half is too narrow).
@@ -18,8 +18,13 @@ struct UnfoldedSplit: Equatable, Sendable {
     ///   - width: the container's width.
     ///   - fold: the vertical fold's leading and trailing edge in the same
     ///     coordinate space, or `nil` when the system reports none.
-    static func make(width: CGFloat, isRegularWidth: Bool, fold: ClosedRange<CGFloat>?) -> UnfoldedSplit? {
+    static func make(width: CGFloat, isRegularWidth: Bool, fold: ClosedRange<CGFloat>?, isPad: Bool = false) -> UnfoldedSplit? {
         guard isRegularWidth, width >= minimumPaneWidth * 2 else { return nil }
+        if isPad {
+            // The garage stays a phone-width list; the vehicle gets the rest.
+            let primary = min(max((width * 0.36).rounded(.down), 380), 440)
+            return UnfoldedSplit(primaryWidth: primary, secondaryX: primary, secondaryWidth: width - primary)
+        }
         if let fold,
            fold.lowerBound >= minimumPaneWidth,
            width - fold.upperBound >= minimumPaneWidth {

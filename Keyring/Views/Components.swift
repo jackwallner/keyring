@@ -71,7 +71,26 @@ extension View {
         self
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
+            .readableColumn()
             .background(Theme.paper.ignoresSafeArea())
+    }
+
+    /// Keeps a scroll view's content to a readable column, centred, on wide
+    /// screens. Only the content is inset, so the bars, the scroll indicator
+    /// and the paper stay full width. Phones and narrow panes are unchanged.
+    func readableColumn(maxWidth: CGFloat = Theme.columnWidth) -> some View {
+        modifier(ReadableColumn(maxWidth: maxWidth))
+    }
+}
+
+private struct ReadableColumn: ViewModifier {
+    let maxWidth: CGFloat
+    @State private var width: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.horizontal, max(0, ((width - maxWidth) / 2).rounded(.down)), for: .scrollContent)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 }
 

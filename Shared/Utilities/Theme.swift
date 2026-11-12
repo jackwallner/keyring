@@ -18,6 +18,8 @@ enum Theme {
     static let radius: CGFloat = 20
     static let smallRadius: CGFloat = 12
     static let cardHeight: CGFloat = 212
+    /// Widest a screen's content runs before it centres in a column (iPad).
+    static let columnWidth: CGFloat = 680
 
     // MARK: Rhythm
 

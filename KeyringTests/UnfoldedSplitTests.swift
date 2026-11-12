@@ -41,6 +41,22 @@ final class UnfoldedSplitTests: XCTestCase {
         }
     }
 
+    func testPadKeepsTheGarageNarrowAndGivesTheVehicleTheRest() {
+        for width in [CGFloat(744), 834, 1_032, 1_194, 1_376] {
+            let split = UnfoldedSplit.make(width: width, isRegularWidth: true, fold: nil, isPad: true)
+            XCTAssertNotNil(split)
+            XCTAssertGreaterThanOrEqual(split!.primaryWidth, 380)
+            XCTAssertLessThanOrEqual(split!.primaryWidth, 440)
+            XCTAssertGreaterThanOrEqual(split!.secondaryWidth, UnfoldedSplit.minimumPaneWidth)
+            XCTAssertEqual(split!.secondaryX + split!.secondaryWidth, width)
+        }
+    }
+
+    func testPadSplitViewHalfStaysOneColumn() {
+        XCTAssertNil(UnfoldedSplit.make(width: 678, isRegularWidth: true, fold: nil, isPad: true))
+        XCTAssertNil(UnfoldedSplit.make(width: 507, isRegularWidth: false, fold: nil, isPad: true))
+    }
+
     @MainActor
     func testEmptyGarageHasNoPaneVehicle() {
         let pane = VehiclePane()

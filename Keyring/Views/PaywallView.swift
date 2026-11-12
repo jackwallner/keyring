@@ -25,7 +25,7 @@ enum ProFeature: String, CaseIterable, Identifiable {
         switch self {
         case .unlimitedVehicles: "Your first two are free forever. Pro adds the boat, the bikes, the RV and the mower."
         case .serviceRecord: "Every job, receipt and reading on clean pages. Print it for the glovebox or send it to a buyer."
-        case .receiptScan: "Snap a receipt or the pump and the total, date, shop and gallons are read on your iPhone."
+        case .receiptScan: "Snap a receipt or the pump and the total, date, shop and gallons are read on your \(DeviceName.current)."
         case .insights: "Spending by month, by vehicle and by job, and your real cost per mile."
         }
     }
@@ -94,6 +94,8 @@ struct PaywallView: View {
                     content
                 }
             }
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
             if displayCloseButton {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark")
@@ -117,6 +119,7 @@ struct PaywallView: View {
     }
 
     private var content: some View {
+        GeometryReader { proxy in
         ScrollView {
             VStack(spacing: Theme.lg) {
                 VStack(spacing: Theme.xs) {
@@ -164,8 +167,11 @@ struct PaywallView: View {
             }
             .padding(.horizontal, Theme.margin)
             .padding(.bottom, Theme.md)
+            // A tall iPad centres the plans instead of leaving the lower half empty.
+            .frame(minHeight: proxy.size.height)
         }
         .scrollBounceBehavior(.basedOnSize)
+        }
     }
 
     private var orderedFeatures: [ProFeature] {

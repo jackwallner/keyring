@@ -44,6 +44,7 @@ struct OnboardingView: View {
             if !nameFocused {
                 // Capped so the largest text sizes leave the pages room to read.
                 footer.dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    .frame(maxWidth: 560)
             }
         }
         .background(Theme.paper.ignoresSafeArea())
@@ -218,7 +219,7 @@ struct OnboardingView: View {
             Text("Log it together")
                 .font(Theme.title(pageTitleSize))
                 .foregroundStyle(Theme.ink)
-            Text("Share the garage with one code. Whoever takes the car in logs it from their own iPhone, and everyone sees who did what.")
+            Text("Share the garage with one code. Whoever takes the car in logs it from their own \(DeviceName.current), and everyone sees who did what.")
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
             VStack(alignment: .leading, spacing: Theme.xs) {

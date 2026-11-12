@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// App Store captures run from launch arguments; surfaces that must stay out
 /// of marketing shots (the review prompt) check this. Always false in Release.
@@ -19,6 +20,24 @@ enum ScreenshotConfig {
         let args = ProcessInfo.processInfo.arguments
         guard let index = args.firstIndex(of: flag), args.indices.contains(index + 1) else { return nil }
         return args[index + 1]
+    }
+
+    /// `-Orientation landscape|portrait`: rotates the window after launch, for iPad captures.
+    @MainActor
+    static func applyOrientation() {
+        guard let value = value(after: "-Orientation") else { return }
+        let landscape = value == "landscape"
+        let mask: UIInterfaceOrientationMask = landscape ? .landscapeRight : .portrait
+        for scene in UIApplication.shared.connectedScenes {
+            guard let scene = scene as? UIWindowScene else { continue }
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { error in
+                NSLog("Orientation request failed: %@", String(describing: error))
+            }
+        }
+        // The request is ignored while the app is windowed; the device hint still rotates a simulator.
+        let target: UIInterfaceOrientation = landscape ? .landscapeRight : .portrait
+        UIDevice.current.setValue(target.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
     }
     #else
     static let isEnabled = false

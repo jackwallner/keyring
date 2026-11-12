@@ -46,6 +46,12 @@ struct KeyringApp: App {
                 .tint(Theme.brass)
                 .preferredColorScheme(Appearance(rawValue: appearance)?.colorScheme)
                 .onOpenURL { NotificationRouter.shared.open($0) }
+                #if DEBUG
+                .task {
+                    try? await Task.sleep(for: .seconds(1))
+                    ScreenshotConfig.applyOrientation()
+                }
+                #endif
                 .alert("Couldn't join this garage", isPresented: Binding(
                     get: { sharing.invitationError != nil },
                     set: { if !$0 { sharing.invitationError = nil } }
@@ -110,7 +116,7 @@ enum Appearance: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: "Match iPhone"
+        case .system: "Match \(DeviceName.current)"
         case .light: "Light"
         case .dark: "Dark"
         }
@@ -218,7 +224,8 @@ struct MainTabView: View {
         UnfoldedSplit.make(
             width: paneGeometry.width,
             isRegularWidth: horizontalSizeClass == .regular,
-            fold: paneGeometry.fold
+            fold: paneGeometry.fold,
+            isPad: UIDevice.current.userInterfaceIdiom == .pad
         )
     }
 

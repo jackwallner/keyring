@@ -493,7 +493,7 @@ struct LogServiceView: View {
             Text("Receipt and photos")
         } footer: {
             if store.isPro {
-                Text("The app reads the total, date, shop and mileage from a receipt on this iPhone. Check what it fills in.")
+                Text("The app reads the total, date, shop and mileage from a receipt on this \(DeviceName.current). Check what it fills in.")
             } else {
                 Text("Receipts and photos are always saved. With Pro, the total, date, shop and mileage fill in by themselves.")
             }

@@ -24,7 +24,7 @@ struct FamilyView: View {
                     Text("Share the garage")
                         .font(Theme.title(30))
                         .foregroundStyle(Theme.ink)
-                    Text("Your partner, a teen driver, whoever takes the truck in. Everyone logs from their own iPhone, and every phone shows the same history. Each person turns reminders on or off for each vehicle on their own phone.")
+                    Text("Your partner, a teen driver, whoever takes the truck in. Everyone logs from their own \(DeviceName.current), and every device shows the same history. Each person turns reminders on or off for each vehicle on their own device.")
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                 }
@@ -132,7 +132,7 @@ struct FamilyView: View {
                 leaving = nil
             }
         } message: {
-            Text("Its vehicles disappear from this iPhone. Nothing is deleted for the owner, and they can invite you again.")
+            Text("Its vehicles disappear from this \(DeviceName.current). Nothing is deleted for the owner, and they can invite you again.")
         }
         .alert("Couldn't leave \(leaveFailed?.displayName ?? "the garage")", isPresented: Binding(get: { leaveFailed != nil }, set: { if !$0 { leaveFailed = nil } })) {
             Button("Try again") { if let leaveFailed { leave(leaveFailed) } }
@@ -241,7 +241,7 @@ struct FamilyView: View {
         errorMessage = nil
         defer { preparing = false }
         guard await sharing.accountAvailable() else {
-            errorMessage = "Sign in to iCloud on this iPhone (Settings > your name) to invite anyone."
+            errorMessage = "Sign in to iCloud on this \(DeviceName.current) (Settings > your name) to invite anyone."
             return
         }
         do {
@@ -279,7 +279,7 @@ struct JoinGarageView: View {
                     Section {
                         Button { scanning = true } label: { Label("Scan their code", systemImage: "qrcode.viewfinder") }
                     } footer: {
-                        Text("On their iPhone: Family at the top of Garage, then Create invite.")
+                        Text("On their \(DeviceName.current): Family at the top of Garage, then Create invite.")
                     }
                 }
                 Section {

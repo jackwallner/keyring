@@ -582,7 +582,7 @@ struct InsightsView: View {
 
     var body: some View {
         if AppGroup.defaults.bool(forKey: AppGroup.Key.hideCosts) {
-            EmptyStateView(symbol: "eye.slash", title: "Costs are hidden", message: "Costs are hidden on this iPhone. Turn them back on in Settings to see where the money goes.")
+            EmptyStateView(symbol: "eye.slash", title: "Costs are hidden", message: "Costs are hidden on this \(DeviceName.current). Turn them back on in Settings to see where the money goes.")
                 .frame(maxHeight: .infinity)
                 .paperBackground()
                 .navigationTitle("Insights")

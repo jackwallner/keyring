@@ -755,7 +755,7 @@ struct VehicleDetailView: View {
                     get: { !ReminderScheduler.shared.mutedVehicleIDs.contains(vehicle.id?.uuidString ?? "") },
                     set: { ReminderScheduler.shared.setMuted(!$0, vehicleID: vehicle.id, store: garage) }
                 )) {
-                    Text("Reminders on this iPhone").font(.subheadline)
+                    Text("Reminders on this \(DeviceName.current)").font(.subheadline)
                 }
                 .padding(.vertical, Theme.xs)
             }

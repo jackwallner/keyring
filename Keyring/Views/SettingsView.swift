@@ -71,7 +71,7 @@ struct SettingsView: View {
             Section {
                 switch notificationStatus {
                 case .denied:
-                    Button("Turn on in iPhone Settings") {
+                    Button("Turn on in \(DeviceName.current) Settings") {
                         if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
                     }
                 case .notDetermined:
@@ -98,18 +98,18 @@ struct SettingsView: View {
             } header: {
                 Text("Reminders")
             } footer: {
-                Text("A heads-up a week before each job and on the day, plus one Saturday note if anything is overdue. Reminders are per iPhone; mute a vehicle on its page.")
+                Text("A heads-up a week before each job and on the day, plus one Saturday note if anything is overdue. Reminders are per \(DeviceName.current); mute a vehicle on its page.")
             }
 
             Section {
-                Toggle("Hide costs on this iPhone", isOn: $hideCosts)
+                Toggle("Hide costs on this \(DeviceName.current)", isOn: $hideCosts)
                 Picker("Appearance", selection: $appearance) {
                     ForEach(Appearance.allCases) { Text($0.title).tag($0.rawValue) }
                 }
                 NavigationLink { SectionOrderView() } label: { Text("Vehicle page order") }
                     .accessibilityIdentifier("settings.sectionOrder")
             } header: {
-                Text("This iPhone")
+                Text("This \(DeviceName.current)")
             } footer: {
                 Text("Hiding costs keeps prices off lists, the garage and the Service Record here. Everyone else still sees what they choose.")
             }
@@ -132,7 +132,7 @@ struct SettingsView: View {
             } footer: {
                 Text(sharing.iCloudAvailable
                      ? "Everything syncs through your iCloud. Export and import are always free, so your history is always yours."
-                     : "iCloud is off, so everything stays on this iPhone. Sign in to iCloud to back it up and share it. The spreadsheet is always free.")
+                     : "iCloud is off, so everything stays on this \(DeviceName.current). Sign in to iCloud to back it up and share it. The spreadsheet is always free.")
             }
 
             Section("Vehicle Maintenance Log") {

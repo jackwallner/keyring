@@ -37,6 +37,7 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 | `.claude/rules/release.md` | screenshot sets (iPhone, Duo), ASC upload, submission draft | screenshots, ASC, release |
 | `.claude/rules/android.md` | Kotlin/Compose port in `android/`, catalog parity, platform gaps, Play state | touching `android/` or the Swift catalog |
 | `.claude/rules/iphone-duo.md` | unfolded two-pane layout (garage beside the vehicle), `-DuoScreen` captures | touching `MainTabView`, Garage navigation, Duo screenshots |
+| `.claude/rules/ipad-layout.md` | iPad two-pane split, readable column width, device-name copy | touching iPad layout, `UnfoldedSplit`, `paperBackground`, iPad screenshots |
 
 ## App-specific notes
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.
