@@ -40,12 +40,14 @@ struct AddVehicleFlow: View {
                 ToolbarItem(placement: .cancellationAction) {
                     if step == .kind {
                         Button("Cancel") { dismiss() }
+                            .accessibilityIdentifier("vehicle.cancel")
                     } else {
                         Button {
                             withAnimation(.snappy) { step = step == .history ? .details : .kind }
                         } label: {
                             Label("Back", systemImage: "chevron.backward")
                         }
+                        .accessibilityIdentifier("vehicle.back")
                     }
                 }
             }
@@ -534,6 +536,7 @@ struct VehicleDetailsForm: View {
                 .multilineTextAlignment(dynamicTypeSize.isAccessibilitySize ? .leading : .trailing)
                 .textInputAutocapitalization(.words)
                 .focused($focus, equals: field)
+                .accessibilityIdentifier("add.\(field)")
                 .submitLabel(field == .nickname ? .done : .next)
                 .onSubmit {
                     switch field {

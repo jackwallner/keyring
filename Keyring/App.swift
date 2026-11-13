@@ -27,6 +27,9 @@ struct KeyringApp: App {
         ConversionDiagnostics.recordAppOpen()
         ReviewPrompter.recordLaunch()
         #if DEBUG
+        // A true first install for the release-gate journeys: no log, no settings.
+        // The journey drops the flag before it relaunches, so the log must survive that.
+        if ProcessInfo.processInfo.arguments.contains("-ResetData") { KeyringApp.resetData() }
         // A first install: onboarding, then the garage it plans.
         if ProcessInfo.processInfo.arguments.contains("-Onboarding") {
             AppGroup.defaults.set(false, forKey: AppGroup.Key.hasCompletedSetup)
@@ -94,6 +97,20 @@ struct KeyringApp: App {
             await KeyringApp.refreshRecallsInBackground()
         }
     }
+
+    #if DEBUG
+    /// Deletes the on-disk log and the shared settings (`-ResetData`).
+    private static func resetData() {
+        let files = FileManager.default
+        let support = files.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        for directory in [support.appendingPathComponent("KeyringData"), AppGroup.containerURL.appendingPathComponent("KeyringData")] {
+            try? files.removeItem(at: directory)
+        }
+        if let domain = UserDefaults(suiteName: AppGroup.id) {
+            domain.removePersistentDomain(forName: AppGroup.id)
+        }
+    }
+    #endif
 
     /// iOS picks the moment; asking for twice a day keeps a new recall within a day or so.
     static func scheduleRecallRefresh() {
@@ -203,6 +220,14 @@ struct MainTabView: View {
             }
         }
 
+        var identifier: String {
+            switch self {
+            case .garage: "tab.garage"
+            case .history: "tab.history"
+            case .settings: "tab.settings"
+            }
+        }
+
         var systemImage: String {
             switch self {
             case .garage: "car.fill"
@@ -287,7 +312,7 @@ struct MainTabView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if split != nil { paneTabBar }
             }
-            .tabItem { Label(tab.title, systemImage: tab.systemImage) }
+            .tabItem { Label(tab.title, systemImage: tab.systemImage).accessibilityIdentifier(tab.identifier) }
             .tag(tab)
     }
 
@@ -325,6 +350,7 @@ struct MainTabView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityIdentifier(item.identifier)
             }
         }
         .padding(.horizontal, Theme.xs)

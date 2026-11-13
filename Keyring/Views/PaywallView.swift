@@ -106,6 +106,7 @@ struct PaywallView: View {
                 }
                 .padding(Theme.xs)
                 .accessibilityLabel("Close")
+                .accessibilityIdentifier("paywall.close")
             }
         }
         .background(Theme.paper.ignoresSafeArea())
