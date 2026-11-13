@@ -8,7 +8,11 @@ paths:
 
 ## Screenshots
 - Two sets in `fastlane/screenshots/en-US/`: iPhone 6.9 inch (1320x2868, `01-*.png`) and iPhone Duo outer
-  display (1398x2034, `duo_01-*.png`). The uploader picks the ASC display type from the pixel size.
+  display (1398x2034, `duo_01-*.png`) and 13-inch iPad (2064x2752, `ipad_01-*.png`, 1.2.0). The uploader picks the ASC
+  display type from the pixel size. Screenshots exist on en-US only; the other locales inherit it.
+- iPad set: `configs/keyring-ipad.json` (target `ipad_13`), raw frames from `gh-sim launch --device "iPad Pro 13-inch (M5)"`
+  with the same `-SeedDemo -DemoPro -ScreenshotRoute` args, kept in `samples/keyring/capture-proof-ipad/`. A comma inside a
+  `--screen` value made gh-sim stop after the launch frame, so leave out `-vehicleSectionOrder`.
 - Manifests: `~/ios/appstore-screenshots/configs/keyring.json` (slot 1, iPhone 17 Pro) and `keyring-duo.json`
   (`store_slot` 11, iPhone Duo, `screenshot_display` "LCD", the outer screen; "LCD-1" is the folded inner panel and
   is blank). Capture with `./bin/shotflow capture <manifest> --output <dir>`, inspect every raw PNG, copy them into
