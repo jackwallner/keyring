@@ -1,0 +1,19 @@
+{
+  "project": "Keyring.xcodeproj",
+  "scheme": "KeyringUITests",
+  "uitests_dir": "KeyringUITests",
+  "journeys": [
+    "KeyringUITests/ReleaseJourneysUITests"
+  ],
+  "personas": [
+    "newcomer",
+    "accessibility",
+    "reduce-motion",
+    "german",
+    "duo",
+    "ipad-portrait",
+    "ipad-landscape"
+  ],
+  "persona_overrides": {},
+  "slot": null
+}
