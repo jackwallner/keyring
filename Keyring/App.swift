@@ -276,6 +276,7 @@ struct MainTabView: View {
                 page(.history) { NavigationStack { HistoryView() } }
                 page(.settings) { NavigationStack { SettingsView() } }
             }
+            .clipped()
             if split != nil { paneTabBar }
         }
     }

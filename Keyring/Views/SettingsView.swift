@@ -43,6 +43,7 @@ struct SettingsView: View {
                         .multilineTextAlignment(.trailing)
                         .focused($editingText)
                         .onSubmit(saveText)
+                        .accessibilityIdentifier("settings.name")
                 }
                 if let own = garage.ownGarage {
                     LabeledContent("Garage name") {

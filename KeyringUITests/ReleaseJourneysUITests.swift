@@ -127,9 +127,9 @@ final class ReleaseJourneysUITests: XCTestCase {
         QA.checkpoint(app, "settings")
 
         let name = "QA Tester"
-        let field = app.textFields.firstMatch
+        let field = app.textFields["settings.name"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "Settings should offer the name field")
-        field.tap()
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10), "Tapping the name field should raise the keyboard")
         clear(field)
         field.typeText(name)
@@ -142,7 +142,7 @@ final class ReleaseJourneysUITests: XCTestCase {
 
         QA.relaunch(app)
         tab("Settings").tap()
-        let again = app.textFields.firstMatch
+        let again = app.textFields["settings.name"]
         XCTAssertTrue(again.waitForExistence(timeout: 30), "Settings should reopen")
         XCTAssertEqual(again.value as? String, name, "The saved name should survive a relaunch")
         QA.checkpoint(app, "settings-after-relaunch")
@@ -212,6 +212,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         // Return walks the fields (Make, Model, Trim, Nickname) and scrolls each into view.
         for _ in 0..<3 { app.typeText("\n") }
         app.typeText(nickname)
+        app.typeText("\n")
         let next = app.buttons["vehicle.continue"]
         scrollTo(next)
         XCTAssertTrue(next.waitForExistence(timeout: 10), "The details step should offer Continue")

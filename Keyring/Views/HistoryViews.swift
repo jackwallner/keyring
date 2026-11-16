@@ -37,15 +37,14 @@ struct HistoryView: View {
             }
             if allVehicles.count > 1 {
                 Section {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Theme.xs) {
-                            chip("All", selected: filter == nil) { filter = nil }
-                            ForEach(allVehicles) { vehicle in
-                                chip(vehicle.displayName, tint: vehicle.tint, retired: vehicle.isRetired, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
-                            }
+                    FlowLayout(spacing: Theme.xs) {
+                        chip("All", selected: filter == nil) { filter = nil }
+                        ForEach(allVehicles) { vehicle in
+                            chip(vehicle.displayName, tint: vehicle.tint, retired: vehicle.isRetired, selected: filter == vehicle.objectID) { filter = vehicle.objectID }
                         }
-                        .padding(.horizontal, Theme.margin)
                     }
+                    .padding(.horizontal, Theme.margin)
+                    .padding(.vertical, Theme.xs)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 }
