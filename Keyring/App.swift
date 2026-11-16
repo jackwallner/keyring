@@ -270,38 +270,28 @@ struct MainTabView: View {
     }
 
     private var tabs: some View {
-        TabView(selection: $tab) {
-            page(.garage) { GarageView() }
-            page(.history) { NavigationStack { HistoryView() } }
-            page(.settings) { NavigationStack { SettingsView() } }
+        VStack(spacing: 0) {
+            TabView(selection: $tab) {
+                page(.garage) { GarageView() }
+                page(.history) { NavigationStack { HistoryView() } }
+                page(.settings) { NavigationStack { SettingsView() } }
+            }
+            if split != nil { paneTabBar }
         }
     }
 
     /// One tab's screen. Unfolded, the system's floating glass bar would let
     /// rows show through it, so the leading pane hides it for an opaque bar of
-    /// the same tabs. That bar is a safe-area inset, so every list scrolls its
-    /// last row clear of it.
+    /// the same tabs, stacked under the tab content.
     private func page<Content: View>(_ tab: Tab, @ViewBuilder content: () -> Content) -> some View {
         content()
             .toolbar(split == nil ? .automatic : .hidden, for: .tabBar)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if split != nil { paneTabBar }
-            }
             .tabItem { Label(tab.title, systemImage: tab.systemImage) }
             .tag(tab)
     }
 
-    /// Topped by a short fade, so a card scrolling toward the bar dissolves
-    /// into the page instead of being sliced at its edge. The fade is part of
-    /// the inset, so the last row still scrolls clear of it.
-    private var paneTabBar: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [Theme.paper.opacity(0), Theme.paper], startPoint: .top, endPoint: .bottom)
-                .frame(height: Theme.lg)
-                .allowsHitTesting(false)
-            paneTabButtons
-        }
-    }
+    /// Sits below the tabs, not over them, so no card scrolls behind it.
+    private var paneTabBar: some View { paneTabButtons }
 
     private var paneTabButtons: some View {
         HStack(spacing: 0) {

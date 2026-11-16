@@ -130,6 +130,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "Settings should offer the name field")
         field.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10), "Tapping the name field should raise the keyboard")
         clear(field)
         field.typeText(name)
         let saveName = app.buttons["settings.save"]
@@ -208,10 +209,9 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(makeField.waitForExistence(timeout: 20), "The details step should offer Make")
         makeField.tap()
         makeField.typeText(make)
-        let nicknameField = app.textFields["Nickname"]
-        scrollTo(nicknameField)
-        nicknameField.tap()
-        nicknameField.typeText(nickname)
+        // Return walks the fields (Make, Model, Trim, Nickname) and scrolls each into view.
+        for _ in 0..<3 { app.typeText("\n") }
+        app.typeText(nickname)
         let next = app.buttons["vehicle.continue"]
         scrollTo(next)
         XCTAssertTrue(next.waitForExistence(timeout: 10), "The details step should offer Continue")
@@ -261,7 +261,7 @@ final class ReleaseJourneysUITests: XCTestCase {
     private func scrollTo(_ element: XCUIElement) {
         var swipes = 0
         while !(element.exists && element.isHittable), swipes < 6 {
-            app.swipeUp()
+            QA.swipe(app, .up)
             swipes += 1
         }
     }

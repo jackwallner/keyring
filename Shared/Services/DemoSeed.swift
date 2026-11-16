@@ -8,7 +8,7 @@ import Foundation
 enum DemoSeed {
     static func seed(into store: GarageStore, now: Date = .now) {
         guard store.vehicles.isEmpty else { return }
-        store.setOwnerName("Jack")
+        if store.ownerName == nil { store.setOwnerName("Jack") }
         let garage = store.ensureOwnGarage()
         garage.name = "The Wallner garage"
         let day: TimeInterval = 86_400

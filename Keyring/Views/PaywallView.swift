@@ -54,6 +54,7 @@ enum ProFeature: String, CaseIterable, Identifiable {
 /// purchase, so the footer renders in every state.
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @EnvironmentObject private var store: StoreService
 
     var displayCloseButton = true
@@ -131,38 +132,15 @@ struct PaywallView: View {
                 }
                 .padding(.top, displayCloseButton ? 44 : Theme.lg)
 
-                VStack(alignment: .leading, spacing: Theme.md) {
-                    ForEach(orderedFeatures) { feature in
-                        HStack(alignment: .top, spacing: Theme.sm) {
-                            Image(systemName: feature.symbol)
-                                .font(.body)
-                                .foregroundStyle(Theme.brass)
-                                .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(feature.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-                                Text(feature.detail).font(.footnote).foregroundStyle(Theme.secondaryInk).fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                    }
+                if dynamicTypeSize.isAccessibilitySize {
+                    plansList
+                    checkout
+                    featureList
+                } else {
+                    featureList
+                    plansList
+                    checkout
                 }
-                .card()
-
-                VStack(spacing: Theme.stackGap) {
-                    ForEach(store.packages, id: \.identifier) { package in
-                        PlanCard(
-                            package: package,
-                            isSelected: selected?.identifier == package.identifier,
-                            trialLabel: store.eligibleIntroLabel(for: package),
-                            perMonth: perMonth(package),
-                            savings: savings(package)
-                        ) {
-                            Haptics.selected()
-                            selected = package
-                        }
-                    }
-                }
-
-                checkout
                 legalFooter
             }
             .padding(.horizontal, Theme.margin)
@@ -171,6 +149,41 @@ struct PaywallView: View {
             .frame(minHeight: proxy.size.height)
         }
         .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    private var featureList: some View {
+        VStack(alignment: .leading, spacing: Theme.md) {
+            ForEach(orderedFeatures) { feature in
+                HStack(alignment: .top, spacing: Theme.sm) {
+                    Image(systemName: feature.symbol)
+                        .font(.body)
+                        .foregroundStyle(Theme.brass)
+                        .frame(minWidth: 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(feature.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                        Text(feature.detail).font(.footnote).foregroundStyle(Theme.secondaryInk).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .card()
+    }
+
+    private var plansList: some View {
+        VStack(spacing: Theme.stackGap) {
+            ForEach(store.packages, id: \.identifier) { package in
+                PlanCard(
+                    package: package,
+                    isSelected: selected?.identifier == package.identifier,
+                    trialLabel: store.eligibleIntroLabel(for: package),
+                    perMonth: perMonth(package),
+                    savings: savings(package)
+                ) {
+                    Haptics.selected()
+                    selected = package
+                }
+            }
         }
     }
 

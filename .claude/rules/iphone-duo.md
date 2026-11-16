@@ -25,9 +25,8 @@ paths:
   navigation and scroll. Never swap layouts with an `if` around the tabs.
 - Each pane gets `horizontalSizeClass = .compact`, so it lays out as on a phone.
 - Split, the system's floating glass tab bar is hidden and each tab carries
-  `paneTabBar` (opaque, same tabs) as a bottom `safeAreaInset`, so every list
-  scrolls its last row clear of it and nothing shows through. The bar spans
-  the leading pane only.
+  `paneTabBar` (opaque, same tabs) stacked under the tab content in a VStack,
+  so no card scrolls behind it. The bar spans the leading pane only.
 - iOS 27.1 puts the inner display's status bar and the trailing pane's toolbar
   (More, back, +) in a column on the display's trailing edge and insets the
   pane's trailing safe area for it. The vehicle pane must respect that inset:
@@ -35,8 +34,6 @@ paths:
   column's buttons. `toolbarVerticalBehavior(.disabled)` is not the fix: it
   letterboxed the whole scene with white 42 pt strips at both display edges
   and narrowed the leading pane (run 3).
-- `paneTabBar` is topped by a 20 pt page-coloured fade inside the inset, so a
-  key tag scrolling under the bar dissolves instead of being sliced mid-glyph.
 - Folded, iOS 27.1 draws its own vertical rail (status bar, tabs, toolbar) on
   the outer display's trailing edge. That is the system default and unchanged.
 - Unsigned simulator builds (gh-sim) have no iCloud entitlement and CloudKit

@@ -454,7 +454,7 @@ struct EntryRow: View {
                 Text(subtitle)
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
         }
         .contentShape(Rectangle())
