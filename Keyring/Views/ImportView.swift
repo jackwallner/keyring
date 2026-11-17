@@ -279,6 +279,9 @@ struct ImportView: View {
     private func assignTargets() {
         guard let result else { return }
         let names = result.vehicleNames
+        // Remapped columns can rename every vehicle in the file. A choice left
+        // for a name that's gone would hold Import on "Choose a vehicle".
+        targets = targets.filter { names.contains($0.key) }
         for name in names where targets[name] == nil {
             if let match = match(name) {
                 targets[name] = .vehicle(match.objectID)

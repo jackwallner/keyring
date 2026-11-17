@@ -62,7 +62,7 @@ struct PartsSection: View {
             }
             .accessibilityIdentifier("log.addPart")
             if let total = partsTotal, total > 0, (cost ?? 0) == 0 {
-                Button("Use \(Format.money(total)) as the cost") { cost = total }
+                Button("Use \(Format.money(total)) as the cost") { cost = Format.bounded(total) }
             }
 
             ForEach($specs) { $spec in

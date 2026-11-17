@@ -28,4 +28,23 @@ final class NumberFieldTests: XCTestCase {
             XCTAssertEqual(NumberField.parse(shown, locale: locale), 48_210, "\(shown) in \(identifier)")
         }
     }
+
+    /// Twenty digits used to read as 1e20, and showing it as a whole number trapped on the next keystroke.
+    func testARunOfDigitsTooLongForAFigureIsNotOne() {
+        let locale = Locale(identifier: "en_US")
+        XCTAssertNil(NumberField.parse("99999999999999999999", locale: locale))
+        XCTAssertNil(NumberField.parse(String(repeating: "9", count: 400), locale: locale))
+        XCTAssertEqual(NumberField.parse("999,999,999", locale: locale), 999_999_999)
+        XCTAssertNil(ServiceImport.number("12345678901234567890"))
+        XCTAssertNil(ServiceImport.number(String(repeating: "9", count: 400)))
+        XCTAssertEqual(ServiceImport.number("248,210"), 248_210)
+    }
+
+    /// A barcode tapped in the scanner used to fill in 1e19 and trap the field showing it.
+    func testAScannedRunOfDigitsTooLongForAFigureFillsNothing() {
+        XCTAssertNil(FieldReader.tapped("12345678901234567890", for: .reading(last: 0, meter: .miles)))
+        XCTAssertNil(FieldReader.tapped("$12345678901234567890", for: .amount))
+        XCTAssertEqual(FieldReader.tapped("48210", for: .reading(last: 0, meter: .miles)), "48210")
+        XCTAssertEqual(FieldReader.tapped("$412.37", for: .amount), "412.37")
+    }
 }

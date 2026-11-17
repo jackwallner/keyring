@@ -34,9 +34,8 @@ enum FieldReader {
         switch kind {
         case .plate: plateNumber(raw)
         case .vin: vin(in: [raw])
-        case .reading:
-            raw.filter(\.isNumber).count >= 1 ? raw.filter { $0.isNumber || $0 == "." }.trimmingCharacters(in: CharacterSet(charactersIn: ".")) : nil
-        case .amount: amount(in: [raw]).map(format)
+        case .reading: reading(raw)
+        case .amount: amount(in: [raw]).flatMap(format)
         case .text: clean(raw)
         }
     }
@@ -46,8 +45,8 @@ enum FieldReader {
         switch kind {
         case .plate: plate(in: lines)
         case .vin: vin(in: lines.map(\.text))
-        case let .reading(last, meter): OdometerReader.pick(lines: lines.map(\.text), last: last, meter: meter).map(format)
-        case .amount: amount(in: lines.map(\.text)).map(format)
+        case let .reading(last, meter): OdometerReader.pick(lines: lines.map(\.text), last: last, meter: meter).flatMap(format)
+        case .amount: amount(in: lines.map(\.text)).flatMap(format)
         case .text: nil
         }
     }
@@ -101,7 +100,17 @@ enum FieldReader {
         return text.isEmpty ? nil : text
     }
 
-    private static func format(_ value: Double) -> String {
-        value == value.rounded() ? String(Int(value)) : String(value)
+    /// The digits tapped on a meter. A barcode or serial runs past any real
+    /// reading, and filling it in would trap the field showing it.
+    private static func reading(_ raw: String) -> String? {
+        guard raw.contains(where: \.isNumber) else { return nil }
+        let text = raw.filter { $0.isNumber || $0 == "." }.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        if let value = Double(text), Format.bounded(value) == nil { return nil }
+        return text
+    }
+
+    private static func format(_ value: Double) -> String? {
+        guard let value = Format.bounded(value) else { return nil }
+        return value == value.rounded() ? String(Int(value)) : String(value)
     }
 }
