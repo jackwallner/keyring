@@ -492,7 +492,7 @@ enum Layout {
 
     /// Resolves a snapshot leaf back to a live element and asks whether a tap
     /// would reach it: false for hidden tabs, covered views and clipped scroll content.
-    static func visible(_ app: XCUIApplication, _ leaf: Leaf) -> Bool {
+    static func visible(_ app: XCUIApplication, _ leaf: Leaf, tolerant: Bool = true) -> Bool {
         let parts = leaf.key.split(separator: "#")
         let index = Int(parts.last ?? "0") ?? 0
         let query = leaf.identifier.isEmpty
@@ -505,7 +505,27 @@ enum Layout {
                 && abs(frame.width - leaf.frame.width) < 1 && abs(frame.height - leaf.frame.height) < 1
         }
         let element = query.allElementsBoundByIndex.first { near($0.frame) } ?? query.element(boundBy: index)
-        return element.exists && element.isHittable
+        return tappable(app, element, tolerant: tolerant)
+    }
+
+    /// isHittable records a test failure when an element has no valid activation
+    /// point (a date chip scrolled half out of a narrow strip), so anything whose
+    /// centre is outside the screen is answered here without asking.
+    static func tappable(_ app: XCUIApplication, _ element: XCUIElement, tolerant: Bool = true) -> Bool {
+        guard element.exists else { return false }
+        // A main button that overhangs the screen is still the main button: ask it plainly.
+        guard tolerant else { return element.isHittable }
+        let frame = element.frame
+        guard !frame.isEmpty, app.frame.contains(CGPoint(x: frame.midX, y: frame.midY)) else { return false }
+        // A hidden tab's chip can sit mid-frame yet have no activation point; the
+        // answer is then "no", not a failed test.
+        var hittable = false
+        let options = XCTExpectedFailure.Options()
+        options.isStrict = false
+        XCTExpectFailure("an element with no activation point is not hittable", options: options) {
+            hittable = element.isHittable
+        }
+        return hittable
     }
 
     static func typeName(_ type: XCUIElement.ElementType) -> String {
@@ -587,7 +607,7 @@ enum Audit {
                 if let target = issue.element {
                     if checked < 40 {
                         checked += 1
-                        if !(target.exists && target.isHittable) { return true }
+                        if !Layout.tappable(app, target) { return true }
                     } else if !leaves.contains(where: { $0.label == target.label && $0.type == target.elementType }) {
                         return true
                     }
@@ -906,9 +926,13 @@ enum Anchor {
     static var last: (journey: String, checkpoint: String, frame: CGRect)?
 
     /// The largest button in the bottom 40% of the screen, at least half the screen wide.
-    static func primary(_ leaves: [Leaf], width: CGFloat, height: CGFloat) -> Leaf? {
-        leaves.filter { $0.type == .button && !$0.inScroll && $0.frame.width >= width * 0.5 && $0.frame.midY >= height * 0.6 }
-            .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+    /// Only a button a tap would reach counts: a hidden tab keeps its own
+    /// call to action in the tree, drawn at opacity 0 under the visible screen.
+    static func primary(_ app: XCUIApplication, _ leaves: [Leaf], width: CGFloat, height: CGFloat) -> Leaf? {
+        let candidates = leaves
+            .filter { $0.type == .button && !$0.inScroll && $0.frame.width >= width * 0.5 && $0.frame.midY >= height * 0.6 }
+            .sorted { $0.frame.width * $0.frame.height > $1.frame.width * $1.frame.height }
+        return candidates.prefix(6).first { Layout.visible(app, $0, tolerant: false) }
     }
 
     /// Onboarding and paywall steps share one call to action. When it jumps
@@ -916,7 +940,7 @@ enum Anchor {
     /// thumb misses and the flow feels unfinished.
     static func check(_ app: XCUIApplication, _ leaves: [Leaf], width: CGFloat, height: CGFloat, context: QA.Context) {
         // A keyboard lifts the button on purpose.
-        guard app.keyboards.count == 0, let button = primary(leaves, width: width, height: height) else {
+        guard app.keyboards.count == 0, let button = primary(app, leaves, width: width, height: height) else {
             last = nil
             return
         }
