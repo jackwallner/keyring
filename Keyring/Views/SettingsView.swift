@@ -17,7 +17,8 @@ struct SettingsView: View {
     @State private var garageName = ""
     @State private var savedName = ""
     @State private var savedGarageName = ""
-    @FocusState private var editingText: Bool
+    @FocusState private var focus: Field?
+    private enum Field { case name, garage }
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
     @State private var reminderHour = 9
     @State private var showingPaywall = false
@@ -41,17 +42,21 @@ struct SettingsView: View {
                 LabeledContent("Your name") {
                     TextField("For entries you log", text: $name)
                         .multilineTextAlignment(.trailing)
-                        .focused($editingText)
+                        .focused($focus, equals: .name)
                         .onSubmit(saveText)
                         .accessibilityIdentifier("settings.name")
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focus = .name }
                 if let own = garage.ownGarage {
                     LabeledContent("Garage name") {
                         TextField("Our garage", text: $garageName)
                             .multilineTextAlignment(.trailing)
-                            .focused($editingText)
+                            .focused($focus, equals: .garage)
                             .onSubmit(saveText)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture { focus = .garage }
                 }
                 Button { showingFamily = true } label: {
                     HStack {
@@ -202,7 +207,7 @@ struct SettingsView: View {
         }
         savedName = name
         savedGarageName = garageName
-        editingText = false
+        focus = nil
         Haptics.success()
     }
 

@@ -456,13 +456,19 @@ struct OnboardingView: View {
             : AnyLayout(HStackLayout(spacing: 14))
         return layout {
             Link("Terms", destination: AppLinks.standardEULA)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
             Link("Privacy", destination: AppLinks.privacyPolicy)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
             Button("Restore", action: restore)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity)
         .font(.caption2)
         .foregroundStyle(Theme.faintInk)
-        .frame(minHeight: 20)
+        .frame(minHeight: 44)
         .disabled(!onTrialPage || store.isPro || purchasing || restoring)
     }
 
