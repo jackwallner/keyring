@@ -67,10 +67,10 @@ final class ReleaseJourneysUITests: XCTestCase {
         let job = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Oil and filter")).firstMatch
         XCTAssertTrue(job.waitForExistence(timeout: 20), "Log service should list the oil change")
         QA.checkpoint(app, "log-service")
-        job.tap()
+        press(job, "The oil change row")
         let save = app.buttons["log.save"]
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Log service should offer Save")
-        save.tap()
+        press(save, "Save")
         XCTAssertTrue(app.buttons["vehicle.log"].waitForExistence(timeout: 20), "Saving should return to the vehicle page")
         QA.checkpoint(app, "vehicle-after-log")
 
@@ -187,6 +187,14 @@ final class ReleaseJourneysUITests: XCTestCase {
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
     }
 
+    /// Taps once the element can take it: a sheet or relaunch still settling answers a query late.
+    private func press(_ element: XCUIElement, _ what: String) {
+        let ready = NSPredicate(format: "exists == true AND hittable == true")
+        let wait = XCTNSPredicateExpectation(predicate: ready, object: element)
+        XCTAssertEqual(XCTWaiter().wait(for: [wait], timeout: 20), .completed, "\(what) should be tappable")
+        element.tap()
+    }
+
     private func onboardingNext() {
         let next = app.buttons["onboarding.continue"]
         XCTAssertTrue(next.waitForExistence(timeout: 20), "Onboarding should offer Continue")
@@ -203,7 +211,9 @@ final class ReleaseJourneysUITests: XCTestCase {
 
     private func clear(_ field: XCUIElement) {
         guard let current = field.value as? String, !current.isEmpty, current != field.placeholderValue else { return }
+        // The caret may land at either end of a trailing-aligned field, so delete both ways.
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
+        field.typeText(String(repeating: XCUIKeyboardKey.forwardDelete.rawValue, count: current.count))
     }
 
     /// The add flow's details step: make and nickname, then on to the last-done step.
