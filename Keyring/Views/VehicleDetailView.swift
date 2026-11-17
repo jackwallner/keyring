@@ -360,6 +360,9 @@ struct VehicleDetailView: View {
         return VStack(alignment: .leading, spacing: Theme.sm) {
             SectionHeader(title: "Maintenance") {
                 NavigationLink("Schedule") { ScheduleView(vehicle: vehicle) }
+                    .foregroundStyle(Theme.brassText)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             if dues.isEmpty {
                 Text("No jobs on the schedule. Add some from the catalog for this \(vehicle.kind.title.lowercased()).")

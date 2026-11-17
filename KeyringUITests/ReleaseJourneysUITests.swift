@@ -131,7 +131,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 10), "Settings should offer the name field")
         // The field sits low at large text and the tab bar floats over the list: bring it clear first.
         for _ in 0..<2 where !field.isHittable { QA.swipe(app, .up) }
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
         if !app.keyboards.firstMatch.waitForExistence(timeout: 3) { field.tap() }
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10), "Tapping the name field should raise the keyboard")
         clear(field)
@@ -211,9 +211,9 @@ final class ReleaseJourneysUITests: XCTestCase {
 
     private func clear(_ field: XCUIElement) {
         guard let current = field.value as? String, !current.isEmpty, current != field.placeholderValue else { return }
-        // The caret may land at either end of a trailing-aligned field, so delete both ways.
-        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
-        field.typeText(String(repeating: XCUIKeyboardKey.forwardDelete.rawValue, count: current.count))
+        // Park the caret at the end of the text (a second tap on the right edge), then delete back past it.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5)).tap()
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 2))
     }
 
     /// The add flow's details step: make and nickname, then on to the last-done step.
