@@ -124,7 +124,9 @@ struct SectionHeader<Trailing: View>: View {
     private var styledTrailing: some View {
         trailing
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Theme.brass)
+            .foregroundStyle(Theme.brassText)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
     }
 }
 

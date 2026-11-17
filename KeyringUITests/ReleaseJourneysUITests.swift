@@ -129,7 +129,10 @@ final class ReleaseJourneysUITests: XCTestCase {
         let name = "QA Tester"
         let field = app.textFields["settings.name"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "Settings should offer the name field")
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        // The field sits low at large text and the tab bar floats over the list: bring it clear first.
+        for _ in 0..<2 where !field.isHittable { QA.swipe(app, .up) }
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        if !app.keyboards.firstMatch.waitForExistence(timeout: 3) { field.tap() }
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10), "Tapping the name field should raise the keyboard")
         clear(field)
         field.typeText(name)
@@ -261,8 +264,12 @@ final class ReleaseJourneysUITests: XCTestCase {
 
     private func scrollTo(_ element: XCUIElement) {
         var swipes = 0
+        // Swipe inside the form itself: on iPad the sheet is shorter than the screen,
+        // and an app-level swipe starts below it.
+        let forms = app.collectionViews.allElementsBoundByIndex.filter(\.exists) + app.tables.allElementsBoundByIndex.filter(\.exists)
+        let surface: XCUIElement = forms.last ?? app
         while !(element.exists && element.isHittable), swipes < 6 {
-            QA.swipe(app, .up)
+            QA.swipe(surface, .up)
             swipes += 1
         }
     }

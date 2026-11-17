@@ -42,6 +42,8 @@ enum Theme {
     static let faintInk = Color(light: 0x9A958A, dark: 0x6F6B62)
     static let hairline = Color(light: 0xDED8CB, dark: 0x34312C)
     static let brass = Color(light: 0xA9771F, dark: 0xD8A84A)
+    /// Brass for small text: the fill brass is 3.9:1 on paper, this clears 4.5:1.
+    static let brassText = Color(light: 0x84591A, dark: 0xD8A84A)
     static let brassSoft = Color(light: 0xF3E6C8, dark: 0x3A2F1A)
 
     static let overdue = Color(light: 0xB9381A, dark: 0xF07A55)
