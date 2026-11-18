@@ -64,10 +64,11 @@ final class ReleaseJourneysUITests: XCTestCase {
         QA.checkpoint(app, "vehicle")
         log.tap()
 
-        let job = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Oil and filter")).firstMatch
-        XCTAssertTrue(job.waitForExistence(timeout: 20), "Log service should list the oil change")
+        let jobs = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Oil and filter"))
+        XCTAssertTrue(jobs.firstMatch.waitForExistence(timeout: 20), "Log service should list the oil change")
         QA.checkpoint(app, "log-service")
-        press(job, "The oil change row")
+        // The unfolded Duo keeps the vehicle page's own oil change row beside the sheet, under its dimming.
+        press(reachable(jobs), "The oil change row")
         let save = app.buttons["log.save"]
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Log service should offer Save")
         press(save, "Save")
@@ -185,6 +186,16 @@ final class ReleaseJourneysUITests: XCTestCase {
         let wait = XCTNSPredicateExpectation(predicate: ready, object: element)
         XCTAssertEqual(XCTWaiter().wait(for: [wait], timeout: 20), .completed, "\(what) should be tappable")
         element.tap()
+    }
+
+    /// The match a user could tap, once one is: a sheet can cover a twin of its row.
+    private func reachable(_ query: XCUIElementQuery) -> XCUIElement {
+        let deadline = Date().addingTimeInterval(20)
+        repeat {
+            if let hit = query.allElementsBoundByIndex.first(where: { $0.exists && $0.isHittable }) { return hit }
+            usleep(300_000)
+        } while Date() < deadline
+        return query.firstMatch
     }
 
     private func onboardingNext() {
