@@ -267,7 +267,19 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(garageCard(nickname).waitForExistence(timeout: 20), "The garage should list the new vehicle")
     }
 
+    /// The iPad add sheet floats over the garage split, and a drag on the split
+    /// under its dimming scrolls nothing, so drag the sheet's own form there.
     private func scrollTo(_ element: XCUIElement) {
-        QA.reveal(element, in: app, swipes: 6)
+        let sheet = app.collectionViews.allElementsBoundByIndex.last {
+            $0.exists && $0.frame.minX > 0 && $0.frame.width < app.frame.width
+        }
+        guard let sheet, UIDevice.current.userInterfaceIdiom == .pad else {
+            QA.reveal(element, in: app, swipes: 6)
+            return
+        }
+        for _ in 0..<8 where !(element.exists && element.isHittable) {
+            QA.drag(sheet, .up, in: app)
+            usleep(400_000)
+        }
     }
 }
