@@ -78,7 +78,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(garageCard(nickname).waitForExistence(timeout: 30), "The vehicle should survive a relaunch")
         QA.checkpoint(app, "garage-after-relaunch")
 
-        tab("History").tap()
+        openTab("History")
         let entry = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Oil and filter")).firstMatch
         XCTAssertTrue(entry.waitForExistence(timeout: 20), "The logged service should still be in History after a relaunch")
         QA.checkpoint(app, "history-after-relaunch")
@@ -109,13 +109,13 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(garageCard("The Tacoma").waitForExistence(timeout: 30), "The garage should reopen without onboarding")
         QA.checkpoint(app, "garage-after-relaunch")
 
-        tab("History").tap()
+        openTab("History")
         XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 20), "History should open")
         QA.checkpoint(app, "history")
-        tab("Settings").tap()
+        openTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 20), "Settings should open")
         QA.checkpoint(app, "settings")
-        tab("Garage").tap()
+        openTab("Garage")
         XCTAssertTrue(garageCard("The Tacoma").waitForExistence(timeout: 20), "Garage should open again")
         QA.checkpoint(app, "garage-return")
     }
@@ -129,13 +129,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         let name = "QA Tester"
         let field = app.textFields["settings.name"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "Settings should offer the name field")
-        // The field sits low at large text and the tab bar floats over the list: bring it clear first.
-        for _ in 0..<2 where !field.isHittable { QA.swipe(app, .up) }
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
-        if !app.keyboards.firstMatch.waitForExistence(timeout: 3) { field.tap() }
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10), "Tapping the name field should raise the keyboard")
-        clear(field)
-        field.typeText(name)
+        QA.type(name, into: field, in: app)
         let saveName = app.buttons["settings.save"]
         XCTAssertTrue(saveName.waitForExistence(timeout: 5), "Save should appear while the name is edited")
         QA.checkpoint(app, "settings-editing-name")
@@ -144,7 +138,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         QA.checkpoint(app, "settings-name-saved")
 
         QA.relaunch(app)
-        tab("Settings").tap()
+        openTab("Settings")
         let again = app.textFields["settings.name"]
         XCTAssertTrue(again.waitForExistence(timeout: 30), "Settings should reopen")
         XCTAssertEqual(again.value as? String, name, "The saved name should survive a relaunch")
@@ -177,10 +171,8 @@ final class ReleaseJourneysUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func tab(_ title: String) -> XCUIElement {
-        let tab = app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
-        XCTAssertTrue(tab.waitForExistence(timeout: 20), "\(title) tab should exist")
-        return tab
+    private func openTab(_ title: String) {
+        QA.openTab(app, title)
     }
 
     private func garageCard(_ name: String) -> XCUIElement {
@@ -209,19 +201,11 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(close.waitForNonExistence(timeout: 10), "The paywall should dismiss")
     }
 
-    private func clear(_ field: XCUIElement) {
-        guard let current = field.value as? String, !current.isEmpty, current != field.placeholderValue else { return }
-        // Park the caret at the end of the text (a second tap on the right edge), then delete back past it.
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5)).tap()
-        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 2))
-    }
-
     /// The add flow's details step: make and nickname, then on to the last-done step.
     private func addDetails(make: String, nickname: String) {
         let makeField = app.textFields["Make"]
         XCTAssertTrue(makeField.waitForExistence(timeout: 20), "The details step should offer Make")
-        makeField.tap()
-        makeField.typeText(make)
+        QA.type(make, into: makeField, in: app)
         // Return walks the fields (Make, Model, Trim, Nickname) and scrolls each into view.
         for _ in 0..<3 { app.typeText("\n") }
         app.typeText(nickname)
@@ -273,14 +257,6 @@ final class ReleaseJourneysUITests: XCTestCase {
     }
 
     private func scrollTo(_ element: XCUIElement) {
-        var swipes = 0
-        // Swipe inside the form itself: on iPad the sheet is shorter than the screen,
-        // and an app-level swipe starts below it.
-        let forms = app.collectionViews.allElementsBoundByIndex.filter(\.exists) + app.tables.allElementsBoundByIndex.filter(\.exists)
-        let surface: XCUIElement = forms.last ?? app
-        while !(element.exists && element.isHittable), swipes < 6 {
-            QA.swipe(surface, .up)
-            swipes += 1
-        }
+        QA.reveal(element, in: app, swipes: 6)
     }
 }
