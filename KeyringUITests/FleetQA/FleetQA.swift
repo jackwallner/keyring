@@ -478,9 +478,16 @@ enum Layout {
         guard !found.isEmpty else { return }
         // A frame caught mid-transition, or glass still blending what scrolled under it, reads
         // differently a moment later. Only an overlap that a second capture still shows is drawn.
+        // Frames are read again with it: a card that lands late moves the pair (the control
+        // app's broken screen does), and the old frames would point at the wrong pixels.
         usleep(700_000)
+        guard let fresh = Layout.leaves(app)?.leaves else { return }
         let again = Render.read(QA.capture(app))
-        for item in found where drawnOver(item.a, item.b, item.region, again, leaves) {
+        let now = Dictionary(fresh.map { ($0.key, $0) }, uniquingKeysWith: { first, _ in first })
+        for item in found {
+            guard let a = now[item.a.key], let b = now[item.b.key] else { continue }
+            let region = a.frame.intersection(b.frame)
+            guard !region.isNull, region.width > 2, region.height > 2, drawnOver(a, b, region, again, fresh) else { continue }
             QA.record(context, "overlap", "P1", item.pair,
                       String(format: "%@ \"%@\" overlaps \"%@\" by %.0f%%", typeName(item.a.type), item.a.name,
                              item.b.name, 100 * item.share))
@@ -814,15 +821,16 @@ enum Render {
 
     /// True when any of the element's own words (not shared with `other`) is drawn with its
     /// middle inside `region`. A label with no words of its own cannot be told apart, so it counts.
+    /// Whole words only: Baby Docs' "thing" is not drawn just because its pinned note says "Nothing".
     static func drawnInside(_ region: CGRect, _ lines: [Line], _ leaf: Leaf, excluding other: String) -> Bool {
         let shared = Set(words(other))
         let wanted = Set(words(leaf.label)).subtracting(shared)
         guard !wanted.isEmpty else { return true }
         let area = region.insetBy(dx: -2, dy: -2)
-        let drawn = lines.flatMap { $0.words.isEmpty ? [$0] : $0.words }
+        let drawn = Set(lines.flatMap { $0.words.isEmpty ? [$0] : $0.words }
             .filter { area.contains(CGPoint(x: $0.frame.midX, y: $0.frame.midY)) }
-            .map { $0.text.lowercased() }.joined(separator: " ")
-        return wanted.contains { drawn.contains($0) }
+            .flatMap { words($0.text) })
+        return !wanted.isDisjoint(with: drawn)
     }
 
     /// True when text drawn in `region` shares at least two three-letter runs with either label.
@@ -1206,14 +1214,17 @@ extension QA {
 
     /// What to drag to scroll toward an element: the tall scroll view, list or
     /// collection under it, latest in the tree. A form sheet on the iPad is shorter
-    /// than the screen, so a drag across the app starts below it (Keyring), and on
-    /// the unfolded Duo each pane scrolls on its own (Baby Docs). A short carousel
-    /// inside a list is not it. Falls back to the whole app.
+    /// than the screen, so a drag across the app starts below it, and the split
+    /// view's lists under the sheet's dimming take no drag (Keyring); on the unfolded
+    /// Duo each pane scrolls on its own (Baby Docs). A short carousel inside a list
+    /// is not it. Falls back to the whole app.
     static func scroller(for element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
         let types = [XCUIElement.ElementType.scrollView, .collectionView, .table].map(\.rawValue)
-        let tall = app.frame.height * 0.4
+        let tall = app.frame.height * 0.25
         let candidates = app.descendants(matching: .any).matching(NSPredicate(format: "elementType IN %@", types))
-            .allElementsBoundByIndex.filter { $0.exists && $0.frame.height >= tall && app.frame.intersects($0.frame) }
+            .allElementsBoundByIndex.filter {
+                $0.exists && $0.frame.height >= tall && app.frame.intersects($0.frame) && $0.isHittable
+            }
         let x = element.exists ? element.frame.midX : nil
         let under = candidates.filter { pane in x.map { pane.frame.minX <= $0 && $0 <= pane.frame.maxX } ?? true }
         return under.last ?? candidates.last ?? app
