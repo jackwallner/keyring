@@ -455,15 +455,16 @@ struct OnboardingView: View {
             ? AnyLayout(VStackLayout(spacing: Theme.sm))
             : AnyLayout(HStackLayout(spacing: 14))
         return layout {
-            Link("Terms", destination: AppLinks.standardEULA)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-            Link("Privacy", destination: AppLinks.privacyPolicy)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-            Button("Restore", action: restore)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
+            // The size sits inside the label so the link's own element is 44 pt, not a wrapper around it.
+            Link(destination: AppLinks.standardEULA) {
+                Text("Terms").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
+            Link(destination: AppLinks.privacyPolicy) {
+                Text("Privacy").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
+            Button(action: restore) {
+                Text("Restore").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
         }
         .frame(maxWidth: .infinity)
         .font(.caption2)
