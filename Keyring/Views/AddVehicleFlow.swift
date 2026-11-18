@@ -26,11 +26,11 @@ struct AddVehicleFlow: View {
                 switch step {
                 case .kind:
                     KindPicker { kind in
-                        withAnimation(.snappy) { pick(kind) }
+                        withAnimation(Motion.snappy) { pick(kind) }
                     }
                 case .details:
                     VehicleDetailsForm(draft: $draft, destination: $destination, destinations: destinations) {
-                        withAnimation(.snappy) { step = .history }
+                        withAnimation(Motion.snappy) { step = .history }
                     }
                 case .history:
                     LastDoneStep(draft: $draft, items: coreItems, finish: finish)
@@ -42,7 +42,7 @@ struct AddVehicleFlow: View {
                         Button("Cancel") { dismiss() }
                     } else {
                         Button {
-                            withAnimation(.snappy) { step = step == .history ? .details : .kind }
+                            withAnimation(Motion.snappy) { step = step == .history ? .details : .kind }
                         } label: {
                             Label("Back", systemImage: "chevron.backward")
                         }

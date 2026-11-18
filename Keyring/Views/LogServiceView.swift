@@ -199,7 +199,7 @@ struct LogServiceView: View {
 
     private var kindPicker: some View {
         Section {
-            Picker("Kind", selection: $draft.kind.animation(.snappy)) {
+            Picker("Kind", selection: $draft.kind.animation(Motion.snappy)) {
                 Text("Maintenance").tag(EntryKind.service)
                 Text("Repair").tag(EntryKind.repair)
                 Text("Mod").tag(EntryKind.mod)
@@ -244,7 +244,7 @@ struct LogServiceView: View {
             if showingScheduled || !selected.isEmpty {
                 dueRows
             } else {
-                Button { withAnimation(.snappy) { showingScheduled = true } } label: {
+                Button { withAnimation(Motion.snappy) { showingScheduled = true } } label: {
                     Label("Scheduled work done on the same visit", systemImage: "plus")
                 }
             }

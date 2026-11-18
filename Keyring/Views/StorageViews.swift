@@ -46,7 +46,7 @@ struct StorageSheet: View {
 
     @ViewBuilder private var storeSections: some View {
         Section {
-            Toggle("Remind me to take it out", isOn: $remind.animation())
+            Toggle("Remind me to take it out", isOn: $remind.animation(Motion.snappy))
             if remind {
                 DatePicker("On", selection: $until, in: Date.now..., displayedComponents: .date)
             }

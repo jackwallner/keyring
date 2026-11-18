@@ -1226,7 +1226,7 @@ struct RetireVehicleSheet: View {
         Haptics.success()
         if sold {
             garage.markSold(vehicle, on: date, price: price)
-            withAnimation(.snappy) { handingOver = true }
+            withAnimation(Motion.snappy) { handingOver = true }
         } else {
             garage.retire(vehicle, true)
             dismiss()

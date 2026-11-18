@@ -2,6 +2,17 @@ import SafariServices
 import SwiftUI
 import UIKit
 
+/// Animations that go quiet when Reduce Motion is on.
+@MainActor
+enum Motion {
+    static var snappy: Animation? { snappy(nil) }
+
+    static func snappy(_ duration: Double?) -> Animation? {
+        if UIAccessibility.isReduceMotionEnabled { return nil }
+        return duration.map { .snappy(duration: $0) } ?? .snappy
+    }
+}
+
 // MARK: - Buttons
 
 /// Ink on paper. One per screen, for the thing the screen is for.
@@ -16,7 +27,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .background(Theme.action.opacity(isEnabled ? 1 : 0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .opacity(configuration.isPressed ? 0.8 : 1)
             .scaleEffect(configuration.isPressed ? 0.985 : 1)
-            .animation(.snappy(duration: 0.15), value: configuration.isPressed)
+            .animation(Motion.snappy(0.15), value: configuration.isPressed)
     }
 }
 
@@ -37,7 +48,7 @@ struct PressableStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .opacity(configuration.isPressed ? 0.9 : 1)
-            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+            .animation(Motion.snappy(0.18), value: configuration.isPressed)
     }
 }
 

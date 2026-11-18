@@ -329,7 +329,7 @@ struct ImportView: View {
             }
         }
         Haptics.success()
-        withAnimation(.snappy) { self.summary = summary }
+        withAnimation(Motion.snappy) { self.summary = summary }
     }
 
     private func vehicle(for name: String, rows: [ServiceImport.Row]) -> Vehicle? {

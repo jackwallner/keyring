@@ -458,7 +458,7 @@ private struct RecallRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.xs) {
-            Button { withAnimation(.snappy) { expanded.toggle() } } label: {
+            Button { withAnimation(Motion.snappy) { expanded.toggle() } } label: {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {

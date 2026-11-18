@@ -280,7 +280,7 @@ struct GarageView: View {
                 }
                 if items.count > 3 {
                     Button(showingAllAttention ? "Show fewer" : "Show all \(items.count)") {
-                        withAnimation(.snappy) { showingAllAttention.toggle() }
+                        withAnimation(Motion.snappy) { showingAllAttention.toggle() }
                     }
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(Theme.brass)
@@ -310,7 +310,7 @@ struct GarageView: View {
 
     private func move(_ vehicle: Vehicle, to index: Int) {
         Haptics.selected()
-        withAnimation(.snappy) { garage.move(vehicle, to: index) }
+        withAnimation(Motion.snappy) { garage.move(vehicle, to: index) }
     }
 
     /// Vehicles picked in onboarding and not added yet.
@@ -350,7 +350,7 @@ struct GarageView: View {
             .buttonStyle(PressableStyle())
             .contextMenu {
                 Button(role: .destructive) {
-                    withAnimation(.snappy) { planned = PlannedVehicles.removing(kind, from: planned) }
+                    withAnimation(Motion.snappy) { planned = PlannedVehicles.removing(kind, from: planned) }
                 } label: {
                     Label("Remove", systemImage: "minus.circle")
                 }

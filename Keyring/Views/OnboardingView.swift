@@ -38,8 +38,8 @@ struct OnboardingView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { pageHeight = $0 }
-            .animation(.snappy, value: page)
-            .animation(.snappy, value: nameFocused)
+            .animation(Motion.snappy, value: page)
+            .animation(Motion.snappy, value: nameFocused)
             // The tall footer would squeeze the name field under the keyboard.
             if !nameFocused {
                 // Capped so the largest text sizes leave the pages room to read.
@@ -372,7 +372,7 @@ struct OnboardingView: View {
                         .frame(width: dot == page ? 20 : 7, height: 7)
                 }
             }
-            .animation(.snappy(duration: 0.22), value: page)
+            .animation(Motion.snappy(0.22), value: page)
             .padding(.bottom, 2)
             .accessibilityHidden(true)
             if reserves {
@@ -485,7 +485,7 @@ struct OnboardingView: View {
     private func primary() {
         if page == familyPage { garage.setOwnerName(name) }
         guard onTrialPage else {
-            withAnimation(.snappy) { page += 1 }
+            withAnimation(Motion.snappy) { page += 1 }
             return
         }
         guard !store.isPro else { finish(); return }
