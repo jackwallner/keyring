@@ -1,1 +1,1 @@
-Taustaparannuksia ja virhekorjauksia, jotta Vehicle Maintenance Log toimii sujuvasti. Kiitos, että olet mukana.
+Nyt myös iPadille, näkymä on suunniteltu isommalle näytölle.

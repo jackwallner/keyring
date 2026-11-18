@@ -1,1 +1,1 @@
-Förbättringar bakom kulisserna och buggfixar så att Vehicle Maintenance Log fungerar smidigt. Tack för att du är här.
+Nu även på iPad, med en layout som är gjord för den större skärmen.

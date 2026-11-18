@@ -1,1 +1,1 @@
-Peningkatan di balik layar dan perbaikan bug agar Vehicle Maintenance Log berjalan lancar. Terima kasih telah hadir.
+Kini hadir di iPad, dengan tata letak yang dirancang untuk layar yang lebih besar.
