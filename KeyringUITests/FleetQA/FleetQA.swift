@@ -1214,17 +1214,14 @@ extension QA {
 
     /// What to drag to scroll toward an element: the tall scroll view, list or
     /// collection under it, latest in the tree. A form sheet on the iPad is shorter
-    /// than the screen, so a drag across the app starts below it, and the split
-    /// view's lists under the sheet's dimming take no drag (Keyring); on the unfolded
-    /// Duo each pane scrolls on its own (Baby Docs). A short carousel inside a list
-    /// is not it. Falls back to the whole app.
+    /// than the screen, so a drag across the app starts below it (Keyring), and on
+    /// the unfolded Duo each pane scrolls on its own (Baby Docs). A short carousel
+    /// inside a list is not it. Falls back to the whole app.
     static func scroller(for element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
         let types = [XCUIElement.ElementType.scrollView, .collectionView, .table].map(\.rawValue)
-        let tall = app.frame.height * 0.25
+        let tall = app.frame.height * 0.4
         let candidates = app.descendants(matching: .any).matching(NSPredicate(format: "elementType IN %@", types))
-            .allElementsBoundByIndex.filter {
-                $0.exists && $0.frame.height >= tall && app.frame.intersects($0.frame) && $0.isHittable
-            }
+            .allElementsBoundByIndex.filter { $0.exists && $0.frame.height >= tall && app.frame.intersects($0.frame) }
         let x = element.exists ? element.frame.midX : nil
         let under = candidates.filter { pane in x.map { pane.frame.minX <= $0 && $0 <= pane.frame.maxX } ?? true }
         return under.last ?? candidates.last ?? app
