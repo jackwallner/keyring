@@ -45,6 +45,10 @@ Print or send a clean Service Record PDF with every job and receipt. When you se
 
 Safety recalls from NHTSA, one tap to your country's price guide with the vehicle filled in, parts for the job due next, plus upgrades and owners clubs.
 
+### Mods, events and paperwork
+
+Keep a build list of every mod with its parts and cost, log a track day or a trail ride and see which jobs it brings due, check what comes due before a long trip, and keep the title and insurance card with the vehicle. Unplanned repairs are logged beside maintenance.
+
 ## Is Vehicle Maintenance Log free?
 
 Yes, for two vehicles. They are free for good, with unlimited logging, fill-ups and mpg, reminders, recalls, family sharing and CSV export. Pro, a monthly or yearly subscription with a one-week free trial or a one-time purchase, adds unlimited vehicles, the Service Record PDF, receipt and pump auto-fill and spending insights. No account, no ads.
