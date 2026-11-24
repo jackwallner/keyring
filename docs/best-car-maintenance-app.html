@@ -220,6 +220,14 @@ footer a { display: inline-block; padding: 6px 0; color: #6e6e73; text-decoratio
 .get-app { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; --badge-h: 48px; }
 .get-app .store-btn { display: inline-flex; align-items: center; box-sizing: border-box; height: var(--badge-h); padding: 0 28px; border-radius: 980px; background: #1c1b19; color: #fff; font-size: 15px; font-weight: 500; text-decoration: none; }
 .get-app .store-btn.soon { opacity: 0.6; cursor: default; }
+.store-badges { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+.store-badges.start { justify-content: flex-start; }
+.play-badge { display: inline-flex; transition: opacity 0.15s; }
+.play-badge:hover { opacity: 0.85; }
+.play-badge img { display: block; height: 46px; width: auto; }
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+.nav-actions .play-badge img { height: 36px; }
+@media (max-width: 480px) { .nav-actions .play-badge { display: none; } }
 </style>
 </head>
 <body>
@@ -251,6 +259,7 @@ footer a { display: inline-block; padding: 6px 0; color: #6e6e73; text-decoratio
 <p>Vehicle Maintenance Log &amp; MPG keeps one shared garage for every vehicle in the family, from cars and trucks to motorcycles, boats, campers, aircraft and mowers. Invite anyone with a link or QR code and each person logs from their own iPhone, sees the same history and keeps their own reminders. Each vehicle starts with a recommended schedule for its kind and powertrain, counted down by date and by miles, kilometers or engine hours at the pace you actually drive. It logs fill-ups and works out mpg or L/100 km from full tank to full tank, checks NHTSA recalls for cars, trucks and motorcycles, and prints a Service Record PDF with every job and receipt. You can import a CSV from another app and export to CSV any time. Two vehicles are free for good with unlimited logging, fill-ups, reminders, recalls, sharing and export, and Pro adds unlimited vehicles, the Service Record PDF, receipt and pump auto-fill and spending insights. There is no account and no ads. The trade-offs: it is new with a single rating, and the Service Record PDF is part of Pro.</p>
 <div class="get-app" id="get-app">
 <a class="store-btn" href="https://apps.apple.com/us/app/id6823808045?pt=128748779&amp;ct=jw-vehicle-maintenance-log-best-car-main&amp;mt=8" rel="noopener">Download on the App Store</a>
+<a class="play-badge" href="https://play.google.com/store/apps/details?id=com.jackwallner.keyring" rel="noopener"><img src="google-play-badge.webp" alt="Get it on Google Play" width="155" height="46"></a>
 </div>
 
 <h2>CARFAX Car Care</h2>

@@ -54,3 +54,8 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 footer a { color: var(--muted); margin-right: 14px; }
 @media (max-width: 520px) { h1 { font-size: 36px; } .lead { font-size: 18px; } nav { flex-wrap: wrap; row-gap: 12px; } nav .links a { margin: 0 18px 0 0; } }
 summary > h2.faq-q { display: inline; margin: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.store-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+.store-badges .cta { margin-top: 0; }
+.play-badge { display: inline-flex; transition: opacity 0.15s; }
+.play-badge:hover { opacity: 0.85; }
+.play-badge img { display: block; height: 46px; width: auto; }
