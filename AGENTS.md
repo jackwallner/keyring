@@ -40,6 +40,7 @@ Vehicle Maintenance Log (code name Keyring, renamed 2026-10-17). A shared servic
 | `.claude/rules/ipad-layout.md` | iPad two-pane split, readable column width, device-name copy | touching iPad layout, `UnfoldedSplit`, `paperBackground`, iPad screenshots |
 
 ## App-specific notes
+- Remote config: `Shared/Services/RemoteConfig.swift` reads the current RevenueCat offering's metadata; wording tests go through offering metadata `trial_cta` (`seven_day` control, `my`, `your`; onboarding trial button only, the paywall button stays neutral), and `rating_prompt` = `off` pauses the star prompt. Switch keys must be identical on every offering. DEBUG pin: `-keyring.rc.<key> <value>`.
 - Rating ask: `ReviewPrompter` calls `requestReview()` after a logged service from the 2nd launch, 30-day cooldown, no gate.
 - Support/privacy/terms pages: `docs/` on GitHub Pages (`jackwallner.github.io/keyring`), mirrored to `jackwallner.com/ios/vehicle-maintenance-log/` (old `/ios/keyring/` redirects).
 - NHTSA sends no cache headers and `NHTSAClient.session` answers from its cache whenever it holds an entry, so recall lists go

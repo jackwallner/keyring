@@ -11,8 +11,9 @@ enum ReviewPrompter {
         defaults.set(defaults.integer(forKey: AppGroup.Key.launchCount) + 1, forKey: AppGroup.Key.launchCount)
     }
 
-    static func shouldAsk(now: Date = .now) -> Bool {
-        guard !ScreenshotConfig.isEnabled else { return false }
+    /// `remoteOn` is the `rating_prompt` switch; "off" pauses the automatic ask.
+    static func shouldAsk(now: Date = .now, remoteOn: Bool = true) -> Bool {
+        guard remoteOn, !ScreenshotConfig.isEnabled else { return false }
         let defaults = AppGroup.defaults
         guard defaults.integer(forKey: AppGroup.Key.launchCount) >= 2 else { return false }
         if let last = defaults.object(forKey: AppGroup.Key.lastReviewRequest) as? Date, now.timeIntervalSince(last) < cooldown {

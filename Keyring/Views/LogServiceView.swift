@@ -651,7 +651,7 @@ struct LogServiceView: View {
         }
         // Catching up on an old receipt isn't a moment to ask for a rating.
         let recent = abs(draft.date.timeIntervalSinceNow) < 30 * 86_400
-        if editing == nil, recent, savedInRow == 0, ReviewPrompter.shouldAsk() {
+        if editing == nil, recent, savedInRow == 0, ReviewPrompter.shouldAsk(remoteOn: StoreService.shared.isOn(.ratingPrompt)) {
             ReviewPrompter.markAsked()
             Task {
                 try? await Task.sleep(for: .seconds(0.8))

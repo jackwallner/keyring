@@ -150,6 +150,9 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
     /// free week StoreKit will not grant (Apple 3.1.2).
     @Published private(set) var introEligibility: [String: Bool] = [:]
     @Published private(set) var introEligibilityResolved = false
+    /// The current offering's metadata (a running Experiment's variant
+    /// included), read by `RemoteConfig`. Empty until offerings load.
+    @Published private(set) var remoteMetadata: [String: Any]?
 
     private let logger = Logger(subsystem: AppGroup.subsystem, category: "Store")
     private let defaults = UserDefaults(suiteName: AppGroup.id) ?? .standard
@@ -337,6 +340,13 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
         Purchases.shared.attribution.setAttributes(attributes)
     }
 
+    /// Tags the customer with the trial button wording they saw, so a wording
+    /// test can be read by attribute as well as by Experiment.
+    func syncTrialCTAAttribute() {
+        guard isConfigured, remoteMetadata != nil else { return }
+        Purchases.shared.attribution.setAttributes([TrialCTA.metadataKey: trialCTAArm.rawValue])
+    }
+
     #if DEBUG
     func setLocalOverride(isPro: Bool) {
         self.isPro = isPro
@@ -389,6 +399,7 @@ final class StoreService: NSObject, ObservableObject, PurchasesDelegate {
             }
             let offering = offerings.offering(identifier: "default") ?? offerings.current
             packages = offering?.sortedPlans ?? []
+            remoteMetadata = offerings.current?.metadata
             errorMessage = nil
             await refreshIntroEligibility()
         } catch {

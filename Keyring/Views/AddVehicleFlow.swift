@@ -106,7 +106,7 @@ struct AddVehicleFlow: View {
             }
         }
         onFinish?(vehicle)
-        if garage.vehicles.count >= 2, ReviewPrompter.shouldAsk() {
+        if garage.vehicles.count >= 2, ReviewPrompter.shouldAsk(remoteOn: StoreService.shared.isOn(.ratingPrompt)) {
             ReviewPrompter.markAsked()
             Task {
                 try? await Task.sleep(for: .seconds(1))

@@ -1227,3 +1227,55 @@ final class OnboardingPlanTests: XCTestCase {
         XCTAssertEqual(VehicleKind.pickerSections.flatMap(\.kinds).count, VehicleKind.allCases.count)
     }
 }
+
+final class RemoteConfigTests: XCTestCase {
+    func testMissingNonStringAndUnknownValuesAreControl() {
+        XCTAssertEqual(TrialCTA.from(metadata: nil), .sevenDay)
+        XCTAssertEqual(TrialCTA.from(metadata: [:]), .sevenDay)
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": 3]), .sevenDay)
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": true]), .sevenDay)
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": "shouting"]), .sevenDay)
+    }
+
+    func testEachKnownValueSelectsItsArm() {
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": "seven_day"]), .sevenDay)
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": "my"]), .my)
+        XCTAssertEqual(TrialCTA.from(metadata: ["trial_cta": "your"]), .your)
+    }
+
+    func testControlTextIsTodaysOnboardingCopy() {
+        XCTAssertEqual(TrialCTA.sevenDay.title, "Start free trial")
+        XCTAssertEqual(TrialCTA.sevenDay.title(trialEligible: true), "Start free trial")
+    }
+
+    func testArmTitles() {
+        XCTAssertEqual(TrialCTA.my.title, "Start my free trial")
+        XCTAssertEqual(TrialCTA.your.title, "Start your free trial")
+    }
+
+    func testIneligibleWordingIgnoresTheArm() {
+        for arm in TrialCTA.allCases {
+            XCTAssertEqual(arm.title(trialEligible: false), "Continue with Pro")
+        }
+    }
+
+    func testSwitchIsOnUnlessOff() {
+        XCTAssertTrue(RemoteConfig.isOn(.ratingPrompt, in: nil))
+        XCTAssertTrue(RemoteConfig.isOn(.ratingPrompt, in: [:]))
+        XCTAssertTrue(RemoteConfig.isOn(.ratingPrompt, in: ["rating_prompt": "on"]))
+        XCTAssertTrue(RemoteConfig.isOn(.ratingPrompt, in: ["rating_prompt": 0]))
+        XCTAssertFalse(RemoteConfig.isOn(.ratingPrompt, in: ["rating_prompt": "off"]))
+    }
+
+    func testPausedSwitchBlocksTheReviewAsk() {
+        let defaults = AppGroup.defaults
+        let saved = (defaults.object(forKey: AppGroup.Key.launchCount), defaults.object(forKey: AppGroup.Key.lastReviewRequest))
+        defer {
+            defaults.set(saved.0, forKey: AppGroup.Key.launchCount)
+            defaults.set(saved.1, forKey: AppGroup.Key.lastReviewRequest)
+        }
+        defaults.set(5, forKey: AppGroup.Key.launchCount)
+        defaults.removeObject(forKey: AppGroup.Key.lastReviewRequest)
+        XCTAssertFalse(ReviewPrompter.shouldAsk(remoteOn: false))
+    }
+}

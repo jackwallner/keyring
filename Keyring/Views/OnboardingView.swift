@@ -48,6 +48,8 @@ struct OnboardingView: View {
             }
         }
         .background(Theme.paper.ignoresSafeArea())
+        .onChange(of: onTrialPage) { _, _ in tagTrialArm() }
+        .onChange(of: store.introEligibilityResolved) { _, _ in tagTrialArm() }
         .sheet(isPresented: $joining) { JoinGarageView() }
         .sheet(isPresented: $showingPaywall, onDismiss: { if store.isPro { finish() } }) { PaywallView(focus: .unlimitedVehicles) }
         .task {
@@ -285,10 +287,17 @@ struct OnboardingView: View {
         }
     }
 
+    /// Tags the customer with the wording once they are on the trial page and
+    /// the offering's metadata has loaded.
+    private func tagTrialArm() {
+        guard onTrialPage, !store.isPro else { return }
+        store.syncTrialCTAAttribute()
+    }
+
     private var trialCTA: String {
         if store.isPro { return "Continue" }
-        if let package = onboardingPackage, store.isEligibleForIntroOffer(package) { return "Start free trial" }
-        return "Continue with Pro"
+        let eligible = onboardingPackage.map { store.isEligibleForIntroOffer($0) } ?? false
+        return store.trialCTAArm.title(trialEligible: eligible)
     }
 
     private var trialTitle: String {
